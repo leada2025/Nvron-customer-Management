@@ -28,7 +28,7 @@ const SignupForm = () => {
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/signup", {
+      const res = await axios.post("https://nvron-customer-managemanet.onrender.com/api/auth/signup", {
         name: form.name,
         email: form.email,
         password: form.password,
