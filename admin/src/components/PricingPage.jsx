@@ -18,7 +18,7 @@ export default function PricingPage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/products/unapproved", {
+      const res = await axios.get("https://nvron-customer-managemanet.onrender.com/api/products/unapproved", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(res.data);
@@ -29,7 +29,7 @@ export default function PricingPage() {
 
   const fetchPricing = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/pricing", {
+      const res = await axios.get("https://nvron-customer-managemanet.onrender.com/api/pricing", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPricingList(res.data);
@@ -52,7 +52,7 @@ export default function PricingPage() {
     const minRate = minRates[productId];
 
     await axios.post(
-      "http://localhost:5000/api/pricing",
+      "https://nvron-customer-managemanet.onrender.com/api/pricing",
       { customerId, productId, proposedRate, minRate },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -72,7 +72,7 @@ export default function PricingPage() {
       if (!approvedRate) return;
 
       await axios.patch(
-        `http://localhost:5000/api/pricing/${pricingId}/approve`,
+        `https://nvron-customer-managemanet.onrender.com/api/pricing/${pricingId}/approve`,
         { approvedRate },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -98,7 +98,7 @@ export default function PricingPage() {
   if (!confirmDelete) return;
 
   try {
-    await axios.delete(`http://localhost:5000/api/pricing/${pricingId}`, {
+    await axios.delete(`https://nvron-customer-managemanet.onrender.com/api/pricing/${pricingId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     fetchPricing();

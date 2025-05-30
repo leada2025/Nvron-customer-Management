@@ -71,7 +71,7 @@ const handleSubmit = async (e) => {
  try {
   if (initialData && initialData._id) {
     await axios.put(
-      `http://localhost:5000/api/products/${initialData._id}`,
+      `https://nvron-customer-managemanet.onrender.com/api/products/${initialData._id}`,
       cleanedForm,
       {
         headers: {
@@ -82,7 +82,7 @@ const handleSubmit = async (e) => {
     );
     setSuccessMsg("Product updated successfully!");
   } else {
-    await axios.post("http://localhost:5000/api/products", cleanedForm, {
+    await axios.post("https://nvron-customer-managemanet.onrender.com/api/products", cleanedForm, {
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"

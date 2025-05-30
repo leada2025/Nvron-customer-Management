@@ -26,7 +26,7 @@ const UserPage = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("http://localhost:5000/admin/users", {
+      const res = await fetch("https://nvron-customer-managemanet.onrender.com/admin/users", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -41,7 +41,7 @@ const UserPage = () => {
 
   const fetchRoles = async () => {
     try {
-      const res = await fetch("http://localhost:5000/admin/roles", {
+      const res = await fetch("https://nvron-customer-managemanet.onrender.com/admin/roles", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -57,7 +57,7 @@ const UserPage = () => {
   const handleSaveUser = async (userData) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/admin/users${editingUser ? `/${editingUser._id}` : ""}`,
+        `https://nvron-customer-managemanet.onrender.com/admin/users${editingUser ? `/${editingUser._id}` : ""}`,
         {
           method: editingUser ? "PUT" : "POST",
           headers: {
@@ -82,7 +82,7 @@ const UserPage = () => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/admin/users/${id}`, {
+      const res = await fetch(`https://nvron-customer-managemanet.onrender.com/admin/users/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

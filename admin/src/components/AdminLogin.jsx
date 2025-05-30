@@ -14,7 +14,7 @@ export default function AdminLogin({ setToken }) {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/admin/login", {
+      const res = await axios.post("https://nvron-customer-managemanet.onrender.com/api/auth/admin/login", {
         email,
         password,
       });

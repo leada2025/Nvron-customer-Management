@@ -19,7 +19,7 @@ export default function ProductsPage() {
     setError("");
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/products", {
+      const res = await axios.get("https://nvron-customer-managemanet.onrender.com/api/products", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(res.data);
@@ -81,13 +81,13 @@ export default function ProductsPage() {
       if (editProduct) {
         // Edit product
         await axios.put(
-          `http://localhost:5000/api/products/${editProduct._id}`,
+          `https://nvron-customer-managemanet.onrender.com/${editProduct._id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
         // Add product
-        await axios.post("http://localhost:5000/api/products", formData, {
+        await axios.post("https://nvron-customer-managemanet.onrender.com/api/products", formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
@@ -107,7 +107,7 @@ export default function ProductsPage() {
 
   const token = localStorage.getItem("token");
   try {
-    await axios.delete(`http://localhost:5000/api/products/${productId}`, {
+    await axios.delete(`https://nvron-customer-managemanet.onrender.com/api/products/${productId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     await fetchProducts(); // Refresh list after delete
