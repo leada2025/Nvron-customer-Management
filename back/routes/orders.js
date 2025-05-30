@@ -1,0 +1,79 @@
+const express = require("express");
+const Order = require("../models/Order");
+const { authenticate, authorizeRoles } = require("../middleware/auth");
+
+const router = express.Router();
+
+// Place order
+router.post("/", authenticate, authorizeRoles("customer"), async (req, res) => {
+  try {
+    const { items, note, shippingCharge, subtotal, taxAmount, totalAmount } = req.body;
+    const order = new Order({
+      customerId: req.user.userId,
+      items,
+      note,
+      shippingCharge,
+      subtotal,
+      taxAmount,
+      totalAmount,
+    });
+    await order.save();
+    res.status(201).json({ message: "Order placed successfully", order });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get customer orders
+router.get("/customer", authenticate, authorizeRoles("customer"), async (req, res) => {
+  try {
+    const orders = await Order.find({ customerId: req.user.userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get all orders for billing/sales
+router.get("/", authenticate, authorizeRoles("billing", "sales"), async (req, res) => {
+  try {
+    const orders = await Order.find().populate("customerId", "name email").sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Update order status
+router.patch("/:id/status", authenticate, authorizeRoles("billing"), async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.status = status;
+    await order.save();
+    res.json({ message: `Order marked as ${status}` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Cancel with feedback
+router.patch("/:id/cancel", authenticate, authorizeRoles("customer"), async (req, res) => {
+  try {
+    const { feedback } = req.body;
+    const order = await Order.findOne({ _id: req.params.id, customerId: req.user.userId });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.status !== "pending") return res.status(400).json({ message: "Cannot cancel order" });
+
+    order.status = "cancelled";
+    order.feedback = feedback;
+    await order.save();
+    res.json({ message: "Order cancelled with feedback" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+module.exports = router;

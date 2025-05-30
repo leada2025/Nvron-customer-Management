@@ -1,0 +1,69 @@
+const express = require("express");
+const router = express.Router();
+const Product = require("../models/Product");
+const adminAuth = require("../middleware/adminAuth");
+const { authenticate, authorizeRoles } = require("../middleware/auth");
+const requireAuth = require("../middleware/requireAuth");
+
+// Get all approved products (public)
+router.get("/", async (req, res) => {
+  try {
+    const products = await Product.find({ approved: true });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
+// routes/product.js
+router.get("/unapproved",  requireAuth({ permission: "Manage Pricing"}), async (req, res) => {
+  try {
+    const products = await Product.find({ approved: false });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch unapproved products" });
+  }
+});
+
+
+// Create a product (Admin Only)
+router.post("/",  requireAuth({ permission: "Manage Products" }), async (req, res) => {
+    console.log("Incoming request body:", req.body);
+  try {
+    const newProduct = new Product(req.body);
+    await newProduct.save();
+    res.status(201).json(newProduct);
+  } catch (err) {
+  console.error("Product create error:", err);
+  res.status(400).json({ error: err.message || "Failed to create product" });
+}
+
+});
+
+// Update a product (Admin Only)
+router.put("/:id", requireAuth({ permission: "Manage Products" }), async (req, res) => {
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedProduct) return res.status(404).json({ error: "Not found" });
+    res.json(updatedProduct);
+  } catch (err) {
+    res.status(400).json({ error: "Failed to update product" });
+  }
+});
+
+// Delete a product (Admin Only)
+router.delete("/:id", requireAuth({ permission: "Manage Products" }), async (req, res) => {
+  try {
+    const deleted = await Product.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "Not found" });
+    res.json({ message: "Product deleted" });
+  } catch (err) {
+    res.status(400).json({ error: "Failed to delete product" });
+  }
+});
+
+module.exports = router;
