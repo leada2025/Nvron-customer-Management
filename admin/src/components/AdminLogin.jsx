@@ -1,7 +1,7 @@
 // AdminLogin.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../api/Axios"
 
 export default function AdminLogin({ setToken }) {
   const [email, setEmail] = useState("");
@@ -14,13 +14,14 @@ export default function AdminLogin({ setToken }) {
     setError("");
 
     try {
-      const res = await axios.post("https://nvron-customer-managemanet.onrender.com/api/auth/admin/login", {
+      const res = await axios.post("/api/auth/admin/login", {
         email,
         password,
       });
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user)); 
+      
    
       setToken(res.data.token); // Update token in App state
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../api/Axios";
 
 const SignupForm = () => {
   const [form, setForm] = useState({
@@ -28,7 +28,7 @@ const SignupForm = () => {
     }
 
     try {
-      const res = await axios.post("https://nvron-customer-managemanet.onrender.com/api/auth/signup", {
+      const res = await axios.post("/api/auth/signup", {
         name: form.name,
         email: form.email,
         password: form.password,

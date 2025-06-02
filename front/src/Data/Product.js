@@ -1,7 +1,7 @@
 // data/products.js
 const products = [
   {
-    productName: "ACEVIRON - P",
+    productName: "ACEVIRON - cr",
     packing: "10×10S YELLOW PVC BLISTER",
     dosageForm: "TABLET",
     description: "Aceclofenac 100 mg + Paracetamol 325 mg",

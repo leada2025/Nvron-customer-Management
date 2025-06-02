@@ -1,14 +1,18 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+;
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+ const handleLogout = () => {
+  localStorage.removeItem("user");
+  localStorage.removeItem("token"); // ✅ Remove token
+  navigate("/login");
+};
+
 
   // Helper to check if the path matches
   const isActive = (path) => location.pathname === path;
@@ -39,13 +43,23 @@ const Navbar = () => {
         >
           Order Summary
         </Link>
-          <Link
-          to="/order/:id"
+      <NavLink
+  to="/orders"
+  className={() =>
+    location.pathname === "/orders" || location.pathname.startsWith("/order/")
+      ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1"
+      : "hover:text-blue-600"
+  }
+>
+  My Orders
+</NavLink>
+  <Link
+          to="/order-history"
           className={`hover:text-blue-600 ${
-            isActive("/order/:id") ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : ""
+            isActive("/order-history") ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" : ""
           }`}
         >
-          My Orders
+          Orders History
         </Link>
         <Link
           to="/request-services"

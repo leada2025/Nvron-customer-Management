@@ -9,6 +9,8 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ThankYouPage from './components/Thankyou';
 import OrderDetailsPage from './Pages/OrderDetailsPage';
+import OrdersRedirectPage from './Pages/OrdersRedirectPage';
+import OrderHistoryPage from './Pages/OrderHistoryPage';
 
 
 function AppWrapper() {
@@ -26,6 +28,9 @@ function AppWrapper() {
         <Route path="/request-services" element={<RequestServicePage />} />
         <Route path="/thank-you" element={<ThankYouPage />} />
         <Route path="/order/:id" element={<OrderDetailsPage />} />
+        <Route path="/orders" element={<OrdersRedirectPage />} />
+        <Route path="/order-history" element={<OrderHistoryPage />} />
+
    
 
       </Routes>

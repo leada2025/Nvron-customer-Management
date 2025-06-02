@@ -24,6 +24,7 @@ router.post("/", authenticate, authorizeRoles("customer"), async (req, res) => {
   }
 });
 
+
 // Get customer orders
 router.get("/customer", authenticate, authorizeRoles("customer"), async (req, res) => {
   try {
@@ -33,6 +34,35 @@ router.get("/customer", authenticate, authorizeRoles("customer"), async (req, re
     res.status(500).json({ message: err.message });
   }
 });
+
+router.get("/:id", authenticate, async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    // Find order by ID
+    const order = await Order.findById(orderId).populate("customerId", "name email");
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Optionally: check user is owner or has role (billing/sales) to view order
+    if (
+      req.user.role === "customer" &&
+      order.customerId._id.toString() !== req.user.userId
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+
+
 
 // Get all orders for billing/sales
 router.get("/", authenticate, authorizeRoles("billing", "sales"), async (req, res) => {

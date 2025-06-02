@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../api/Axios";
 
 export default function PricingPage() {
   const [products, setProducts] = useState([]);
@@ -18,7 +18,7 @@ export default function PricingPage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("https://nvron-customer-managemanet.onrender.com/api/products/unapproved", {
+      const res = await axios.get("/api/products/unapproved", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(res.data);
@@ -29,7 +29,7 @@ export default function PricingPage() {
 
   const fetchPricing = async () => {
     try {
-      const res = await axios.get("https://nvron-customer-managemanet.onrender.com/api/pricing", {
+      const res = await axios.get("/api/pricing", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPricingList(res.data);
@@ -52,7 +52,7 @@ export default function PricingPage() {
     const minRate = minRates[productId];
 
     await axios.post(
-      "https://nvron-customer-managemanet.onrender.com/api/pricing",
+      "/api/pricing",
       { customerId, productId, proposedRate, minRate },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -72,7 +72,7 @@ export default function PricingPage() {
       if (!approvedRate) return;
 
       await axios.patch(
-        `https://nvron-customer-managemanet.onrender.com/api/pricing/${pricingId}/approve`,
+        `/api/pricing/${pricingId}/approve`,
         { approvedRate },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -98,7 +98,7 @@ export default function PricingPage() {
   if (!confirmDelete) return;
 
   try {
-    await axios.delete(`https://nvron-customer-managemanet.onrender.com/api/pricing/${pricingId}`, {
+    await axios.delete(`/api/pricing/${pricingId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     fetchPricing();

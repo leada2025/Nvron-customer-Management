@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../api/Axios";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -14,7 +14,7 @@ const LoginForm = () => {
     setError("");
 
     try {
-      const res = await axios.post("https://nvron-customer-managemanet.onrender.com/api/auth/login", {
+      const res = await axios.post("/api/auth/login", {
         email,
         password,
       });
@@ -26,7 +26,7 @@ const LoginForm = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("name", name);
-
+   
       // Redirect based on role
       if (role === "admin") {
         navigate("/admin");
@@ -53,6 +53,7 @@ const LoginForm = () => {
         <label className="block mb-1 font-medium">Email</label>
         <input
           type="email"
+          name="email"
           required
           className="w-full border p-3 rounded-md"
           value={email}

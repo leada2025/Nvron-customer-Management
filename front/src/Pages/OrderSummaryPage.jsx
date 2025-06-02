@@ -1,54 +1,80 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "../api/Axios";
+import {jwtDecode} from "jwt-decode"; // Correct default import
 
 const OrderSummaryPage = () => {
   const [orderItems, setOrderItems] = useState([]);
   const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-useEffect(() => {
-  const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
+  useEffect(() => {
+    const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
+    const normalizedItems = items.map((item) => ({
+      ...item,
+      quantity: Number(item.quantity) || 1,
+      netRate: Number(item.netRate) || 0,
+      tax: Number(item.tax) || 0,
+      productId: item._id,        // Ensure this is passed for backend
+      productName: item.name,     // Ensure this is passed for backend
+    }));
+    setOrderItems(normalizedItems);
+  }, []);
 
-  const normalizedItems = items.map((item) => ({
-    ...item,
-    quantity: Number(item.quantity) || 1,
-    netRate: Number(item.netRate) || 0,
-    tax: Number(item.tax) || 0,
-  }));
+  const subtotal = orderItems.reduce((sum, item) => sum + item.netRate * item.quantity, 0);
 
-  console.log("Normalized order items:", normalizedItems); // Debug log
+  const totalTax = orderItems.reduce(
+    (sum, item) => sum + (item.netRate * item.quantity * item.tax) / 100,
+    0
+  );
 
-  setOrderItems(normalizedItems);
-}, []);
+  const shippingCharge = subtotal > 10000 ? 0 : 250;
+  const totalAmount = subtotal + totalTax + shippingCharge;
 
+  const handlePlaceOrder = async () => {
+    setError("");
+    setLoading(true);
 
-const subtotal = orderItems.reduce((sum, item) => {
-  const lineTotal = item.netRate * item.quantity;
-  return sum + lineTotal;
-}, 0);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("You must be logged in to place an order.");
+      setLoading(false);
+      return;
+    }
 
-const totalTax = orderItems.reduce((sum, item) => {
-  const taxAmount = (item.netRate * item.quantity * item.tax) / 100;
-  return sum + taxAmount;
-}, 0);
-
-  const shipping = subtotal > 10000 ? 0 : 250;
-  const grandTotal = subtotal + totalTax + shipping;
-
-  const handlePlaceOrder = () => {
-    const order = {
-      items: orderItems,
+    const orderPayload = {
+      items: orderItems.map(({ productId, productName, quantity, netRate, tax }) => ({
+        productId,
+        productName,
+        quantity,
+        netRate,
+        tax,
+      })),
       note,
+      shippingCharge,
       subtotal,
-      tax: totalTax,
-      shipping,
-      total: grandTotal,
+      taxAmount: totalTax,
+      totalAmount,
     };
 
-    console.log("Order placed:", order);
-    
-    alert("Order placed successfully!");
-    navigate("/thank-you");
+    try {
+      await axios.post("/api/orders", orderPayload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      alert("Order placed successfully!");
+      localStorage.removeItem("orderItems");
+      navigate("/thank-you");
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to place order.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (orderItems.length === 0) {
@@ -69,6 +95,10 @@ const totalTax = orderItems.reduce((sum, item) => {
     <div className="min-h-screen bg-gray-50 p-6">
       <h1 className="text-2xl font-bold mb-4">Order Summary</h1>
 
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
+      )}
+
       <div className="space-y-4 mb-6">
         {orderItems.map((item, index) => (
           <div
@@ -76,14 +106,14 @@ const totalTax = orderItems.reduce((sum, item) => {
             className="bg-white shadow rounded-lg p-4 flex justify-between items-center"
           >
             <div>
-              <h2 className="font-semibold">{item.productName}</h2>
+              <h2 className="font-semibold">{item.name}</h2>
               <p className="text-sm text-gray-600">{item.description}</p>
               <p className="mt-2 text-gray-700">
                 Quantity: <strong>{item.quantity}</strong>
               </p>
             </div>
             <div className="text-right">
-              <p>₹{(item.netRate * (item.quantity || 1)).toFixed(2)}</p>
+              <p>₹{(item.netRate * item.quantity).toFixed(2)}</p>
               <p className="text-xs text-gray-500">{item.tax}% Tax</p>
             </div>
           </div>
@@ -100,17 +130,20 @@ const totalTax = orderItems.reduce((sum, item) => {
       <div className="text-right text-lg font-medium space-y-1">
         <p>Subtotal: ₹{subtotal.toFixed(2)}</p>
         <p>Tax: ₹{totalTax.toFixed(2)}</p>
-        <p>Shipping: ₹{shipping}</p>
+        <p>Shipping: ₹{shippingCharge}</p>
         <hr className="my-2" />
-        <p className="text-xl">Total: ₹{grandTotal.toFixed(2)}</p>
+        <p className="text-xl">Total: ₹{totalAmount.toFixed(2)}</p>
       </div>
 
       <div className="mt-6 text-right">
         <button
+          disabled={loading}
           onClick={handlePlaceOrder}
-          className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700"
+          className={`bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 ${
+            loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
-          Place Order
+          {loading ? "Placing Order..." : "Place Order"}
         </button>
       </div>
     </div>

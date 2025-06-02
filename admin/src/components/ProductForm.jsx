@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../api/Axios";
 
 export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) {
   const [form, setForm] = useState({
@@ -71,7 +71,7 @@ const handleSubmit = async (e) => {
  try {
   if (initialData && initialData._id) {
     await axios.put(
-      `https://nvron-customer-managemanet.onrender.com/api/products/${initialData._id}`,
+      `/api/products/${initialData._id}`,
       cleanedForm,
       {
         headers: {
@@ -82,7 +82,7 @@ const handleSubmit = async (e) => {
     );
     setSuccessMsg("Product updated successfully!");
   } else {
-    await axios.post("https://nvron-customer-managemanet.onrender.com/api/products", cleanedForm, {
+    await axios.post("/api/products", cleanedForm, {
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"

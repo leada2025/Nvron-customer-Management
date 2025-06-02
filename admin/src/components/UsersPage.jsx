@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
+import axios from "../api/Axios";
 import UserModal from "./UserModel";
-
-
 
 const UserPage = () => {
   const [users, setUsers] = useState([]);
@@ -12,8 +11,8 @@ const UserPage = () => {
     "Approve Pricing",
     "Download Orders",
     "Manage Users",
-     "View Products",
-  "Manage Products"
+    "View Products",
+    "Manage Products"
   ]);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -26,12 +25,11 @@ const UserPage = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("https://nvron-customer-managemanet.onrender.com/admin/users", {
+      const { data } = await axios.get("/admin/users", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      const data = await res.json();
       setUsers(data);
     } catch (err) {
       console.error(err);
@@ -41,12 +39,11 @@ const UserPage = () => {
 
   const fetchRoles = async () => {
     try {
-      const res = await fetch("https://nvron-customer-managemanet.onrender.com/admin/roles", {
+      const { data } = await axios.get("/admin/roles", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      const data = await res.json();
       setAllRoles(data);
     } catch (err) {
       console.error(err);
@@ -56,19 +53,24 @@ const UserPage = () => {
 
   const handleSaveUser = async (userData) => {
     try {
-      const res = await fetch(
-        `https://nvron-customer-managemanet.onrender.com/admin/users${editingUser ? `/${editingUser._id}` : ""}`,
-        {
-          method: editingUser ? "PUT" : "POST",
+      if (editingUser) {
+        await axios.put(
+          `/admin/users/${editingUser._id}`,
+          userData,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+      } else {
+        await axios.post("/admin/users", userData, {
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify(userData),
-        }
-      );
+        });
+      }
 
-      if (!res.ok) throw new Error("Failed to save user");
       await fetchUsers();
       setModalOpen(false);
       setEditingUser(null);
@@ -82,14 +84,11 @@ const UserPage = () => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
     try {
-      const res = await fetch(`https://nvron-customer-managemanet.onrender.com/admin/users/${id}`, {
-        method: "DELETE",
+      await axios.delete(`/admin/users/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-
-      if (!res.ok) throw new Error("Delete failed");
       await fetchUsers();
     } catch (err) {
       console.error(err);
@@ -98,7 +97,6 @@ const UserPage = () => {
   };
 
   return (
-   
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">User Management</h2>
@@ -173,7 +171,6 @@ const UserPage = () => {
         />
       )}
     </div>
-   
   );
 };
 

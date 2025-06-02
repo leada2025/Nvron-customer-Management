@@ -40,23 +40,36 @@ router.post("/signup", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+
+    // Populate the role field to get the name
+    const user = await User.findOne({ email }).populate("role");
+
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      {
+        userId: user._id,
+        role: user.role.name.toLowerCase(), // use role name
+        permissions: user.permissions || [], // optional: pass permissions for admin
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    res.json({ token, role: user.role, name: user.name });
+    res.json({
+      token,
+      role: user.role.name.toLowerCase(),
+      name: user.name,
+      permissions: user.permissions || [],
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 router.post("/admin/login", async (req, res) => {
   try {

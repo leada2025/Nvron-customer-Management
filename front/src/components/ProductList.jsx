@@ -4,53 +4,53 @@ import { useNavigate } from "react-router-dom";
 const ProductList = ({ products }) => {
   const [orderItems, setOrderItems] = useState([]);
   const [quantities, setQuantities] = useState({});
-  const [addedProductNames, setAddedProductNames] = useState(new Set());
+  const [addedProductKeys, setAddedProductKeys] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // On mount, load order items from localStorage
+  
+
+  const getProductKey = (product) =>
+    `${product.name}_${product.dosageForm}_${product.packing}_${product.description}`;
+
   useEffect(() => {
     const savedItems = JSON.parse(localStorage.getItem("orderItems") || "[]");
     setOrderItems(savedItems);
 
-    // Set of productNames already added to order
-    const names = new Set(savedItems.map((item) => item.productName));
-    setAddedProductNames(names);
+    const keys = new Set(savedItems.map((item) => getProductKey(item)));
+    setAddedProductKeys(keys);
 
-    // Map productName -> quantity for quantity inputs
     const qtyMap = {};
     savedItems.forEach((item) => {
-      qtyMap[item.productName] = Number(item.quantity) || 1;
+      qtyMap[getProductKey(item)] = Number(item.quantity) || 1;
     });
     setQuantities(qtyMap);
   }, []);
 
-  // Change quantity for a product (min 1)
-  const handleQuantityChange = (productName, delta) => {
+  const handleQuantityChange = (key, delta) => {
     setQuantities((prev) => {
-      const newQty = Math.max(1, (prev[productName] || 1) + delta);
-      return { ...prev, [productName]: newQty };
+      const newQty = Math.max(1, (prev[key] || 1) + delta);
+      return { ...prev, [key]: newQty };
     });
   };
 
-  // Add or Remove product from order
   const handleToggleAdd = (product) => {
-    const isAlreadyAdded = addedProductNames.has(product.productName);
+    const key = getProductKey(product);
+    const isAlreadyAdded = addedProductKeys.has(key);
 
     if (isAlreadyAdded) {
-      // Remove product from order
       const updatedOrder = orderItems.filter(
-        (p) => p.productName !== product.productName
+        (p) => getProductKey(p) !== key
       );
-      const newAddedNames = new Set(updatedOrder.map((item) => item.productName));
+      const newKeys = new Set(updatedOrder.map((item) => getProductKey(item)));
 
       setOrderItems(updatedOrder);
-      setAddedProductNames(newAddedNames);
+      setAddedProductKeys(newKeys);
       localStorage.setItem("orderItems", JSON.stringify(updatedOrder));
     } else {
-      // Add product to order with normalized quantity, netRate, tax
-      const quantity = Number(quantities[product.productName]) || 1;
+      const quantity = Number(quantities[key]) || 1;
       const updatedItem = {
         ...product,
         quantity,
@@ -58,29 +58,40 @@ const ProductList = ({ products }) => {
         tax: Number(product.tax) || 0,
       };
 
-      // Remove existing entry with same productName (if any) then add new
       const updatedOrder = [
-        ...orderItems.filter((p) => p.productName !== product.productName),
+        ...orderItems.filter((p) => getProductKey(p) !== key),
         updatedItem,
       ];
-      const newAddedNames = new Set(updatedOrder.map((item) => item.productName));
+      const newKeys = new Set(updatedOrder.map((item) => getProductKey(item)));
 
       setOrderItems(updatedOrder);
-      setAddedProductNames(newAddedNames);
+      setAddedProductKeys(newKeys);
       localStorage.setItem("orderItems", JSON.stringify(updatedOrder));
     }
   };
+const filteredProducts = products.filter((product) =>
+  product.name.toLowerCase().includes(searchQuery.toLowerCase())
+);
+  const paginatedProducts = filteredProducts.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
+ const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
-  // Paginate products
-  const paginatedProducts = products.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const totalPages = Math.ceil(products.length / itemsPerPage);
+  
 
   return (
     <div className="p-6 bg-white rounded-xl shadow">
+      <div className="mb-4 flex justify-between items-center">
+  <input
+    type="text"
+    placeholder="Search by product name..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="border px-4 py-2 rounded w-full max-w-sm"
+  />
+</div>
+
       <h1 className="text-2xl font-bold mb-4">Product List</h1>
       <table className="w-full border">
         <thead className="bg-gray-100 text-left">
@@ -97,15 +108,18 @@ const ProductList = ({ products }) => {
         </thead>
         <tbody>
           {paginatedProducts.map((product, index) => {
-            const isAdded = addedProductNames.has(product.productName);
-            const qty = quantities[product.productName] || 1;
+            const key = getProductKey(product);
+            const isAdded = addedProductKeys.has(key);
+            const qty = quantities[key] || 1;
 
             return (
               <tr
-                key={index}
-                className={`hover:bg-gray-50 ${isAdded ? "bg-green-50" : ""} border-t`}
+                key={key}
+                className={`hover:bg-gray-50 ${
+                  isAdded ? "bg-green-50" : ""
+                } border-t`}
               >
-                <td className="px-4 py-2 font-semibold">{product.productName}</td>
+                <td className="px-4 py-2 font-semibold">{product.name}</td>
                 <td className="px-4 py-2 text-gray-600">{product.description}</td>
                 <td className="px-4 py-2">{product.dosageForm}</td>
                 <td className="px-4 py-2">{product.packing}</td>
@@ -114,35 +128,34 @@ const ProductList = ({ products }) => {
                 <td className="px-4 py-2">{product.tax}%</td>
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-2">
-                    {/* Quantity Control */}
+                    {/* Quantity Controls */}
                     <div className="flex items-center gap-1">
-  <button
-    onClick={() => handleQuantityChange(product.productName, -1)}
-    className="px-2 py-1 bg-gray-200 rounded"
-    disabled={isAdded}
-  >
-    −
-  </button>
-  <input
-    type="number"
-    min="1"
-    value={qty}
-    disabled={isAdded}
-    onChange={(e) => {
-      const value = Math.max(1, parseInt(e.target.value) || 1);
-      setQuantities((prev) => ({ ...prev, [product.productName]: value }));
-    }}
-    className="w-16 text-center border rounded px-1 py-0.5"
-  />
-  <button
-    onClick={() => handleQuantityChange(product.productName, 1)}
-    className="px-2 py-1 bg-gray-200 rounded"
-    disabled={isAdded}
-  >
-    +
-  </button>
-</div>
-
+                      <button
+                        onClick={() => handleQuantityChange(key, -1)}
+                        className="px-2 py-1 bg-gray-200 rounded"
+                        disabled={isAdded}
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        value={qty}
+                        disabled={isAdded}
+                        onChange={(e) => {
+                          const value = Math.max(1, parseInt(e.target.value) || 1);
+                          setQuantities((prev) => ({ ...prev, [key]: value }));
+                        }}
+                        className="w-16 text-center border rounded px-1 py-0.5"
+                      />
+                      <button
+                        onClick={() => handleQuantityChange(key, 1)}
+                        className="px-2 py-1 bg-gray-200 rounded"
+                        disabled={isAdded}
+                      >
+                        +
+                      </button>
+                    </div>
 
                     {/* Add/Remove Button */}
                     <button
@@ -184,7 +197,7 @@ const ProductList = ({ products }) => {
         </button>
       </div>
 
-      {/* Go to Order Summary */}
+      {/* Review Order Button */}
       <div className="mt-6 text-right">
         <button
           onClick={() => navigate("/order-summary")}
