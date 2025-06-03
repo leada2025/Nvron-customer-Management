@@ -1,76 +1,190 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "../api/Axios";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
-const sampleOrders = [
-  {
-    id: "ORD001",
-    customer: "Acme Corp",
-    date: "2025-05-25",
-    totalValue: 12500,
-    shippingCharged: false,
-    status: "Pending",
-    products: [
-      { name: "ACEVIRON - P", qty: 10, price: 10.98 },
-      { name: "AMLORON - 5 MG", qty: 5, price: 7.55 },
-    ],
-    notes: "Urgent delivery",
-  },
-  {
-    id: "ORD002",
-    customer: "Beta Ltd",
-    date: "2025-05-24",
-    totalValue: 9500,
-    shippingCharged: true,
-    status: "Processed",
-    products: [
-      { name: "BISORON - 2.5 MG", qty: 15, price: 9.00 },
-    ],
-    notes: "",
-  },
-  // Add more sample orders here...
-];
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(sampleOrders);
+  const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [downloadMenuOpenOrderId, setDownloadMenuOpenOrderId] = useState(null);
+
 
   const ORDERS_PER_PAGE = 5;
 
-  // Filter orders based on search and status
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "All" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+ const fetchOrders = async () => {
+  try {
+    setLoading(true);
+    const res = await axios.get("/api/orders", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    console.log("Raw orders response:", res.data); // should be an array
+    setOrders(Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error("Failed to fetch orders:", err);
+    setOrders([]); // fallback to empty array on error
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+
+
+  const markProcessed = async (orderId) => {
+    try {
+      await axios.patch(
+        `/api/orders/${orderId}/status`,
+        { status: "processed" },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setOrders((prev) =>
+        prev.map((order) =>
+          order._id === orderId ? { ...order, status: "Processed" } : order
+        )
+      );
+    } catch (err) {
+      console.error("Error updating status:", err);
+    }
+  };
+
+const downloadOrder = (order) => {
+  const header = [
+    "Date",
+    "Customer Name",
+    "Product Name",
+    "Quantity",
+    "Rate",
+    "Tax (%)",
+    "description",
+    "shippingCharge",
+    "Item Total",
+    "Order Total"
+  ];
+
+  const rows = order.items.map((item, index) => {
+    const itemTotal = item.quantity * item.netRate * (1 + item.tax / 100);
+    const isLast = index === order.items.length - 1;
+    return [
+      new Date(order.createdAt).toLocaleDateString(),
+      order.customerId?.name || "Unknown",
+      item.productName,
+      item.quantity,
+      item.netRate.toFixed(2),
+      item.tax + "%",
+      item.description,
+      order.shippingCharge,
+      itemTotal.toFixed(2),
+      isLast ? order.totalAmount.toFixed(2) : ""
+    ];
   });
+
+  const csvContent = [header, ...rows]
+    .map((row) => row.join(","))
+    .join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `order-${order._id}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+const downloadPDF = (order) => {
+  const doc = new jsPDF();
+
+  doc.setFontSize(14);
+  doc.text("Order Details", 14, 20);
+
+  const rows = order.items.map((item) => [
+    new Date(order.createdAt).toLocaleDateString(),
+    order.customerId?.name || "Unknown",
+    item.productName || "",
+    (item.quantity || 0).toString(),
+    (item.netRate || 0).toFixed(2),
+    `${item.tax || 0}%`,
+    item.description || "",
+    (order.shippingCharge || 0).toFixed(2),
+    ((item.quantity || 0) * (item.netRate || 0) * (1 + (item.tax || 0) / 100)).toFixed(2),
+  ]);
+
+  const headers = [
+    [
+      "Date",
+      "Customer Name",
+      "Product Name",
+      "Qty",
+      "Rate",
+      "Tax (%)",
+      "Description",
+      "Shipping",
+      "Item Total",
+    ],
+  ];
+
+autoTable(doc, {
+  head: headers,
+  body: rows,
+  startY: 30,
+});
+
+
+  doc.text(
+    `Order Total: ₹${(order.totalAmount || 0).toFixed(2)}`,
+    14,
+    doc.lastAutoTable.finalY + 10
+  );
+
+  console.log("Saving PDF...");
+  doc.save(`order-${order._id}.pdf`);
+};
+
+useEffect(() => {
+  const handleClickOutside = () => setDownloadMenuOpenOrderId(null);
+  document.addEventListener("click", handleClickOutside);
+  return () => document.removeEventListener("click", handleClickOutside);
+}, []);
+
+
+
+
+const filteredOrders = Array.isArray(orders)
+  ? orders.filter((order) => {
+      const matchSearch =
+        order.customerId?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order._id.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchStatus =
+        statusFilter === "All" || order.status === statusFilter.toLowerCase();
+      return matchSearch && matchStatus;
+    })
+  : [];
 
   const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE);
 
-  // Paginate orders
   const paginatedOrders = filteredOrders.slice(
     (currentPage - 1) * ORDERS_PER_PAGE,
     currentPage * ORDERS_PER_PAGE
   );
-
-  const toggleExpand = (orderId) => {
-    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
-  };
-
-  const markProcessed = (orderId) => {
-    setOrders((prev) =>
-      prev.map((order) =>
-        order.id === orderId ? { ...order, status: "Processed" } : order
-      )
-    );
-  };
-
-  const downloadOrder = (order) => {
-    // For now, just alert the order ID
-    alert(`Download order ${order.id} in Zoho format`);
-  };
 
   return (
     <div className="p-6 bg-white rounded shadow">
@@ -98,8 +212,9 @@ export default function OrdersPage() {
           className="border border-gray-300 rounded px-3 py-2 w-full sm:w-48"
         >
           <option value="All">All Statuses</option>
-          <option value="Pending">Pending</option>
+          <option value="pending">Pending</option>
           <option value="Processed">Processed</option>
+           <option value="Cancelled">Cancelled</option>
         </select>
       </div>
 
@@ -112,91 +227,146 @@ export default function OrdersPage() {
               <th className="p-3 border-b text-left">Customer</th>
               <th className="p-3 border-b text-left">Date</th>
               <th className="p-3 border-b text-right">Total (₹)</th>
-              <th className="p-3 border-b text-center">Shipping Charged</th>
+              <th className="p-3 border-b text-center">Shipping</th>
               <th className="p-3 border-b text-center">Status</th>
               <th className="p-3 border-b text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {paginatedOrders.length === 0 && (
+            {loading ? (
+              <tr>
+                <td colSpan="7" className="p-4 text-center">
+                  Loading orders...
+                </td>
+              </tr>
+            ) : paginatedOrders.length === 0 ? (
               <tr>
                 <td colSpan="7" className="p-4 text-center text-gray-500">
                   No orders found.
                 </td>
               </tr>
-            )}
-
-            {paginatedOrders.map((order) => (
-              <React.Fragment key={order.id}>
-                <tr
-                  className="cursor-pointer hover:bg-gray-50"
-                  onClick={() => toggleExpand(order.id)}
-                >
-                  <td className="p-3 border-b">{order.id}</td>
-                  <td className="p-3 border-b">{order.customer}</td>
-                  <td className="p-3 border-b">{order.date}</td>
-                  <td className="p-3 border-b text-right">{order.totalValue.toFixed(2)}</td>
-                  <td className="p-3 border-b text-center">
-                    {order.shippingCharged ? "Yes" : "No"}
-                  </td>
-                  <td className="p-3 border-b text-center">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-semibold ${
-                        order.status === "Processed"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="p-3 border-b text-center space-x-2">
-                    {order.status === "Pending" && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          markProcessed(order.id);
-                        }}
-                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            ) : (
+              paginatedOrders.map((order) => (
+                <React.Fragment key={order._id}>
+                  <tr
+                    className=" hover:bg-gray-50"
+                    
+                  >
+                    <td className="p-3 border-b">{order._id}</td>
+                    <td className="p-3 border-b">
+                      {order.customerId?.name || "Unknown"}
+                    </td>
+                    <td className="p-3 border-b">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td className="p-3 border-b text-right">
+                      {order.totalAmount.toFixed(2)}
+                    </td>
+                    <td className="p-3 border-b text-center">
+                      {order.shippingCharge > 0 ? "Yes" : "No"}
+                    </td>
+                    <td className="p-3 border-b text-center">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          order.status === "Processed"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
                       >
-                        Mark Processed
-                      </button>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        downloadOrder(order);
-                      }}
-                      className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
-                    >
-                      Download
-                    </button>
-                  </td>
-                </tr>
-
-                {/* Expanded detail row */}
-                {expandedOrderId === order.id && (
-                  <tr className="bg-gray-50">
-                    <td colSpan="7" className="p-4 text-sm text-gray-700">
-                      <strong>Products Ordered:</strong>
-                      <ul className="list-disc list-inside mt-1 mb-2">
-                        {order.products.map((p, i) => (
-                          <li key={i}>
-                            {p.name} — Qty: {p.qty}, ₹{p.price.toFixed(2)} each
-                          </li>
-                        ))}
-                      </ul>
-                      {order.notes && (
-                        <>
-                          <strong>Notes:</strong>
-                          <p className="ml-2">{order.notes}</p>
-                        </>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="p-3 border-b text-center space-x-2">
+                      {order.status === "pending" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markProcessed(order._id);
+                          }}
+                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                          Mark Processed
+                        </button>
                       )}
+               <div className="relative inline-block text-left">
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setDownloadMenuOpenOrderId(
+        downloadMenuOpenOrderId === order._id ? null : order._id
+      );
+    }}
+    className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
+  >
+    Download ▼
+  </button>
+
+  {downloadMenuOpenOrderId === order._id && (
+    <div
+      className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-20"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={() => {
+          downloadOrder(order);
+          setDownloadMenuOpenOrderId(null);
+        }}
+        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+      >
+        Download CSV
+      </button>
+      <button
+        onClick={() => {
+          downloadPDF(order);
+          setDownloadMenuOpenOrderId(null);
+        }}
+        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+      >
+        Download PDF
+      </button>
+    </div>
+  )}
+</div>
+
                     </td>
                   </tr>
-                )}
-              </React.Fragment>
-            ))}
+
+                  {/* Expanded row */}
+                  {expandedOrderId === order._id && (
+                    <tr className="bg-gray-50">
+                      <td colSpan="7" className="p-4 text-sm text-gray-700">
+                        <strong>Products Ordered:</strong>
+                        <ul className="list-disc list-inside mt-1 mb-2">
+                          {order.items.map((item, idx) => (
+                            <li key={idx}>
+                              {item.productName} — Qty: {item.quantity}, ₹
+                              {item.unitPrice.toFixed(2)} each
+                            </li>
+                          ))}
+                        </ul>
+                        {order.note && (
+                          <>
+                            <strong>Note:</strong>
+                            <p className="ml-2">{order.note}</p>
+                          </>
+                        )}
+                        {order.feedback && (
+                          <p className="text-red-600">
+                            Cancellation Feedback: {order.feedback}
+                          </p>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                       {order.status.toLowerCase() === "cancelled" && order.feedback && (
+  <tr>
+    <td colSpan="7" className="px-4 py-2 bg-red-50 text-red-600 text-sm border-b">
+      <strong>Feedback:</strong> {order.feedback}
+    </td>
+  </tr>
+)}
+
+                </React.Fragment>
+              ))
+            )}
           </tbody>
         </table>
       </div>

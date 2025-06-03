@@ -6,6 +6,7 @@ const orderItemSchema = new mongoose.Schema({
   quantity: Number,
   netRate: Number,
   tax: Number,
+  description: String,
 });
 
 const orderSchema = new mongoose.Schema({
@@ -14,7 +15,7 @@ const orderSchema = new mongoose.Schema({
   note: String,
   status: {
     type: String,
-    enum: ["pending", "delivered", "cancelled"],
+    enum: ["pending", "delivered", "cancelled","processed"],
     default: "pending",
   },
   feedback: String,

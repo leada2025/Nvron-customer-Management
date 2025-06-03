@@ -28,4 +28,29 @@ router.get("/", authenticate, authorizeRoles("sales"), async (req, res) => {
   }
 });
 
+// Update status of a service request
+router.patch("/:id", authenticate, authorizeRoles("sales"), async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ["pending", "reviewed", "resolved"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const updated = await ServiceRequest.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ message: "Service request not found" });
+    }
+
+    res.json({ message: "Status updated", updated });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
 module.exports = router;

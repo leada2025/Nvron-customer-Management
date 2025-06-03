@@ -1,18 +1,37 @@
-// pages/RequestServicePage.jsx
-
 import React, { useState } from "react";
+import axios from "../api/Axios";
 
 const RequestServicePage = () => {
   const [requestText, setRequestText] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!requestText.trim()) return;
 
-    // For now, just log or alert; in Phase 2 you'd send to backend
-    console.log("Service request submitted:", requestText);
-    alert("Your request has been forwarded to the sales team!");
-    setRequestText("");
+    try {
+      setLoading(true);
+      await axios.post(
+        "/api/requests",
+        {
+          title: "New Request", // Optional: make it customizable
+          description: requestText,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      alert("Your request has been forwarded to the sales team!");
+      setRequestText("");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,8 +48,9 @@ const RequestServicePage = () => {
         <button
           type="submit"
           className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700"
+          disabled={loading}
         >
-          Submit Request
+          {loading ? "Submitting..." : "Submit Request"}
         </button>
       </form>
     </div>

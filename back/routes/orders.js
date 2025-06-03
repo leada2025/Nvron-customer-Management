@@ -1,6 +1,7 @@
 const express = require("express");
 const Order = require("../models/Order");
 const { authenticate, authorizeRoles } = require("../middleware/auth");
+const requireAuth = require("../middleware/requireAuth");
 
 const router = express.Router();
 
@@ -65,7 +66,7 @@ router.get("/:id", authenticate, async (req, res) => {
 
 
 // Get all orders for billing/sales
-router.get("/", authenticate, authorizeRoles("billing", "sales"), async (req, res) => {
+router.get("/", requireAuth({ permission: "Manage Orders"}), async (req, res) => {
   try {
     const orders = await Order.find().populate("customerId", "name email").sort({ createdAt: -1 });
     res.json(orders);
@@ -75,7 +76,7 @@ router.get("/", authenticate, authorizeRoles("billing", "sales"), async (req, re
 });
 
 // Update order status
-router.patch("/:id/status", authenticate, authorizeRoles("billing"), async (req, res) => {
+router.patch("/:id/status", requireAuth({ permissions: "Manage Orders" }),  async (req, res) => {
   try {
     const { status } = req.body;
     const order = await Order.findById(req.params.id);

@@ -6,10 +6,10 @@ const UserPage = () => {
   const [users, setUsers] = useState([]);
   const [allRoles, setAllRoles] = useState([]);
   const [allPermissions, setAllPermissions] = useState([
-    "View Orders",
+   
     "Manage Pricing",
     "Approve Pricing",
-    "Download Orders",
+    "Manage Orders",
     "Manage Users",
     "View Products",
     "Manage Products"
@@ -33,7 +33,7 @@ const UserPage = () => {
       setUsers(data);
     } catch (err) {
       console.error(err);
-      alert("Failed to load users");
+      
     }
   };
 
@@ -47,7 +47,7 @@ const UserPage = () => {
       setAllRoles(data);
     } catch (err) {
       console.error(err);
-      alert("Failed to load roles");
+     
     }
   };
 

@@ -17,8 +17,10 @@ const OrderSummaryPage = () => {
       quantity: Number(item.quantity) || 1,
       netRate: Number(item.netRate) || 0,
       tax: Number(item.tax) || 0,
-      productId: item._id,        // Ensure this is passed for backend
-      productName: item.name,     // Ensure this is passed for backend
+      productId: item._id,       
+      productName: item.name, 
+      description: item.description, 
+         
     }));
     setOrderItems(normalizedItems);
   }, []);
@@ -45,12 +47,13 @@ const OrderSummaryPage = () => {
     }
 
     const orderPayload = {
-      items: orderItems.map(({ productId, productName, quantity, netRate, tax }) => ({
+      items: orderItems.map(({ productId, productName, quantity, netRate, tax, description, }) => ({
         productId,
         productName,
         quantity,
         netRate,
         tax,
+        description
       })),
       note,
       shippingCharge,

@@ -13,7 +13,8 @@ import Unauthorized from "./components/Unauthorized";
 import { AuthProvider } from "./Context/AuthContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import RequirePermission from "./components/Toast";
+import RequirePermission from "./components/RequirePermission";
+import AdminServiceRequestsPage from "./pages/AdminServiceRequestsPage";
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -66,11 +67,16 @@ export default function App() {
 </RequirePermission>
          }/>
 
-          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders" element={
+<RequirePermission permission={["Manage Orders"]}>
+  <OrdersPage />
+</RequirePermission>
+         }/>
           <Route path="settings" element={<SettingsPage />} />
-         
+         <Route path="requests" element={<AdminServiceRequestsPage />} />
         </Route>
          <Route path="/unauthorized" element={<Unauthorized />} />
+         
       </Routes>
     </Router>
     

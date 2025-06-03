@@ -9,6 +9,7 @@ const sidebarLinks = [
   { name: "Products", icon: "📦" },
   { name: "Pricing", icon: "💲" },
   { name: "Orders", icon: "📝" },
+  {name:"Requests", icon:"📨"},
   { name: "Settings", icon: "⚙️" },
 ];
 
