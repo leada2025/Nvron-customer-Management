@@ -98,7 +98,7 @@ router.post("/admin/login", async (req, res) => {
         permissions: combinedPermissions,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+     { expiresIn: "5h" }
     );
 
     res.json({

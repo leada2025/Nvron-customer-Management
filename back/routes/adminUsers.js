@@ -1,6 +1,9 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const Product = require("../models/Product");
+const Order = require("../models/Order");
+const Pricing = require("../models/Pricing");
 const Role = require("../models/Role");
 const adminAuth = require("../middleware/adminAuth"); // Middleware to verify admin
 const mongoose = require("mongoose");
@@ -19,6 +22,22 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/dashboard-stats", async (req, res) => {
+  try {
+    const users = await User.countDocuments();
+    const products = await Product.countDocuments();
+    const pendingOrders = await Order.countDocuments({ status: "pending" });
+  // Count how many distinct products have approved pricing
+const approvedPricing = await Pricing.distinct("productId", { status: "approved" });
+
+
+    res.json({ users, products, pendingOrders, approvedPricing: approvedPricing.length, });
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+    res.status(500).json({ message: "Failed to fetch dashboard stats" });
   }
 });
 
