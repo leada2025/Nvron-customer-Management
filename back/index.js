@@ -17,7 +17,7 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-  origin: ['http://localhost:5174', 'http://localhost:5173','https://nvron-customer-managemanet-front.onrender.com','https://nvron-customer-managemanet-1.onrender.com'],
+  origin: ['http://localhost:5174', 'http://localhost:5173','https://nvron-customer-management-front.onrender.com','https://nvron-customer-management-admin.onrender.com'],
   credentials: true
 }));
 app.use(express.json());
