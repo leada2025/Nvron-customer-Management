@@ -12,18 +12,40 @@ const requireAuth = require("../middleware/requireAuth");
 const router = express.Router();
 
 
-// Get all users (admin only)
+// Update this route
 router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) => {
   try {
-    const users = await User.find()
-      .populate("role", "name permissions") // Only fetch name and permissions
-      .select("-passwordHash"); // Exclude the hashed password from the response
+    const { excludeRole, onlyRole } = req.query;
 
-    res.json(users);
+    const users = await User.find()
+      .populate("role", "name permissions")
+      .select("-passwordHash");
+
+    let filteredUsers = users;
+
+    if (excludeRole) {
+      filteredUsers = users.filter(
+        (u) =>
+          (typeof u.role === "string" && u.role.toLowerCase() !== excludeRole.toLowerCase()) ||
+          (typeof u.role === "object" && u.role?.name?.toLowerCase() !== excludeRole.toLowerCase())
+      );
+    }
+
+    if (onlyRole) {
+      filteredUsers = users.filter(
+        (u) =>
+          (typeof u.role === "string" && u.role.toLowerCase() === onlyRole.toLowerCase()) ||
+          (typeof u.role === "object" && u.role?.name?.toLowerCase() === onlyRole.toLowerCase())
+      );
+    }
+
+    res.json(filteredUsers);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
+
 
 router.get("/dashboard-stats", async (req, res) => {
   try {
@@ -123,7 +145,29 @@ router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res)
     res.status(500).json({ message: err.message });
   }
 });
-// Delete user (admin only)
+
+
+
+// PATCH /admin/users/toggle-status/:id
+router.patch("/toggle-status/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    res.json({
+      message: `User ${user.isActive ? "enabled" : "disabled"} successfully.`,
+      isActive: user.isActive,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error toggling status" });
+  }
+});
+
+
 router.delete("/:id", adminAuth, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);

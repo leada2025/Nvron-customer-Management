@@ -45,6 +45,11 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({ email }).populate("role");
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    // In login controller
+if (!user.isActive) {
+  return res.status(403).json({ message: "Your account has been disabled. Contact support." });
+}
+
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });

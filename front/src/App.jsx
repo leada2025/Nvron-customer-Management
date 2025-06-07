@@ -5,39 +5,61 @@ import OrderSummaryPage from "./Pages/OrderSummaryPage";
 import LoginPage from './Pages/LoginPage';
 import SignupPage from './Pages/SignupPage';
 import RequestServicePage from './Pages/RequestServicePage';
-import Navbar from './components/Navbar';
+
 import Footer from './components/Footer';
 import ThankYouPage from './components/Thankyou';
 import OrderDetailsPage from './Pages/OrderDetailsPage';
 import OrdersRedirectPage from './Pages/OrdersRedirectPage';
 import OrderHistoryPage from './Pages/OrderHistoryPage';
+import ProtectedRoute from './components/ProtectedRoute';
+
+
+import Sidebar from './components/Sidebar'; // updated
+import WelcomePage from './Pages/WelcomePage';
+import OrdersPage from './Pages/Orders';
+import Dashboard from './Pages/Dashboard';
+import Navbar from './Pages/Navbar';
+import ProfileSettings from './Pages/ProfileSetting';
 
 
 function AppWrapper() {
   const location = useLocation();
-  const hideNavbar = location.pathname === "/login" || location.pathname === "/";
+  const hideSidebar = ["/", "/login", "/welcome"].includes(location.pathname);
+
 
   return (
     <>
-      {!hideNavbar && <Navbar />}
-      <Routes>
-        <Route path="/" element={<SignupPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/products" element={<ProductPage />} />
-        <Route path="/order-summary" element={<OrderSummaryPage />} />
-        <Route path="/request-services" element={<RequestServicePage />} />
-        <Route path="/thank-you" element={<ThankYouPage />} />
-        <Route path="/order/:id" element={<OrderDetailsPage />} />
-        <Route path="/orders" element={<OrdersRedirectPage />} />
-        <Route path="/order-history" element={<OrderHistoryPage />} />
-
    
+    
+      {!hideSidebar && <Sidebar />}
+     <div className={`${!hideSidebar ? "md:ml-61" : ""} min-h-screen `}>
+       {!hideSidebar && <Navbar />}
+        <Routes>
+          <Route path="/" element={<SignupPage />} />
+           <Route path="/dashboard" element={<Dashboard />} />
+            
 
-      </Routes>
-        {!hideNavbar && <Footer />}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
+          <Route path="/order-historys" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+
+
+          <Route path="/products" element={<ProtectedRoute><ProductPage /></ProtectedRoute>} />
+          <Route path="/order-summary" element={<ProtectedRoute><OrderSummaryPage /></ProtectedRoute>} />
+          <Route path="/request-services" element={<ProtectedRoute><RequestServicePage /></ProtectedRoute>} />
+          <Route path="/thank-you" element={<ProtectedRoute><ThankYouPage /></ProtectedRoute>} />
+          {/* <Route path="/order/:id" element={<ProtectedRoute><OrderDetailsPage /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><OrdersRedirectPage /></ProtectedRoute>} /> */}
+          <Route path="/order-history" element={<ProtectedRoute><OrderHistoryPage /></ProtectedRoute>} />
+          <Route path="/profile/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+
+        </Routes>
+        {!hideSidebar && <Footer />}
+      </div>
     </>
   );
 }
+
 
 function App() {
   return (

@@ -1,39 +1,29 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
-import UserModal from "./UserModel";
+import UserModal from "../components/UserModel";
 
-const UserPage = () => {
-  const [users, setUsers] = useState([]);
+const CustomerPage = () => {
+  const [customers, setCustomers] = useState([]);
   const [allRoles, setAllRoles] = useState([]);
-  const [allPermissions, setAllPermissions] = useState([
-   
-    "Manage Pricing",
-    "Approve Pricing",
-    "Manage Orders",
-    "Manage Users",
-    "View Products",
-    "Manage Products"
-  ]);
-
+  const [allPermissions, setAllPermissions] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  const [editingCustomer, setEditingCustomer] = useState(null);
 
   useEffect(() => {
-    fetchUsers();
+    fetchCustomers();
     fetchRoles();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchCustomers = async () => {
     try {
-      const { data } = await axios.get("/admin/users?excludeRole=Customer", {
+      const { data } = await axios.get("/admin/users?onlyRole=Customer", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setUsers(data);
+      setCustomers(data);
     } catch (err) {
       console.error(err);
-      
     }
   };
 
@@ -47,22 +37,17 @@ const UserPage = () => {
       setAllRoles(data);
     } catch (err) {
       console.error(err);
-     
     }
   };
 
-  const handleSaveUser = async (userData) => {
+  const handleSaveCustomer = async (userData) => {
     try {
-      if (editingUser) {
-        await axios.put(
-          `/admin/users/${editingUser._id}`,
-          userData,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+      if (editingCustomer) {
+        await axios.put(`/admin/users/${editingCustomer._id}`, userData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
       } else {
         await axios.post("/admin/users", userData, {
           headers: {
@@ -71,17 +56,32 @@ const UserPage = () => {
         });
       }
 
-      await fetchUsers();
+      await fetchCustomers();
       setModalOpen(false);
-      setEditingUser(null);
+      setEditingCustomer(null);
     } catch (err) {
       console.error(err);
-      alert("Error saving user");
+      alert("Error saving customer");
     }
   };
 
-  const handleDeleteUser = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+  const handleToggleStatus = async (id) => {
+  try {
+    await axios.patch(`/admin/users/toggle-status/${id}`, null, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    await fetchCustomers(); 
+  } catch (err) {
+    console.error(err);
+    alert("Failed to toggle user status");
+  }
+};
+
+
+  const handleDeleteCustomer = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this customer?")) return;
 
     try {
       await axios.delete(`/admin/users/${id}`, {
@@ -89,25 +89,25 @@ const UserPage = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      await fetchUsers();
+      await fetchCustomers();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete user");
+      alert("Failed to delete customer");
     }
   };
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">User Management</h2>
+        <h2 className="text-2xl font-bold">Customer Management</h2>
         <button
           onClick={() => {
-            setEditingUser(null);
+            setEditingCustomer(null);
             setModalOpen(true);
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded shadow"
         >
-          + Add User
+          + Add Customer
         </button>
       </div>
 
@@ -123,11 +123,11 @@ const UserPage = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {customers.map((u) => (
               <tr key={u._id} className="border-t">
                 <td className="p-3">{u.name}</td>
                 <td className="p-3">{u.email}</td>
-                <td className="p-3">{u.role?.name || "—"}</td>
+                <td className="p-3">{u.role?.name || u.role || "—"}</td>
                 <td className="p-3">
                   <ul className="list-disc list-inside text-sm">
                     {(u.permissions || []).map((p, i) => (
@@ -138,7 +138,7 @@ const UserPage = () => {
                 <td className="p-3 space-x-2">
                   <button
                     onClick={() => {
-                      setEditingUser(u);
+                      setEditingCustomer(u);
                       setModalOpen(true);
                     }}
                     className="bg-yellow-400 px-3 py-1 rounded"
@@ -146,12 +146,19 @@ const UserPage = () => {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeleteUser(u._id)}
+                    onClick={() => handleDeleteCustomer(u._id)}
                     className="bg-red-500 text-white px-3 py-1 rounded"
                   >
                     Delete
                   </button>
+                    <button
+    onClick={() => handleToggleStatus(u._id)}
+    className={`px-3 py-1 rounded ${u.isActive ? "bg-red-600" : "bg-green-600"} text-white`}
+  >
+    {u.isActive ? "Disable A/c" : "Enable A/c"}
+  </button>
                 </td>
+        
               </tr>
             ))}
           </tbody>
@@ -160,12 +167,12 @@ const UserPage = () => {
 
       {modalOpen && (
         <UserModal
-          user={editingUser}
+          user={editingCustomer}
           onClose={() => {
             setModalOpen(false);
-            setEditingUser(null);
+            setEditingCustomer(null);
           }}
-          onSave={handleSaveUser}
+          onSave={handleSaveCustomer}
           allRoles={allRoles}
           allPermissions={allPermissions}
         />
@@ -174,4 +181,4 @@ const UserPage = () => {
   );
 };
 
-export default UserPage;
+export default CustomerPage;

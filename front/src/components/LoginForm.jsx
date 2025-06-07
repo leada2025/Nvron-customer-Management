@@ -31,7 +31,7 @@ const LoginForm = () => {
       if (role === "admin") {
         navigate("/admin");
       } else {
-        navigate("/products");
+        navigate("/welcome");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed. Try again.");

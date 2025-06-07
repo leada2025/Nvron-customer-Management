@@ -15,6 +15,9 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import RequirePermission from "./components/RequirePermission";
 import AdminServiceRequestsPage from "./pages/AdminServiceRequestsPage";
+import CustomerPage from "./pages/CustomerPage";
+import UnapprovedProductsPage from "./pages/UnapprovedProductsPage";
+import PricingProposalsPage from "./pages/PricingProposalsPage";
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -60,6 +63,11 @@ export default function App() {
   <ProductsPage />
 </RequirePermission>
          }/>
+         <Route path="customer" element={
+<RequirePermission permission={["Manage Users"]}>
+  <CustomerPage />
+</RequirePermission>
+         }/>
 
          <Route path="pricing" element={
 <RequirePermission permission={["Approve Pricing", "Manage Pricing","View Products"]}>
@@ -72,6 +80,8 @@ export default function App() {
   <OrdersPage />
 </RequirePermission>
          }/>
+           <Route path="unapproved" element={<UnapprovedProductsPage />} />
+             <Route path="proposals" element={<PricingProposalsPage />} />
           <Route path="settings" element={<SettingsPage />} />
          <Route path="requests" element={<AdminServiceRequestsPage />} />
         </Route>
