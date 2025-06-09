@@ -11,14 +11,14 @@ const sidebarLinks = [
     icon: "👥",
     submenu: [
       { label: "View/Edit ", path: "customer" },
-      { label: "Reset Password", path: "customers/reports" },
+     
     ],
   },
     {
     name: "Sales Executive",
     icon: "👥",
     submenu: [
-      { label: "Assign Clients ", path: "customers/view" },
+      { label: "Assign Customers ", path: "customers/view" },
       { label: "Track Activity", path: "customers/add" },
       { label: "Sales Target", path: "customers/reports" },
     ],
@@ -63,8 +63,8 @@ const sidebarLinks = [
     name: "Settings",
     icon: "💰",
     submenu: [
-      { label: "  Set User Roles & Permissions",path: "Users" },
-      { label: " Add/Remove Admins", path: "pricing/actions" },
+      { label: "User Access Management",path: "Users" },
+      
       { label: "Edit Branding (Logo, Footer, etc.)", path: "pricing/roles" },
       { label: "Update Terms / Policies", path: "pricing/history" },
     ],
@@ -96,6 +96,9 @@ export default function AdminLayout({setToken}) {
 
 const handleLogout = () => {
   localStorage.removeItem("token");
+    localStorage.removeItem("name");
+      localStorage.removeItem("user");
+  localStorage.removeItem("role");
   setToken(null); // Update state in App.jsx
   navigate("/", { replace: true }); // Redirect to login
 };

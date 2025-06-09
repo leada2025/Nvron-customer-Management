@@ -8,6 +8,7 @@ const CustomerPage = () => {
   const [allPermissions, setAllPermissions] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // 🔍 Add this
 
   useEffect(() => {
     fetchCustomers();
@@ -34,7 +35,10 @@ const CustomerPage = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setAllRoles(data);
+      const customerRoles = data.filter(
+        (role) => role.name.toLowerCase() === "customer"
+      );
+      setAllRoles(customerRoles);
     } catch (err) {
       console.error(err);
     }
@@ -66,19 +70,18 @@ const CustomerPage = () => {
   };
 
   const handleToggleStatus = async (id) => {
-  try {
-    await axios.patch(`/admin/users/toggle-status/${id}`, null, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-    await fetchCustomers(); 
-  } catch (err) {
-    console.error(err);
-    alert("Failed to toggle user status");
-  }
-};
-
+    try {
+      await axios.patch(`/admin/users/toggle-status/${id}`, null, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      await fetchCustomers();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to toggle user status");
+    }
+  };
 
   const handleDeleteCustomer = async (id) => {
     if (!window.confirm("Are you sure you want to delete this customer?")) return;
@@ -96,19 +99,54 @@ const CustomerPage = () => {
     }
   };
 
+  const handleResetPassword = async (id) => {
+    const newPassword = prompt("Enter a new password (min 6 chars):");
+    if (!newPassword || newPassword.length < 6) {
+      alert("Password must be at least 6 characters.");
+      return;
+    }
+
+    try {
+      await axios.patch(`/admin/users/reset-password/${id}`, { newPassword }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      alert("Password reset successfully.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to reset password.");
+    }
+  };
+
+  // 🔍 Filtered customers
+  const filteredCustomers = customers.filter((u) =>
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-2xl font-bold">Customer Management</h2>
-        <button
-          onClick={() => {
-            setEditingCustomer(null);
-            setModalOpen(true);
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded shadow"
-        >
-          + Add Customer
-        </button>
+
+        <div className="flex gap-2 w-full sm:w-auto">
+          <input
+            type="text"
+            placeholder="Search by name..."
+            className="px-4 py-2 border rounded shadow-sm w-full sm:w-64"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button
+            onClick={() => {
+              setEditingCustomer(null);
+              setModalOpen(true);
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded shadow whitespace-nowrap"
+          >
+            + Add Customer
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto bg-white rounded shadow">
@@ -123,7 +161,7 @@ const CustomerPage = () => {
             </tr>
           </thead>
           <tbody>
-            {customers.map((u) => (
+            {filteredCustomers.map((u) => (
               <tr key={u._id} className="border-t">
                 <td className="p-3">{u.name}</td>
                 <td className="p-3">{u.email}</td>
@@ -151,16 +189,30 @@ const CustomerPage = () => {
                   >
                     Delete
                   </button>
-                    <button
-    onClick={() => handleToggleStatus(u._id)}
-    className={`px-3 py-1 rounded ${u.isActive ? "bg-red-600" : "bg-green-600"} text-white`}
-  >
-    {u.isActive ? "Disable A/c" : "Enable A/c"}
-  </button>
+                  <button
+                    onClick={() => handleToggleStatus(u._id)}
+                    className={`px-3 py-1 rounded ${
+                      u.isActive ? "bg-red-600" : "bg-green-600"
+                    } text-white`}
+                  >
+                    {u.isActive ? "Disable A/c" : "Enable A/c"}
+                  </button>
+                  <button
+                    onClick={() => handleResetPassword(u._id)}
+                    className="bg-indigo-600 text-white px-3 py-1 rounded"
+                  >
+                    Reset Password
+                  </button>
                 </td>
-        
               </tr>
             ))}
+            {filteredCustomers.length === 0 && (
+              <tr>
+                <td colSpan="5" className="p-4 text-center text-gray-500">
+                  No customers found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

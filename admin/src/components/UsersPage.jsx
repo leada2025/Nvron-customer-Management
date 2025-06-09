@@ -5,6 +5,8 @@ import UserModal from "./UserModel";
 const UserPage = () => {
   const [users, setUsers] = useState([]);
   const [allRoles, setAllRoles] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
   const [allPermissions, setAllPermissions] = useState([
    
     "Manage Pricing",
@@ -12,7 +14,8 @@ const UserPage = () => {
     "Manage Orders",
     "Manage Users",
     "View Products",
-    "Manage Products"
+    "Manage Products",
+    "View All Users"
   ]);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -96,10 +99,41 @@ const UserPage = () => {
     }
   };
 
+  const handleResetPassword = async (userId, newPassword) => {
+  try {
+    await axios.patch(
+      `/admin/users/reset-password/${userId}`,
+      { newPassword },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    alert("Password reset successfully");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to reset password");
+  }
+};
+const filteredUsers = users.filter((u) =>
+  u.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">User Management</h2>
+        <div className="flex items-center space-x-2">
+    <input
+      type="text"
+      placeholder="Search by name..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="px-3 py-2 border rounded"
+    />
         <button
           onClick={() => {
             setEditingUser(null);
@@ -109,6 +143,7 @@ const UserPage = () => {
         >
           + Add User
         </button>
+      </div>
       </div>
 
       <div className="overflow-x-auto bg-white rounded shadow">
@@ -123,7 +158,8 @@ const UserPage = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+           {filteredUsers.map((u) => (
+
               <tr key={u._id} className="border-t">
                 <td className="p-3">{u.name}</td>
                 <td className="p-3">{u.email}</td>
@@ -151,6 +187,15 @@ const UserPage = () => {
                   >
                     Delete
                   </button>
+                   <button
+    onClick={() => {
+      const newPassword = prompt("Enter new password:");
+      if (newPassword) handleResetPassword(u._id, newPassword);
+    }}
+    className="bg-indigo-600 text-white px-3 py-1 rounded"
+  >
+    Reset Password
+  </button>
                 </td>
               </tr>
             ))}

@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true, // true = enabled, false = disabled
   },
+
+   assignedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null, // this stores which user added this customer
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

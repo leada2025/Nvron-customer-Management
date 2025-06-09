@@ -8,6 +8,7 @@ const Role = require("../models/Role");
 const adminAuth = require("../middleware/adminAuth"); // Middleware to verify admin
 const mongoose = require("mongoose");
 const requireAuth = require("../middleware/requireAuth");
+const enrichUserRole = require("../middleware/enrichUserRole");
 
 const router = express.Router();
 
@@ -17,14 +18,24 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
   try {
     const { excludeRole, onlyRole } = req.query;
 
-    const users = await User.find()
+    let filter = {};
+
+    const isAdmin = req.user.role?.toLowerCase() === "admin";
+    const hasViewAllAccess = req.user.permissions?.includes("View All Users");
+
+    // ❗ If not admin and no View All permission, only fetch users assigned by this user
+    if (!isAdmin && !hasViewAllAccess) {
+      filter.assignedBy = req.user.userId;
+    }
+
+    const users = await User.find(filter)
       .populate("role", "name permissions")
       .select("-passwordHash");
 
     let filteredUsers = users;
 
     if (excludeRole) {
-      filteredUsers = users.filter(
+      filteredUsers = filteredUsers.filter(
         (u) =>
           (typeof u.role === "string" && u.role.toLowerCase() !== excludeRole.toLowerCase()) ||
           (typeof u.role === "object" && u.role?.name?.toLowerCase() !== excludeRole.toLowerCase())
@@ -32,7 +43,7 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
     }
 
     if (onlyRole) {
-      filteredUsers = users.filter(
+      filteredUsers = filteredUsers.filter(
         (u) =>
           (typeof u.role === "string" && u.role.toLowerCase() === onlyRole.toLowerCase()) ||
           (typeof u.role === "object" && u.role?.name?.toLowerCase() === onlyRole.toLowerCase())
@@ -41,6 +52,7 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
 
     res.json(filteredUsers);
   } catch (err) {
+    console.error("GET /admin/users error:", err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -63,9 +75,45 @@ const approvedPricing = await Pricing.distinct("productId", { status: "approved"
   }
 });
 
+router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sales executive"]  }), async (req, res) => {
+  try {
+    const assignedCustomersCount = await User.countDocuments({ assignedBy: req.user.userId, roleName: "Customer" });
+    const ordersCount = await Order.countDocuments({ createdBy: req.user.userId });
+    const totalSalesValue = await Order.aggregate([
+      { $match: { createdBy: req.user.userId } },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $add: [
+                { $multiply: ["$items.quantity", "$items.netRate"] },
+                { $multiply: ["$items.quantity", "$items.netRate", { $divide: ["$items.tax", 100] }] }
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    res.json({
+      assignedCustomers: assignedCustomersCount,
+      orders: ordersCount,
+      totalSales: totalSalesValue[0]?.total || 0,
+    });
+  } catch (err) {
+    console.error("Sales Dashboard Error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 
 router.post("/",  requireAuth({ permission: "Manage Users" }), async (req, res) => {
+  
   try {
+      console.log("Authenticated user info:", req.user);
     const { name, email, password, role, permissions } = req.body;
     if (!password) return res.status(400).json({ message: "Password required" });
 
@@ -91,6 +139,7 @@ if (typeof role === "string" && !mongoose.Types.ObjectId.isValid(role)) {
       passwordHash,
       role: roleId,
       permissions,
+      assignedBy: req.user?.userId || null, 
     });
 
     await user.save();
@@ -166,6 +215,27 @@ router.patch("/toggle-status/:id", async (req, res) => {
     res.status(500).json({ message: "Error toggling status" });
   }
 });
+
+// PATCH /admin/users/reset-password/:id
+router.patch("/reset-password/:id", requireAuth({ permission: "Manage Users" }), async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters." });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 
 router.delete("/:id", adminAuth, async (req, res) => {
