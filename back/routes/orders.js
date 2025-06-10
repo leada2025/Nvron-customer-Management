@@ -2,6 +2,7 @@ const express = require("express");
 const Order = require("../models/Order");
 const { authenticate, authorizeRoles } = require("../middleware/auth");
 const requireAuth = require("../middleware/requireAuth");
+const User = require("../models/User");
 
 const router = express.Router();
 
@@ -66,11 +67,27 @@ router.get("/:id", authenticate, async (req, res) => {
 
 
 // Get all orders for billing/sales
-router.get("/", requireAuth({ permission: "Manage Orders"}), async (req, res) => {
+router.get("/", requireAuth({ permission: "Manage Orders" }), async (req, res) => {
   try {
-    const orders = await Order.find().populate("customerId", "name email").sort({ createdAt: -1 });
+    const isAdmin = req.user.role?.toLowerCase() === "admin";
+    const hasViewAllAccess = req.user.permissions?.includes("View Orders");
+
+    let filter = {};
+
+    // If not admin and doesn't have "View All Users", filter by assigned customers
+    if (!isAdmin && !hasViewAllAccess) {
+      const assignedCustomers = await User.find({ assignedBy: req.user.userId }).select("_id");
+      const customerIds = assignedCustomers.map((cust) => cust._id);
+      filter.customerId = { $in: customerIds };
+    }
+
+    const orders = await Order.find(filter)
+      .populate("customerId", "name email")
+      .sort({ createdAt: -1 });
+
     res.json(orders);
   } catch (err) {
+    console.error("GET /orders error:", err);
     res.status(500).json({ message: err.message });
   }
 });

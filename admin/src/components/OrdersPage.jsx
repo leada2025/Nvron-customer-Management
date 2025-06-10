@@ -14,7 +14,7 @@ export default function OrdersPage() {
   const [downloadMenuOpenOrderId, setDownloadMenuOpenOrderId] = useState(null);
 
 
-  const ORDERS_PER_PAGE = 5;
+  const ORDERS_PER_PAGE = 10;
 
  const fetchOrders = async () => {
   try {

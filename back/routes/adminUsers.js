@@ -23,7 +23,7 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
     const isAdmin = req.user.role?.toLowerCase() === "admin";
     const hasViewAllAccess = req.user.permissions?.includes("View All Users");
 
-    // ❗ If not admin and no View All permission, only fetch users assigned by this user
+   
     if (!isAdmin && !hasViewAllAccess) {
       filter.assignedBy = req.user.userId;
     }
@@ -75,12 +75,20 @@ const approvedPricing = await Pricing.distinct("productId", { status: "approved"
   }
 });
 
-router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sales executive"]  }), async (req, res) => {
+router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sales executive"] }), async (req, res) => {
   try {
-    const assignedCustomersCount = await User.countDocuments({ assignedBy: req.user.userId, roleName: "Customer" });
-    const ordersCount = await Order.countDocuments({ createdBy: req.user.userId });
+    const customerRoleId = "6836fade2aa75e74345b8f1f"; // replace with actual role ObjectId
+
+    const assignedCustomers = await User.find(
+      { assignedBy: req.user.userId, role: customerRoleId },
+      "_id"
+    );
+    const customerIds = assignedCustomers.map(c => c._id);
+
+    const ordersCount = await Order.countDocuments({ customerId: { $in: customerIds } });
+
     const totalSalesValue = await Order.aggregate([
-      { $match: { createdBy: req.user.userId } },
+      { $match: { customerId: { $in: customerIds } } },
       { $unwind: "$items" },
       {
         $group: {
@@ -89,7 +97,13 @@ router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sale
             $sum: {
               $add: [
                 { $multiply: ["$items.quantity", "$items.netRate"] },
-                { $multiply: ["$items.quantity", "$items.netRate", { $divide: ["$items.tax", 100] }] }
+                {
+                  $multiply: [
+                    "$items.quantity",
+                    "$items.netRate",
+                    { $divide: ["$items.tax", 100] }
+                  ]
+                }
               ]
             }
           }
@@ -98,7 +112,7 @@ router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sale
     ]);
 
     res.json({
-      assignedCustomers: assignedCustomersCount,
+      assignedCustomers: customerIds.length,
       orders: ordersCount,
       totalSales: totalSalesValue[0]?.total || 0,
     });
@@ -107,7 +121,6 @@ router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sale
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
 
 
 router.post("/",  requireAuth({ permission: "Manage Users" }), async (req, res) => {
