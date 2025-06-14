@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "../api/Axios";
 
 const OrderDetailsPage = () => {
-  const { id } = useParams(); // Order ID from route
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -11,10 +12,10 @@ const OrderDetailsPage = () => {
 
   const fetchOrder = async () => {
     try {
-     const res = await axios.get(`/api/orders/${id}`, {
-  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-
-
+      const res = await axios.get(`/api/orders/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
       setOrder(res.data);
     } catch (err) {
@@ -40,7 +41,7 @@ const OrderDetailsPage = () => {
         }
       );
       alert("Order cancelled.");
-      fetchOrder(); // Refresh order details
+      fetchOrder();
       setConfirmCancel(false);
     } catch (err) {
       console.error(err);
@@ -48,20 +49,23 @@ const OrderDetailsPage = () => {
     }
   };
 
-  if (loading) {
-    return <div className="p-6 text-center">Loading order details...</div>;
-  }
-
-  if (!order) {
-    return <div className="p-6 text-center text-red-500">Order not found.</div>;
-  }
+  if (loading) return <div className="p-6 text-center">Loading order details...</div>;
+  if (!order) return <div className="p-6 text-center text-red-500">Order not found.</div>;
 
   const isCancellable = order.status === "pending";
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md">
-        <h1 className="text-2xl font-bold mb-4">Order Details</h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-md">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-[#0b7b7b]">Order Details</h1>
+          <button
+            className="text-sm text-[#0b7b7b] underline"
+            onClick={() => navigate(-1)}
+          >
+            ← Back
+          </button>
+        </div>
 
         <div className="mb-4 space-y-1">
           <p><strong>Order ID:</strong> {order._id}</p>
@@ -77,16 +81,14 @@ const OrderDetailsPage = () => {
             </span>
           </p>
           {order.feedback && (
-            <p className="text-sm text-gray-500 italic">
-              Cancel Reason: {order.feedback}
-            </p>
+            <p className="text-sm text-gray-500 italic">Cancel Reason: {order.feedback}</p>
           )}
         </div>
 
-        <table className="min-w-full text-sm border rounded overflow-hidden">
-          <thead className="bg-gray-100">
+        <table className="min-w-full text-sm border rounded overflow-hidden mt-4">
+          <thead className="bg-gray-100 text-left">
             <tr>
-              <th className="text-left px-4 py-2">Product</th>
+              <th className="px-4 py-2">Product</th>
               <th className="text-center px-4 py-2">Qty</th>
               <th className="text-right px-4 py-2">Rate</th>
               <th className="text-right px-4 py-2">Tax (%)</th>
@@ -96,8 +98,7 @@ const OrderDetailsPage = () => {
           <tbody>
             {order.items.map((item, index) => (
               <tr key={index} className="border-t">
-                <td className="px-4 py-2">{item.
-productName}</td>
+                <td className="px-4 py-2">{item.productName}</td>
                 <td className="text-center px-4 py-2">{item.quantity}</td>
                 <td className="text-right px-4 py-2">₹{item.netRate.toFixed(2)}</td>
                 <td className="text-right px-4 py-2">{item.tax}</td>

@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import UserLayout from "./layouts/UserLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+import CatalogPage from "./Pages/CatalogPage";
+import OfferPage from "./pages/OfferPage";
 import SignupPage from "./Pages/SignupPage";
 import LoginPage from "./Pages/LoginPage";
 import WelcomePage from "./Pages/WelcomePage";
@@ -86,6 +88,8 @@ function App() {
 
         {/* User Routes */}
         <Route element={<UserLayout />}>
+        <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
+
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><ProductPage /></ProtectedRoute>} />
@@ -97,6 +101,7 @@ function App() {
           <Route path="/profile/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
           <Route path="/negotiate/:productId" element={<ProtectedRoute><NegotiatePricePage /></ProtectedRoute>} />
           <Route path="/negotiationhis" element={<ProtectedRoute><NegotiationHistory /></ProtectedRoute>} />
+            <Route path="/offers" element={<OfferPage />} />
         </Route>
       </Routes>
     </Router>

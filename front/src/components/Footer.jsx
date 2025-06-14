@@ -3,27 +3,33 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-[#0b7b7b] text-white py-6 mt-10">
-      <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
-        {/* Left - Logo or Company Name */}
-        <div className="text-lg font-semibold">© 2025 Nvron</div>
+    <footer className="bg-[#0b7b7b] text-white py-6 mt-12 shadow-inner">
+      <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+        {/* Left - Logo / Brand */}
+        <div className="text-lg font-bold tracking-wide">Fishman HealthCare</div>
 
         {/* Center - Navigation Links */}
-        <div className="flex space-x-4 mt-3 md:mt-0">
-          <Link to="/products" className="hover:underline">
-            Products
+        <div className="flex flex-wrap justify-center gap-4 mt-4 md:mt-0 text-sm">
+          <Link to="/products" className="hover:underline hover:text-gray-200 transition">
+            Home
           </Link>
-          <Link to="/order-summary" className="hover:underline">
-            Order Summary
+          <Link to="/catalog" className="hover:underline hover:text-gray-200 transition">
+            Catalogue
           </Link>
-          <Link to="/request-services" className="hover:underline">
-            Request Services
+          <Link to="/offers" className="hover:underline hover:text-gray-200 transition">
+            Offers
+          </Link>
+          <Link to="/order-historys" className="hover:underline hover:text-gray-200 transition">
+            Order History
+          </Link>
+          <Link to="/request-services" className="hover:underline hover:text-gray-200 transition">
+            Support
           </Link>
         </div>
 
-        {/* Right - Optional Message */}
-        <div className="mt-3 md:mt-0 text-sm text-gray-400">
-          Empowering better business.
+        {/* Right - Tagline or Extra Info */}
+        <div className="mt-4 md:mt-0 text-xs text-gray-200 italic">
+          Empowering better healthcare solutions.
         </div>
       </div>
     </footer>
