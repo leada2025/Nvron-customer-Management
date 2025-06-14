@@ -1,74 +1,104 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+
+import UserLayout from "./layouts/UserLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import SignupPage from "./Pages/SignupPage";
+import LoginPage from "./Pages/LoginPage";
+import WelcomePage from "./Pages/WelcomePage";
 import ProductPage from "./Pages/ProductPage";
 import OrderSummaryPage from "./Pages/OrderSummaryPage";
-import LoginPage from './Pages/LoginPage';
-import SignupPage from './Pages/SignupPage';
-import RequestServicePage from './Pages/RequestServicePage';
+import RequestServicePage from "./Pages/RequestServicePage";
+import ThankYouPage from "./components/Thankyou";
+import OrderHistoryPage from "./Pages/OrderHistoryPage";
+import OrdersPage from "./Pages/Orders";
+import ProfileSettings from "./Pages/ProfileSetting";
+import NegotiatePricePage from "./Pages/NegotiatePricePage";
+import NegotiationHistory from "./Pages/PriceDetails";
+import Dashboard from "./Pages/Dashboard";
 
-import Footer from './components/Footer';
-import ThankYouPage from './components/Thankyou';
-import OrderDetailsPage from './Pages/OrderDetailsPage';
-import OrdersRedirectPage from './Pages/OrdersRedirectPage';
-import OrderHistoryPage from './Pages/OrderHistoryPage';
-import ProtectedRoute from './components/ProtectedRoute';
+// Admin
+import AdminLayout from './admin/AdminLayout';
+import AdminLogin from "./admin/components/AdminLogin";
+import UsersPage from "./admin/components/UsersPage";
+import ProductsPage from "./admin/components/ProductPage";
+import PricingPage from "./admin/components/PricingPage";
+import Orders from "./admin/components/OrdersPage";
+import SettingsPage from "./admin/components/Setting";
+import DashboardPage from "./admin/components/Dashboard";
+import Unauthorized from "./admin/components/Unauthorized";
+import RequirePermission from "./admin/components/RequirePermission";
+import AdminServiceRequestsPage from "./admin/pages/AdminServiceRequestsPage";
+import CustomerPage from "./admin/pages/CustomerPage";
+import UnapprovedProductsPage from "./admin/pages/UnapprovedProductsPage";
+import PricingProposalsPage from "./admin/pages/PricingProposalsPage";
+import SalesNegotiationPanel from "./admin/pages/PriceRequest";
+import NegotiationApprovalPage from "./admin/pages/PriceApproval";
 
+function App() {
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
-import Sidebar from './components/Sidebar'; // updated
-import WelcomePage from './Pages/WelcomePage';
-import OrdersPage from './Pages/Orders';
-import Dashboard from './Pages/Dashboard';
-import Navbar from './Pages/Navbar';
-import ProfileSettings from './Pages/ProfileSetting';
-import NegotiatePricePage from './Pages/NegotiatePricePage';
-import NegotiationHistory from './Pages/PriceDetails';
-
-
-function AppWrapper() {
-  const location = useLocation();
-  const hideSidebar = ["/", "/login", "/welcome"].includes(location.pathname);
-
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setToken(localStorage.getItem("token"));
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   return (
-    <>
-   
-    
-      {!hideSidebar && <Sidebar />}
-     <div className={`${!hideSidebar ? "md:ml-61" : ""} min-h-screen `}>
-       {!hideSidebar && <Navbar />}
-        <Routes>
-          <Route path="/" element={<SignupPage />} />
-           <Route path="/dashboard" element={<Dashboard />} />
-            
+    <Router>
+      <Routes>
+        {/* Public */}
+        <Route path="/" element={<SignupPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
-          <Route path="/login" element={<LoginPage />} />
+        {/* Admin Login */}
+        <Route
+          path="/admin-login"
+          element={token ? <Navigate to="/admin" replace /> : <AdminLogin setToken={setToken} />}
+        />
+        <Route path="/admin/unauthorized" element={<Unauthorized />} />
+
+        {/* Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute redirectPath="/admin-login">
+              <AdminLayout setToken={setToken} />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="users" element={<RequirePermission permission="Manage Users"><UsersPage /></RequirePermission>} />
+          <Route path="products" element={<RequirePermission permission={["View Products"]}><ProductsPage /></RequirePermission>} />
+          <Route path="customer" element={<RequirePermission permission={["Manage Users"]}><CustomerPage /></RequirePermission>} />
+          <Route path="pricing" element={<RequirePermission permission={["Approve Pricing", "Manage Pricing", "View Products"]}><PricingPage /></RequirePermission>} />
+          <Route path="orders" element={<RequirePermission permission={["Manage Orders"]}><Orders /></RequirePermission>} />
+          <Route path="unapproved" element={<UnapprovedProductsPage />} />
+          <Route path="proposals" element={<PricingProposalsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="requests" element={<AdminServiceRequestsPage />} />
+          <Route path="priceconsole" element={<SalesNegotiationPanel />} />
+          <Route path="priceapproval" element={<NegotiationApprovalPage />} />
+        </Route>
+
+        {/* User Routes */}
+        <Route element={<UserLayout />}>
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
-          <Route path="/order-historys" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-
-
           <Route path="/products" element={<ProtectedRoute><ProductPage /></ProtectedRoute>} />
           <Route path="/order-summary" element={<ProtectedRoute><OrderSummaryPage /></ProtectedRoute>} />
           <Route path="/request-services" element={<ProtectedRoute><RequestServicePage /></ProtectedRoute>} />
           <Route path="/thank-you" element={<ProtectedRoute><ThankYouPage /></ProtectedRoute>} />
-          {/* <Route path="/order/:id" element={<ProtectedRoute><OrderDetailsPage /></ProtectedRoute>} />
-          <Route path="/orders" element={<ProtectedRoute><OrdersRedirectPage /></ProtectedRoute>} /> */}
           <Route path="/order-history" element={<ProtectedRoute><OrderHistoryPage /></ProtectedRoute>} />
+          <Route path="/order-historys" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
           <Route path="/profile/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
-<Route path="/negotiate/:productId" element={<NegotiatePricePage />} />
-<Route path="/negotiationhis" element={<NegotiationHistory />} />
-
-        </Routes>
-        {!hideSidebar && <Footer />}
-      </div>
-    </>
-  );
-}
-
-
-function App() {
-  return (
-    <Router>
-      <AppWrapper />
+          <Route path="/negotiate/:productId" element={<ProtectedRoute><NegotiatePricePage /></ProtectedRoute>} />
+          <Route path="/negotiationhis" element={<ProtectedRoute><NegotiationHistory /></ProtectedRoute>} />
+        </Route>
+      </Routes>
     </Router>
   );
 }
