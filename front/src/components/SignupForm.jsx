@@ -64,7 +64,7 @@ const SignupForm = () => {
       {/* form inputs */}
 
       <div className="mb-4">
-        <label className="block mb-1 font-medium">Full Name</label>
+        <label className="block mb-1 font-medium">Full name</label>
         <input
           type="text"
           name="name"
