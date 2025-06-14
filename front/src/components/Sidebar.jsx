@@ -49,9 +49,6 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="absolute bottom-4 left-4 text-xs text-gray-400">
-        Customer UI
-      </div>
     </aside>
   );
 };
