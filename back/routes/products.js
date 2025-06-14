@@ -4,14 +4,43 @@ const Product = require("../models/Product");
 const adminAuth = require("../middleware/adminAuth");
 const { authenticate, authorizeRoles } = require("../middleware/auth");
 const requireAuth = require("../middleware/requireAuth");
+const NegotiationRequest = require("../models/NegotiationRequest");
+const jwt = require("jsonwebtoken");
 
-// Get all approved products (public)
+
+
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find({ approved: true });
-    res.json(products);
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.split(" ")[1];
+
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const customerId = decoded.id || decoded._id;
+
+    const products = await Product.find();
+
+    const negotiatedPrices = await NegotiationRequest.find({
+      customerId,
+      status: "approved",
+    });
+
+    const priceMap = {};
+    negotiatedPrices.forEach((n) => {
+      priceMap[n.productId.toString()] = n.approvedPrice;
+
+    });
+
+    const enriched = products.map((p) => ({
+      ...p.toObject(),
+      specialPrice: priceMap[p._id.toString()] || null,
+    }));
+
+    res.json(enriched);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch products" });
+    console.error("Error fetching products:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -39,6 +68,17 @@ router.post("/",  requireAuth({ permission: "Manage Products" }), async (req, re
 }
 
 });
+// Get a single product by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch product" });
+  }
+});
+
 
 // Update a product (Admin Only)
 router.put("/:id", requireAuth({ permission: "Manage Products" }), async (req, res) => {

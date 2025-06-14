@@ -18,14 +18,18 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
   try {
     const { excludeRole, onlyRole } = req.query;
 
-    let filter = {};
-
     const isAdmin = req.user.role?.toLowerCase() === "admin";
     const hasViewAllAccess = req.user.permissions?.includes("View All Users");
 
-   
+    let filter = {};
+
     if (!isAdmin && !hasViewAllAccess) {
-      filter.assignedBy = req.user.userId;
+      filter = {
+        $or: [
+          { assignedBy: req.user.userId },
+          { assignedTo: req.user.userId },
+        ],
+      };
     }
 
     const users = await User.find(filter)
@@ -59,6 +63,8 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
 
 
 
+
+
 router.get("/dashboard-stats", async (req, res) => {
   try {
     const users = await User.countDocuments();
@@ -74,19 +80,28 @@ const approvedPricing = await Pricing.distinct("productId", { status: "approved"
     res.status(500).json({ message: "Failed to fetch dashboard stats" });
   }
 });
-
 router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sales executive"] }), async (req, res) => {
   try {
     const customerRoleId = "6836fade2aa75e74345b8f1f"; // replace with actual role ObjectId
 
+    // Find customers assignedBy or assignedTo this sales user
     const assignedCustomers = await User.find(
-      { assignedBy: req.user.userId, role: customerRoleId },
+      {
+        role: customerRoleId,
+        $or: [
+          { assignedBy: req.user.userId },
+          { assignedTo: req.user.userId },
+        ],
+      },
       "_id"
     );
+
     const customerIds = assignedCustomers.map(c => c._id);
 
+    // Count orders placed by these customers
     const ordersCount = await Order.countDocuments({ customerId: { $in: customerIds } });
 
+    // Calculate total sales value for these orders
     const totalSalesValue = await Order.aggregate([
       { $match: { customerId: { $in: customerIds } } },
       { $unwind: "$items" },
@@ -116,6 +131,7 @@ router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sale
       orders: ordersCount,
       totalSales: totalSalesValue[0]?.total || 0,
     });
+
   } catch (err) {
     console.error("Sales Dashboard Error:", err);
     res.status(500).json({ message: "Internal server error" });
@@ -123,11 +139,32 @@ router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sale
 });
 
 
+router.get("/assignable", requireAuth({ permission: "Manage Users" }), async (req, res) => {
+  try {
+    // Filter users with sales-related roles or permissions
+    const assignableUsers = await User.find({
+      $or: [
+        { "role": { $exists: true } },
+        { permissions: { $in: ["Manage Orders", "Assign Clients"] } }
+      ]
+    })
+    .populate("role", "name")
+    .select("name email role");
+
+    res.json(assignableUsers);
+  } catch (err) {
+    console.error("Error fetching assignable users:", err);
+    res.status(500).json({ message: "Failed to fetch assignable users" });
+  }
+});
+
+
+
 router.post("/",  requireAuth({ permission: "Manage Users" }), async (req, res) => {
   
   try {
       console.log("Authenticated user info:", req.user);
-    const { name, email, password, role, permissions } = req.body;
+    const { name, email, password, role, permissions, assignedTo } = req.body;
     if (!password) return res.status(400).json({ message: "Password required" });
 
     const existingUser = await User.findOne({ email });
@@ -153,6 +190,7 @@ if (typeof role === "string" && !mongoose.Types.ObjectId.isValid(role)) {
       role: roleId,
       permissions,
       assignedBy: req.user?.userId || null, 
+       assignedTo: assignedTo || null
     });
 
     await user.save();
@@ -200,6 +238,11 @@ router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res)
     if (password) {
       user.passwordHash = await bcrypt.hash(password, 10);
     }
+
+    if (req.body.assignedTo !== undefined) {
+  user.assignedTo = req.body.assignedTo;
+}
+
 
     await user.save();
     res.json({ message: "User updated" });
@@ -259,5 +302,7 @@ router.delete("/:id", adminAuth, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+
 
 module.exports = router;

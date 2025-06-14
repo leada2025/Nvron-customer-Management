@@ -125,109 +125,92 @@ const CustomerPage = () => {
   );
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-2xl font-bold">Customer Management</h2>
+   <div className="p-6 max-w-7xl mx-auto">
+  <div className="flex justify-between items-center mb-6">
+    <h2 className="text-2xl font-semibold text-gray-800">Customer Management</h2>
+    <div className="flex items-center gap-3">
+      <input
+        type="text"
+        placeholder="Search customers..."
+        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <button
+        onClick={() => {
+          setEditingCustomer(null);
+          setModalOpen(true);
+        }}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition"
+      >
+        + Add Customer
+      </button>
+    </div>
+  </div>
 
-        <div className="flex gap-2 w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="Search by name..."
-            className="px-4 py-2 border rounded shadow-sm w-full sm:w-64"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button
-            onClick={() => {
-              setEditingCustomer(null);
-              setModalOpen(true);
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded shadow whitespace-nowrap"
-          >
-            + Add Customer
-          </button>
-        </div>
-      </div>
+<div className="overflow-x-auto bg-white border border-gray-300 rounded-md shadow-sm">
+  <table className="min-w-full divide-y divide-gray-100">
+    <thead className="bg-gray-50">
+      <tr>
+        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
+       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+       
+      </tr>
+    </thead>
+   <tbody>
 
-      <div className="overflow-x-auto bg-white rounded shadow">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="p-3">Name</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Role</th>
-              <th className="p-3">Permissions</th>
-              <th className="p-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCustomers.map((u) => (
-              <tr key={u._id} className="border-t">
-                <td className="p-3">{u.name}</td>
-                <td className="p-3">{u.email}</td>
-                <td className="p-3">{u.role?.name || u.role || "—"}</td>
-                <td className="p-3">
-                  <ul className="list-disc list-inside text-sm">
-                    {(u.permissions || []).map((p, i) => (
-                      <li key={i}>{p}</li>
-                    ))}
-                  </ul>
-                </td>
-                <td className="p-3 space-x-2">
-                  <button
-                    onClick={() => {
-                      setEditingCustomer(u);
-                      setModalOpen(true);
-                    }}
-                    className="bg-yellow-400 px-3 py-1 rounded"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCustomer(u._id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={() => handleToggleStatus(u._id)}
-                    className={`px-3 py-1 rounded ${
-                      u.isActive ? "bg-red-600" : "bg-green-600"
-                    } text-white`}
-                  >
-                    {u.isActive ? "Disable A/c" : "Enable A/c"}
-                  </button>
-                  <button
-                    onClick={() => handleResetPassword(u._id)}
-                    className="bg-indigo-600 text-white px-3 py-1 rounded"
-                  >
-                    Reset Password
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {filteredCustomers.length === 0 && (
-              <tr>
-                <td colSpan="5" className="p-4 text-center text-gray-500">
-                  No customers found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+  {filteredCustomers.map((u) => (
+    <tr
+      key={u._id}
+      className="border-t border-gray-300 hover:bg-gray-100 cursor-pointer"
+      onClick={() => {
+        setEditingCustomer(u);
+        setModalOpen(true);
+      }}
+    >
+      <td className="text-sm p-3">{u.name}</td>
+      <td className=" text-sm p-3">{u.email}</td>
+      <td className=" text-sm  p-3">{u.role?.name || u.role || "—"}</td>
+      <td className=" text-sm  p-3">
+        <span
+          className={`text-xs font-medium rounded-full ml-4 ${
+            u.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+          }`}
+        >
+          {u.isActive ? "Active" : "Inactive"}
+        </span>
+      </td>
+    </tr>
+  ))}
+
+  {filteredCustomers.length === 0 && (
+    <tr>
+      <td colSpan="5" className="p-4 text-center text-gray-500">
+        No customers found.
+      </td>
+    </tr>
+  )}
+</tbody>
+
+  </table>
+</div>
+
 
       {modalOpen && (
-        <UserModal
-          user={editingCustomer}
-          onClose={() => {
-            setModalOpen(false);
-            setEditingCustomer(null);
-          }}
-          onSave={handleSaveCustomer}
-          allRoles={allRoles}
-          allPermissions={allPermissions}
-        />
+<UserModal
+  user={editingCustomer}
+  onClose={() => {
+    setModalOpen(false);
+    setEditingCustomer(null);
+    fetchCustomers(); // Refresh data
+  }}
+  onSave={handleSaveCustomer}
+  allRoles={allRoles}
+  allPermissions={allPermissions}
+/>
+
       )}
     </div>
   );

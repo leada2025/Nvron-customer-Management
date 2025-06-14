@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from "react";
 import CreatableSelect from "react-select/creatable";
+import axios from "../api/Axios";
 
-const UserModal = ({ user, onClose, onSave, allRoles, allPermissions }) => {
+const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignableUsers }) => {
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState(user?.role?._id || "");
+  const [roleName, setRoleName] = useState(user?.role?.name || "");
   const [permissions, setPermissions] = useState(user?.permissions || []);
+  const [assignedTo, setAssignedTo] = useState(user?.assignedTo || "");
 
   useEffect(() => {
-    // Auto-fill permissions when role changes (unless editing)
     if (role && !user) {
       const selectedRole = allRoles.find((r) => r._id === role);
       if (selectedRole) {
         setPermissions(selectedRole.permissions || []);
+        setRoleName(selectedRole.name);
       }
     }
   }, [role]);
@@ -36,7 +39,8 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions }) => {
       name,
       email,
       role,
-      permissions,
+      assignedTo: roleName === "Customer" ? assignedTo || null : null,
+      permissions: roleName === "Customer" ? [] : permissions,
     };
 
     if (password) {
@@ -45,29 +49,42 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions }) => {
 
     onSave(userData);
   };
-const roleOptions = allRoles.map((r) => ({
-  value: r._id,
-  label: r.name,
-  permissions: r.permissions,
-}));
 
-const handleRoleChange = (selected) => {
-  if (!selected) {
-    setRole("");
-    setPermissions([]);
-    return;
+  const roleOptions = allRoles.map((r) => ({
+    value: r._id,
+    label: r.name,
+    permissions: r.permissions,
+  }));
+
+  const handleRoleChange = (selected) => {
+    if (!selected) {
+      setRole("");
+      setRoleName("");
+      setPermissions([]);
+      return;
+    }
+
+    setRole(selected.value);
+    setRoleName(selected.label);
+    if (selected.permissions) {
+      setPermissions(selected.permissions);
+    } else {
+      setPermissions([]);
+    }
+  };
+const nonCustomerExecutives = (assignableUsers || []).filter(
+  (user) => {
+    const roleName = user.role?.name?.toLowerCase() || "";
+    return (
+      roleName !== "customer" &&
+      roleName.includes("sales") // e.g., "sales", "sales executive", "sales rep"
+    );
   }
+);
 
-  setRole(selected.value || selected.label); // if custom, use label as fallback
 
-  if (selected.permissions) {
-    setPermissions(selected.permissions);
-  } else {
-    setPermissions([]); // for newly created roles
-  }
-};
   return (
-    <div className="fixed inset-0 bg-black/50 bg-opacity-40 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-xl">
         <h2 className="text-xl font-semibold mb-4">
           {user ? "Edit User" : "Add New User"}
@@ -78,7 +95,7 @@ const handleRoleChange = (selected) => {
             <label className="block text-sm font-medium">Name</label>
             <input
               type="text"
-              className="w-full border px-3 py-2 rounded mt-1"
+              className="w-full border border-gray-300 px-3 py-2 rounded mt-1"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -88,7 +105,7 @@ const handleRoleChange = (selected) => {
             <label className="block text-sm font-medium">Email</label>
             <input
               type="email"
-              className="w-full border px-3 py-2 rounded mt-1"
+              className="w-full border border-gray-300 px-3 py-2 rounded mt-1"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -99,7 +116,7 @@ const handleRoleChange = (selected) => {
               <label className="block text-sm font-medium">Password</label>
               <input
                 type="password"
-                className="w-full border px-3 py-2 rounded mt-1"
+                className="w-full border border-gray-300 px-3 py-2 rounded mt-1"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -107,56 +124,150 @@ const handleRoleChange = (selected) => {
           )}
 
           <div>
-  <label className="block text-sm font-medium">Role</label>
-  <CreatableSelect
-    isClearable
-    onChange={handleRoleChange}
-    options={roleOptions}
-    defaultValue={
-      user && user.role
-        ? {
-            value: user.role._id,
-            label: user.role.name,
-            permissions: user.role.permissions,
+            <label className="block text-sm font-medium">Role</label>
+            <CreatableSelect
+              isClearable
+              onChange={handleRoleChange}
+              options={roleOptions}
+              defaultValue={
+                user && user.role
+                  ? {
+                      value: user.role._id,
+                      label: user.role.name,
+                      permissions: user.role.permissions,
+                    }
+                  : null
+              }
+              placeholder="Type to search or create role..."
+            />
+          </div>
+
+          {/* "Assign To" Dropdown for Customer Role */}
+          {roleName === "Customer" && (
+            <div>
+              <label className="block font-medium mb-1">Assign To (Sales Executive)</label>
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full border px-3 py-2 rounded"
+              >
+                <option value="">— None —</option>
+                {nonCustomerExecutives.map((exec) => (
+                  <option key={exec._id} value={exec._id}>
+                    {exec.name} ({exec.role?.name || "No Role"})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Permissions — Hidden for Customers */}
+          {roleName !== "Customer" && (
+            <div>
+              <label className="block text-sm font-medium">Permissions</label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                {allPermissions.map((perm) => (
+                  <label key={perm} className="inline-flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={permissions.includes(perm)}
+                      onChange={() => handleCheckboxChange(perm)}
+                    />
+                    <span>{perm}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+ <div className="mt-6 flex flex-wrap gap-2 justify-end">
+  <button
+    onClick={onClose}
+    className="px-3 py-1 text-sm border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-100"
+  >
+    Cancel
+  </button>
+
+  <button
+    onClick={handleSubmit}
+    className="px-3 py-1 text-sm bg-gray-800 text-white rounded hover:bg-gray-700"
+  >
+    {user ? "Update" : "Create"}
+  </button>
+
+  {user && (
+    <>
+      <button
+        onClick={() => {
+          if (window.confirm("Are you sure you want to delete this user?")) {
+            axios
+              .delete(`/admin/users/${user._id}`, {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              })
+              .then(() => {
+                alert("User deleted.");
+                onClose();
+              })
+              .catch(() => alert("Failed to delete."));
           }
-        : null
-    }
-    placeholder="Type to search or create role..."
-  />
+        }}
+        className="px-3 py-1 text-sm border border-gray-300 text-red-600 bg-white rounded hover:bg-red-50"
+      >
+        Delete
+      </button>
+
+      <button
+        onClick={() => {
+          axios
+            .patch(`/admin/users/toggle-status/${user._id}`, null, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            })
+            .then(() => {
+              alert("User status toggled.");
+              onClose();
+            })
+            .catch(() => alert("Failed to toggle."));
+        }}
+        className="px-3 py-1 text-sm border border-gray-300 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+      >
+        {user.isActive ? "Disable A/c" : "Enable A/c"}
+      </button>
+
+      <button
+        onClick={() => {
+          const newPassword = prompt("Enter new password (min 6 chars):");
+          if (!newPassword || newPassword.length < 6) {
+            alert("Password must be at least 6 characters.");
+            return;
+          }
+
+          axios
+            .patch(
+              `/admin/users/reset-password/${user._id}`,
+              { newPassword },
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            )
+            .then(() => alert("Password reset."))
+            .catch(() => alert("Failed to reset password."));
+        }}
+        className="px-3 py-1 text-sm border border-gray-300 bg-white text-indigo-600 rounded hover:bg-indigo-50"
+      >
+        Reset Password
+      </button>
+    </>
+  )}
 </div>
 
 
-          <div>
-            <label className="block text-sm font-medium">Permissions</label>
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              {allPermissions.map((perm) => (
-                <label key={perm} className="inline-flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={permissions.includes(perm)}
-                    onChange={() => handleCheckboxChange(perm)}
-                  />
-                  <span>{perm}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-400 rounded"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            {user ? "Update User" : "Create User"}
-          </button>
-        </div>
       </div>
     </div>
   );

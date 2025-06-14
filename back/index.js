@@ -10,6 +10,7 @@ const pricingRoutes = require("./routes/pricing");
 const requestRoutes = require("./routes/requests");
 const adminUsersRouter = require("./routes/adminUsers");
 const roleRoutes = require("./routes/roles");
+const negotiation =require("./routes/negotiation")
 
 
 
@@ -29,6 +30,8 @@ app.use("/api/pricing", pricingRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/admin/users", adminUsersRouter);
 app.use("/admin/roles", roleRoutes);
+app.use("/api/negotiations",negotiation);
+
 
 const PORT = process.env.PORT || 5000;
 mongoose

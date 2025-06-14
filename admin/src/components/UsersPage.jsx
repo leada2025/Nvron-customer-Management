@@ -6,6 +6,7 @@ const UserPage = () => {
   const [users, setUsers] = useState([]);
   const [allRoles, setAllRoles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [assignableUsers, setAssignableUsers] = useState([]);
 
   const [allPermissions, setAllPermissions] = useState([
    
@@ -120,6 +121,22 @@ const filteredUsers = users.filter((u) =>
   u.name.toLowerCase().includes(searchTerm.toLowerCase())
 );
 
+const fetchAssignableUsers = async () => {
+  try {
+    const { data } = await axios.get("/admin/users/assignable", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    setAssignableUsers(data);
+  } catch (err) {
+    console.error("Failed to fetch assignable users", err);
+  }
+};
+
+useEffect(() => {
+  fetchAssignableUsers();
+}, []);
 
 
   return (
@@ -146,60 +163,43 @@ const filteredUsers = users.filter((u) =>
       </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded shadow">
+      <div className="overflow-x-auto border border-gray-300 bg-white rounded shadow">
         <table className="min-w-full">
-          <thead>
+          <thead className="text-gray-600 text-centre">
             <tr className="bg-gray-100 text-left">
               <th className="p-3">Name</th>
               <th className="p-3">Email</th>
               <th className="p-3">Role</th>
               <th className="p-3">Permissions</th>
-              <th className="p-3">Actions</th>
+              
             </tr>
           </thead>
-          <tbody>
-           {filteredUsers.map((u) => (
+         <tbody>
+  {filteredUsers.map((u) => (
+    <tr
+      key={u._id}
+      className="border-t border-gray-300 hover:bg-gray-100 cursor-pointer"
+      onClick={() => {
+        setEditingUser(u);
+        setModalOpen(true);
+      }}
+    >
+      <td className="text-sm p-3">{u.name}</td>
+      <td className=" text-sm p-3">{u.email}</td>
+      <td className=" text-sm p-3">{u.role?.name || u.role || "—"}</td>
+      <td className=" text-sm p-3">
+        <span
+          className={`text-xs font-medium rounded-full px-2 py-1 ${
+            u.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          }`}
+        >
+          {u.isActive ? "Active" : "Inactive"}
+        </span>
+      </td>
+    </tr>
+  ))}
+</tbody>
 
-              <tr key={u._id} className="border-t">
-                <td className="p-3">{u.name}</td>
-                <td className="p-3">{u.email}</td>
-                <td className="p-3">{u.role?.name || "—"}</td>
-                <td className="p-3">
-                  <ul className="list-disc list-inside text-sm">
-                    {(u.permissions || []).map((p, i) => (
-                      <li key={i}>{p}</li>
-                    ))}
-                  </ul>
-                </td>
-                <td className="p-3 space-x-2">
-                  <button
-                    onClick={() => {
-                      setEditingUser(u);
-                      setModalOpen(true);
-                    }}
-                    className="bg-yellow-400 px-3 py-1 rounded"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteUser(u._id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-                   <button
-    onClick={() => {
-      const newPassword = prompt("Enter new password:");
-      if (newPassword) handleResetPassword(u._id, newPassword);
-    }}
-    className="bg-indigo-600 text-white px-3 py-1 rounded"
-  >
-    Reset Password
-  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
         </table>
       </div>
 
@@ -213,6 +213,7 @@ const filteredUsers = users.filter((u) =>
           onSave={handleSaveUser}
           allRoles={allRoles}
           allPermissions={allPermissions}
+           assignableUsers={assignableUsers}
         />
       )}
     </div>

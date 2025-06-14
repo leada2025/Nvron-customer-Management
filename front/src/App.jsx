@@ -20,6 +20,8 @@ import OrdersPage from './Pages/Orders';
 import Dashboard from './Pages/Dashboard';
 import Navbar from './Pages/Navbar';
 import ProfileSettings from './Pages/ProfileSetting';
+import NegotiatePricePage from './Pages/NegotiatePricePage';
+import NegotiationHistory from './Pages/PriceDetails';
 
 
 function AppWrapper() {
@@ -52,6 +54,8 @@ function AppWrapper() {
           <Route path="/orders" element={<ProtectedRoute><OrdersRedirectPage /></ProtectedRoute>} /> */}
           <Route path="/order-history" element={<ProtectedRoute><OrderHistoryPage /></ProtectedRoute>} />
           <Route path="/profile/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+<Route path="/negotiate/:productId" element={<NegotiatePricePage />} />
+<Route path="/negotiationhis" element={<NegotiationHistory />} />
 
         </Routes>
         {!hideSidebar && <Footer />}

@@ -124,8 +124,27 @@ const filteredProducts = products.filter((product) =>
                 <td className="px-4 py-2">{product.dosageForm}</td>
                 <td className="px-4 py-2">{product.packing}</td>
                 <td className="px-4 py-2">₹{product.mrp}</td>
-                <td className="px-4 py-2">₹{product.netRate}</td>
+<td className="px-4 py-2">
+  ₹
+  {product.specialPrice !== undefined && product.specialPrice !== null
+    ? product.specialPrice
+    : product.netRate}
+  {product.specialPrice !== undefined && product.specialPrice !== null ? (
+    <span className="ml-1 text-sm text-green-600 font-semibold">(Special)</span>
+  ) : (
+    <button
+      onClick={() => navigate(`/negotiate/${product._id}`)}
+      className="ml-2 text-blue-600 underline text-sm"
+    >
+      Negotiate Price
+    </button>
+  )}
+</td>
+
+
+
                 <td className="px-4 py-2">{product.tax}%</td>
+                
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-2">
                     {/* Quantity Controls */}

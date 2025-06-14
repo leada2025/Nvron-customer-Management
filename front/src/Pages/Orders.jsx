@@ -40,9 +40,10 @@ const OrdersPage = () => {
         }
       );
       alert("Order cancelled.");
-      // Refresh orders
       const updatedOrders = orders.map((order) =>
-        order._id === id ? { ...order, status: "cancelled", feedback: cancelReason } : order
+        order._id === id
+          ? { ...order, status: "cancelled", feedback: cancelReason }
+          : order
       );
       setOrders(updatedOrders);
       setConfirmCancelId(null);
@@ -66,24 +67,56 @@ const OrdersPage = () => {
           const isExpanded = expandedOrderId === order._id;
           const isCancellable = order.status === "pending";
 
+      const borderColor =
+  order.status === "delivered"
+    ? "border-green-500"
+    : order.status === "cancelled"
+    ? "border-red-500"
+    : order.status === "processing"
+    ? "border-blue-500"
+    : "border-yellow-500";
+
+const badgeColor =
+  order.status === "delivered"
+    ? "bg-green-600"
+    : order.status === "cancelled"
+    ? "bg-red-600"
+    : order.status === "processing"
+    ? "bg-blue-600"
+    : "bg-yellow-600";
+
+
           return (
-            <div key={order._id} className="mb-6 bg-white p-6 rounded-xl shadow-md border">
+            <div
+              key={order._id}
+              className={`mb-6 bg-white p-6 rounded-xl shadow-md border relative pl-6 border-l-8 ${borderColor}`}
+            >
+              <span
+                className={`absolute -left-3 top-3 text-xs px-2 py-1 rounded-r-md font-semibold text-white ${badgeColor}`}
+              >
+                {order.status}
+              </span>
+
               <div className="flex justify-between items-start">
                 <div>
+                  <br />
                   <p className="text-sm text-gray-500">Order ID: {order._id}</p>
                   <p className="font-semibold text-gray-700">
                     Status:{" "}
-                    <span
-                      className={`${
-                        order.status === "delivered"
-                          ? "text-green-600"
-                          : order.status === "cancelled"
-                          ? "text-red-600"
-                          : "text-yellow-600"
-                      } uppercase`}
-                    >
-                      {order.status}
-                    </span>
+                  <span
+  className={`${
+    order.status === "delivered"
+      ? "text-green-600"
+      : order.status === "cancelled"
+      ? "text-red-600"
+      : order.status === "processing"
+      ? "text-blue-600"
+      : "text-yellow-600"
+  } uppercase`}
+>
+  {order.status}
+</span>
+
                   </p>
                   <p>Total Amount: ₹{order.totalAmount.toFixed(2)}</p>
                   <p>Placed on: {new Date(order.createdAt).toLocaleString()}</p>

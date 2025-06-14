@@ -12,20 +12,44 @@ const ProductPage = () => {
  
 
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await axios.get("/api/products"); // Change URL if deployed
-        setProducts(res.data);
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const fetchProductsAndSpecialPrices = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-    fetchProducts();
-  }, []);
+      const [productsRes, specialPricesRes] = await Promise.all([
+        axios.get("/api/products", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("/api/negotiations/special-prices", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      // Merge special prices into products
+      const specialPrices = specialPricesRes.data;
+      const enrichedProducts = productsRes.data.map((product) => {
+        const matched = specialPrices.find(
+          (sp) => sp.productId === product._id
+        );
+        return matched
+         ? { ...product, specialPrice: matched.approvedPrice }
+
+          : product;
+      });
+
+      setProducts(enrichedProducts);
+    } catch (err) {
+      console.error("Failed to fetch:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProductsAndSpecialPrices();
+}, []);
+
+
 
   const handleAddToOrder = (product) => {
     setOrderItems((prev) => [...prev, product]);

@@ -10,20 +10,60 @@ const OrderSummaryPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
-    const normalizedItems = items.map((item) => ({
-      ...item,
-      quantity: Number(item.quantity) || 1,
-      netRate: Number(item.netRate) || 0,
-      tax: Number(item.tax) || 0,
-      productId: item._id,       
-      productName: item.name, 
-      description: item.description, 
-         
-    }));
-    setOrderItems(normalizedItems);
-  }, []);
+useEffect(() => {
+  const fetchSpecialPrices = async () => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const { data: specialPrices } = await axios.get("/api/negotiations/special-prices", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Convert to a Map for quick lookup
+     const priceMap = {};
+specialPrices.forEach((entry) => {
+  priceMap[entry.productId] = entry.approvedPrice;
+});
+
+
+      const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
+
+      const normalizedItems = items.map((item) => {
+        const specialNetRate = priceMap[item._id] ?? item.netRate;
+
+        return {
+          ...item,
+          quantity: Number(item.quantity) || 1,
+          netRate: Number(specialNetRate),
+          tax: Number(item.tax) || 0,
+          productId: item._id,
+          productName: item.name,
+          description: item.description,
+        };
+      });
+
+      setOrderItems(normalizedItems);
+    } catch (err) {
+      console.error("Failed to fetch special prices:", err);
+      const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
+      const fallbackItems = items.map((item) => ({
+        ...item,
+        quantity: Number(item.quantity) || 1,
+        netRate: Number(item.netRate) || 0,
+        tax: Number(item.tax) || 0,
+        productId: item._id,
+        productName: item.name,
+        description: item.description,
+      }));
+      setOrderItems(fallbackItems);
+    }
+  };
+
+  fetchSpecialPrices();
+}, []);
+
 
   const subtotal = orderItems.reduce((sum, item) => sum + item.netRate * item.quantity, 0);
 

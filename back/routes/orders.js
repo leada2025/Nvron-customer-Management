@@ -74,9 +74,15 @@ router.get("/", requireAuth({ permission: "Manage Orders" }), async (req, res) =
 
     let filter = {};
 
-    // If not admin and doesn't have "View All Users", filter by assigned customers
     if (!isAdmin && !hasViewAllAccess) {
-      const assignedCustomers = await User.find({ assignedBy: req.user.userId }).select("_id");
+      // Get customers either assignedBy or assignedTo this user
+      const assignedCustomers = await User.find({
+        $or: [
+          { assignedBy: req.user.userId },
+          { assignedTo: req.user.userId },
+        ],
+      }).select("_id");
+
       const customerIds = assignedCustomers.map((cust) => cust._id);
       filter.customerId = { $in: customerIds };
     }
@@ -91,6 +97,7 @@ router.get("/", requireAuth({ permission: "Manage Orders" }), async (req, res) =
     res.status(500).json({ message: err.message });
   }
 });
+
 
 // Update order status
 router.patch("/:id/status", requireAuth({ permissions: "Manage Orders" }),  async (req, res) => {

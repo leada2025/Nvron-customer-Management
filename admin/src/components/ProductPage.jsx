@@ -156,7 +156,7 @@ export default function ProductsPage() {
         <>
           <table className="w-full table-auto border-collapse border border-gray-300">
             <thead>
-              <tr className="bg-gray-100">
+              <tr className="bg-gray-100 text-gray-600">
                 <th className="border border-gray-300 px-3 py-1">Name</th>
                 <th className="border border-gray-300 px-3 py-1">Packing</th>
                 <th className="border border-gray-300 px-3 py-1">Dosage Form</th>
@@ -177,15 +177,15 @@ export default function ProductsPage() {
               ) : (
                 pagedProducts.map((p) => (
                   <tr key={p._id} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-1">{p.name}</td>
-                    <td className="border border-gray-300 px-3 py-1">{p.packing}</td>
-                    <td className="border border-gray-300 px-3 py-1">{p.dosageForm}</td>
-                    <td className="border border-gray-300 px-3 py-1">{p.description}</td>
-                    <td className="border border-gray-300 px-3 py-1">{p.tax}</td>
-                    <td className="border border-gray-300 px-3 py-1">{p.mrp}</td>
-                    <td className="border border-gray-300 px-3 py-1">{p.netRate}</td>
-                    <td className="border border-gray-300 px-3 py-1 text-center">
-                     <td className="border border-gray-300 px-3 py-1 text-center space-x-2">
+                    <td className="border text-sm border-gray-300 px-3 py-1">{p.name}</td>
+                    <td className="border text-sm border-gray-300 px-3 py-1">{p.packing}</td>
+                    <td className="border text-sm border-gray-300 px-3 py-1">{p.dosageForm}</td>
+                    <td className="border text-sm border-gray-300 px-3 py-1">{p.description}</td>
+                    <td className="border text-sm border-gray-300 px-3 py-1">{p.tax}</td>
+                    <td className="border text-sm border-gray-300 px-3 py-1">{p.mrp}</td>
+                    <td className="border text-sm border-gray-300 px-3 py-1">{p.netRate}</td>
+                    <td className="border text-sm border-gray-300 px-3 py-1 text-center">
+                     <td className="border text-sm border-gray-300 px-3 py-1 text-center space-x-2">
   <button
     onClick={() => openEditModal(p)}
     className="text-blue-600 hover:underline"

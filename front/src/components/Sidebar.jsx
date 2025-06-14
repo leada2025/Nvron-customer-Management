@@ -43,7 +43,7 @@ const toggleSubmenu = (label) => {
   {
     label: "💰 Price Control",
     submenu: [
-      { to: "/price-requests", label: "Price Requests" },
+      { to: "/negotiationhis", label: "Price Requests" },
       { to: "/price-approval", label: "Approve/Reject" },
       { to: "/price-history", label: "History Log" },
     ],

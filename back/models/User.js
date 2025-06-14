@@ -22,6 +22,12 @@ const userSchema = new mongoose.Schema({
     ref: "User",
     default: null, // this stores which user added this customer
   },
+  assignedTo: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null,
+},
+
 });
 
 module.exports = mongoose.model("User", userSchema);
