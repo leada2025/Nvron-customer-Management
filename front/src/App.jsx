@@ -86,12 +86,13 @@ function App() {
           <Route path="priceapproval" element={<NegotiationApprovalPage />} />
         </Route>
 
+  <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
         {/* User Routes */}
         <Route element={<UserLayout />}>
         <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
 
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
+        
           <Route path="/products" element={<ProtectedRoute><ProductPage /></ProtectedRoute>} />
           <Route path="/order-summary" element={<ProtectedRoute><OrderSummaryPage /></ProtectedRoute>} />
           <Route path="/request-services" element={<ProtectedRoute><RequestServicePage /></ProtectedRoute>} />

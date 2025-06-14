@@ -86,72 +86,70 @@ const ProductPage = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto bg-white rounded-md shadow">
-        <table className="min-w-full text-sm text-left border">
-          <thead className="bg-gray-100 text-gray-700 font-semibold">
-            <tr>
-              <th className="p-3 border">Product</th>
-              <th className="p-3 border">Description</th>
-              <th className="p-3 border">Dosage Form</th>
-              <th className="p-3 border">Packing</th>
-              <th className="p-3 border">MRP</th>
-              <th className="p-3 border">Net Rate</th>
-              <th className="p-3 border">Tax</th>
-              <th className="p-3 border">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((product) => (
-              <tr key={product._id} className="border-b">
-                <td className="p-3 border">{product.name}</td>
-                <td className="p-3 border">{product.description}</td>
-                <td className="p-3 border">{product.dosageForm || "TABLET"}</td>
-                <td className="p-3 border">{product.packing || "10X10 PVC BLISTER"}</td>
-                <td className="p-3 border">₹{product.price}</td>
-                <td className="p-3 border text-green-600">
-                  {product.specialPrice ? (
-                    <>
-                      ₹{product.specialPrice}{" "}
-                      <span className="text-sm text-green-700">(Special)</span>
-                    </>
-                  ) : (
-                    <span className="text-blue-700 underline cursor-pointer">
-                      Negotiate Price
-                    </span>
-                  )}
-                </td>
-                <td className="p-3 border">12%</td>
-                <td className="p-3 border flex items-center gap-2">
-                  <button
-                    className="px-2 py-1 bg-gray-200 rounded"
-                    onClick={() => handleQuantityChange(product._id, -1)}
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <input
-                    type="number"
-                    className="w-10 text-center border rounded"
-                    value={quantities[product._id] || 1}
-                    readOnly
-                  />
-                  <button
-                    className="px-2 py-1 bg-gray-200 rounded"
-                    onClick={() => handleQuantityChange(product._id, 1)}
-                  >
-                    <Plus size={14} />
-                  </button>
-                  <button
-                    onClick={() => handleAddToOrder(product)}
-                    className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
-                  >
-                    Add
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+     {/* Table */}
+<div className="overflow-x-auto bg-white rounded-xl shadow p-4">
+  <table className="min-w-full text-sm text-left">
+    <thead className="text-gray-600 uppercase text-xs tracking-wider">
+      <tr>
+        <th className="py-2 px-3">Product</th>
+        <th className="py-2 px-3">Description</th>
+        <th className="py-2 px-3">Dosage Form</th>
+        <th className="py-2 px-3">Packing</th>
+        <th className="py-2 px-3">MRP</th>
+        <th className="py-2 px-3">Net Rate</th>
+        <th className="py-2 px-3">Tax</th>
+        <th className="py-2 px-3">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filteredProducts.map((product) => (
+        <tr
+          key={product._id}
+          className="hover:bg-slate-50 transition border-b last:border-none"
+        >
+          <td className="py-3 px-3">{product.name}</td>
+          <td className="py-3 px-3">{product.description}</td>
+          <td className="py-3 px-3">{product.dosageForm || "TABLET"}</td>
+          <td className="py-3 px-3">{product.packing || "10X10 PVC BLISTER"}</td>
+          <td className="py-3 px-3">₹{product.price}</td>
+          <td className="py-3 px-3 text-green-600">
+            ₹{product.specialPrice || product.price}
+          </td>
+          <td className="py-3 px-3">12%</td>
+          <td className="py-3 px-3">
+            <div className="flex items-center gap-2">
+              <button
+                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                onClick={() => handleQuantityChange(product._id, -1)}
+              >
+                <Minus size={14} />
+              </button>
+              <input
+                type="number"
+                className="w-10 text-center bg-slate-100 rounded"
+                value={quantities[product._id] || 1}
+                readOnly
+              />
+              <button
+                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                onClick={() => handleQuantityChange(product._id, 1)}
+              >
+                <Plus size={14} />
+              </button>
+              <button
+                onClick={() => handleAddToOrder(product)}
+                className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
+              >
+                Add
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
 
       {/* Place Order Button */}
       {orderItems.length > 0 && (

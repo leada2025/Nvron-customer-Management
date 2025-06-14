@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
+  LayoutDashboard,
   Home,
   BookOpen,
   ShoppingCart,
@@ -11,6 +12,7 @@ import {
 
 const Sidebar = () => {
   const navItems = [
+    { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={18} /> },
     { label: "Home", path: "/products", icon: <Home size={18} /> },
     { label: "Catalogue", path: "/catalog", icon: <BookOpen size={18} /> },
     { label: "Order History", path: "/order-history", icon: <ShoppingCart size={18} /> },

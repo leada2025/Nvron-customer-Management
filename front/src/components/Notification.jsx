@@ -1,5 +1,10 @@
-// components/NotificationsDropdown.jsx
 import React, { useState, useRef, useEffect } from "react";
+import {
+  Bell,
+  Gift,
+  Truck,
+  Wrench,
+} from "lucide-react"; // Add more icons here if needed
 
 export default function NotificationsDropdown() {
   const [open, setOpen] = useState(false);
@@ -17,18 +22,30 @@ export default function NotificationsDropdown() {
     <div className="relative inline-block text-left ml-[500px] z-[60]" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-gray-800 hover:text-black font-medium"
+        className="flex items-center gap-2 text-[#0b7b7b] hover:text-[#096969] font-semibold transition"
       >
-        <span>🔔</span> 
+       <Bell className="w-5 h-5 text-white" />
+
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-72 bg-white border rounded-lg shadow-lg z-50">
-          <div className="px-4 py-2 border-b font-semibold">🔔 Important Messages</div>
-          <div className="flex flex-col text-sm text-gray-700">
-            <div className="px-4 py-2 hover:bg-gray-100">🎁 New Offers / Schemes</div>
-            <div className="px-4 py-2 hover:bg-gray-100">🚚 Dispatch & Payment Alerts</div>
-            <div className="px-4 py-2 hover:bg-gray-100">🛠️ Portal Updates</div>
+        <div className="absolute right-0 mt-2 w-80 bg-white border border-teal-200 rounded-xl shadow-2xl z-50 overflow-hidden">
+          <div className="px-4 py-3 bg-[#0b7b7b] text-white font-semibold text-sm">
+            Notifications
+          </div>
+          <div className="flex flex-col text-sm text-gray-700 divide-y divide-gray-200">
+            <div className="flex items-center gap-2 px-4 py-3 hover:bg-teal-50 transition cursor-pointer">
+              <Gift size={16} className="text-[#0b7b7b]" />
+              New Offers & Schemes
+            </div>
+            <div className="flex items-center gap-2 px-4 py-3 hover:bg-teal-50 transition cursor-pointer">
+              <Truck size={16} className="text-[#0b7b7b]" />
+              Dispatch & Payment Alerts
+            </div>
+            <div className="flex items-center gap-2 px-4 py-3 hover:bg-teal-50 transition cursor-pointer">
+              <Wrench size={16} className="text-[#0b7b7b]" />
+              Portal Updates
+            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  UserCircle,
+  LogOut,
+} from "lucide-react"; // Lucide icons
 
 export default function ProfileDropdown() {
   const [open, setOpen] = useState(false);
@@ -29,29 +33,29 @@ export default function ProfileDropdown() {
     <div className="relative inline-block text-left z-50" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-gray-800 hover:text-black font-medium"
+        className="flex items-center gap-2 bg-[#0b7b7b] text-white px-3 py-1 rounded-md hover:bg-[#096969] transition"
       >
-        <span>My Profile</span> <span>👤</span>
+        <UserCircle className="w-5 h-5" />
+        <span>My Profile</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg z-50">
-          <div className="px-4 py-2 border-b font-semibold">👤 My Profile</div>
-          <div className="flex flex-col text-sm text-gray-700">
-            <button onClick={() => handleNavigate("business")} className="text-left px-4 py-2 hover:bg-gray-100">
-              🏥 Manage Business Info
+        <div className="absolute right-0 mt-2 w-64 bg-white border border-teal-200 rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="flex flex-col text-sm text-gray-800 divide-y divide-gray-200">
+            <button
+              onClick={() => handleNavigate("")}
+              className="flex items-center gap-2 px-4 py-3 hover:bg-teal-50 transition text-left"
+            >
+              <UserCircle size={18} className="text-[#0b7b7b]" />
+              <span>My Profile</span>
             </button>
-            <button onClick={() => handleNavigate("address")} className="text-left px-4 py-2 hover:bg-gray-100">
-              🏠 Address Book
-            </button>
-            <button onClick={() => handleNavigate("contact")} className="text-left px-4 py-2 hover:bg-gray-100">
-              📞 Contact Details
-            </button>
-            <button onClick={() => handleNavigate("password")} className="text-left px-4 py-2 hover:bg-gray-100">
-              🔑 Change Password
-            </button>
-            <button onClick={handleLogout} className="text-left px-4 py-2 text-red-500 hover:bg-red-50">
-              🚪 Logout
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-3 hover:bg-red-50 transition text-left text-red-500"
+            >
+              <LogOut size={18} className="text-red-500" />
+              <span>Logout</span>
             </button>
           </div>
         </div>
