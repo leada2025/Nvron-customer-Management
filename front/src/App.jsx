@@ -5,7 +5,7 @@ import UserLayout from "./layouts/UserLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import CatalogPage from "./Pages/CatalogPage";
-import OfferPage from "./pages/OfferPage";
+import OfferPage from "./Pages/OfferPage";
 import SignupPage from "./Pages/SignupPage";
 import LoginPage from "./Pages/LoginPage";
 import WelcomePage from "./Pages/WelcomePage";
