@@ -10,6 +10,8 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
     tax: 12,
     mrp: "",
     netRate: "",
+    ptr: "",
+    pts: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -26,6 +28,8 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
         tax: initialData.tax || 12,
         mrp: initialData.mrp || "",
         netRate: initialData.netRate || "",
+        ptr: initialData.ptr || "",
+        pts: initialData.pts || "",
       });
     } else {
       setForm({
@@ -36,6 +40,8 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
         tax: 12,
         mrp: "",
         netRate: "",
+        ptr: "",
+        pts: "",
       });
     }
     setError("");
@@ -48,95 +54,83 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
-  setSuccessMsg("");
 
-  const token = localStorage.getItem("token");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccessMsg("");
 
-  // Convert string inputs to numbers explicitly
-  const cleanedForm = {
-    ...form,
-    tax: Number(form.tax),
-    mrp: parseFloat(form.mrp),
-    netRate: parseFloat(form.netRate),
-  };
-  if (initialData?.approved) {
-  delete cleanedForm.mrp;
-  delete cleanedForm.netRate;
-}
+    const token = localStorage.getItem("token");
 
- try {
-  if (initialData && initialData._id) {
-    await axios.put(
-      `/api/products/${initialData._id}`,
-      cleanedForm,
-      {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
+    const cleanedForm = {
+      ...form,
+      tax: Number(form.tax),
+      mrp: parseFloat(form.mrp),
+      netRate: parseFloat(form.netRate),
+      ptr: parseFloat(form.ptr),
+      pts: parseFloat(form.pts),
+    };
+
+    if (initialData?.approved) {
+      delete cleanedForm.mrp;
+      delete cleanedForm.netRate;
+    }
+
+    try {
+      if (initialData && initialData._id) {
+        await axios.put(`/api/products/${initialData._id}`, cleanedForm, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        setSuccessMsg("Product updated successfully!");
+      } else {
+        await axios.post("/api/products", cleanedForm, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        setSuccessMsg("Product added successfully!");
+        setForm({
+          name: "",
+          packing: "",
+          dosageForm: "",
+          description: "",
+          tax: 12,
+          mrp: "",
+          netRate: "",
+          ptr: "",
+          pts: "",
+        });
       }
-    );
-    setSuccessMsg("Product updated successfully!");
-  } else {
-    await axios.post("/api/products", cleanedForm, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-    });
-    setSuccessMsg("Product added successfully!");
-    setForm({
-      name: "",
-      packing: "",
-      dosageForm: "",
-      description: "",
-      tax: 12,
-      mrp: "",
-      netRate: "",
-    });
-  }
 
-  if (onSubmit) {
-    onSubmit(cleanedForm); // ✅ Notify parent of the updated/created product
-  }
-
-  setLoading(false);
-
-} catch (err) {
-  console.error("API error:", err);
-  setError(
-    err.response?.data?.message || "Failed to save product. Please try again."
-  );
-  setSuccessMsg("");
-  setLoading(false);
-}
-}
-
-
-
+      if (onSubmit) {
+        onSubmit(cleanedForm);
+      }
+    } catch (err) {
+      console.error("API error:", err);
+      setError(err.response?.data?.message || "Failed to save product. Please try again.");
+      setSuccessMsg("");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+
         <h3 className="text-lg font-semibold mb-4">
           {initialData ? "Edit Product" : "Add Product"}
         </h3>
 
-        {error && (
-          <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{error}</div>
-        )}
-        {successMsg && (
-          <div className="bg-green-100 text-green-700 p-2 mb-4 rounded">
-            {successMsg}
-          </div>
-        )}
+        {error && <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{error}</div>}
+        {successMsg && <div className="bg-green-100 text-green-700 p-2 mb-4 rounded">{successMsg}</div>}
 
-        <form onSubmit={handleSubmit} className="">
-          {/* Form fields here (same as your original) */}
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block font-medium mb-1">Product Name</label>
             <input
@@ -205,42 +199,71 @@ const handleSubmit = async (e) => {
             </select>
           </div>
 
-         <div>
-  <label className="block font-medium mb-1">MRP</label>
-  <input
-    name="mrp"
-    type="number"
-    value={form.mrp}
-    onChange={handleChange}
-    required
-    min="0"
-    step="0.01"
-    className={`w-full border border-gray-300 rounded px-3 py-2 ${
-      initialData?.approved ? "bg-gray-100 cursor-not-allowed" : ""
-    }`}
-    placeholder="₹"
-    disabled={loading || initialData?.approved}
-  />
-</div>
+          <div>
+            <label className="block font-medium mb-1">MRP</label>
+            <input
+              name="mrp"
+              type="number"
+              value={form.mrp}
+              onChange={handleChange}
+              required
+              min="0"
+              step="0.01"
+              className={`w-full border border-gray-300 rounded px-3 py-2 ${
+                initialData?.approved ? "bg-gray-100 cursor-not-allowed" : ""
+              }`}
+              placeholder="₹"
+              disabled={loading || initialData?.approved}
+            />
+          </div>
 
-<div>
-  <label className="block font-medium mb-1">Net Rate</label>
-  <input
-    name="netRate"
-    type="number"
-    value={form.netRate}
-    onChange={handleChange}
-    required
-    min="0"
-    step="0.01"
-    className={`w-full border border-gray-300 rounded px-3 py-2 ${
-      initialData?.approved ? "bg-gray-100 cursor-not-allowed" : ""
-    }`}
-    placeholder="₹"
-    disabled={loading || initialData?.approved}
-  />
-</div>
+          <div>
+            <label className="block font-medium mb-1">Net Rate</label>
+            <input
+              name="netRate"
+              type="number"
+              value={form.netRate}
+              onChange={handleChange}
+              required
+              min="0"
+              step="0.01"
+              className={`w-full border border-gray-300 rounded px-3 py-2 ${
+                initialData?.approved ? "bg-gray-100 cursor-not-allowed" : ""
+              }`}
+              placeholder="₹"
+              disabled={loading || initialData?.approved}
+            />
+          </div>
 
+          <div>
+            <label className="block font-medium mb-1">PTR</label>
+            <input
+              name="ptr"
+              type="number"
+              value={form.ptr}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              placeholder="₹"
+              disabled={loading}
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium mb-1">PTS</label>
+            <input
+              name="pts"
+              type="number"
+              value={form.pts}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              placeholder="₹"
+              disabled={loading}
+            />
+          </div>
 
           <div className="flex justify-end space-x-3 pt-4 border-t">
             <button

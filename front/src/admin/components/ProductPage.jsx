@@ -13,7 +13,6 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch products from backend
   const fetchProducts = async () => {
     setLoading(true);
     setError("");
@@ -33,12 +32,10 @@ export default function ProductsPage() {
     }
   };
 
-  // Load products on mount
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  // Filter products safely and with search
   const filteredProducts = useMemo(() => {
     if (!Array.isArray(products)) return [];
     if (!searchTerm) return products;
@@ -52,13 +49,11 @@ export default function ProductsPage() {
 
   const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
 
-  // Products to show on current page
   const pagedProducts = filteredProducts.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE
   );
 
-  // Handlers
   const openAddModal = () => {
     setEditProduct(null);
     setModalOpen(true);
@@ -74,26 +69,21 @@ export default function ProductsPage() {
     setEditProduct(null);
   };
 
-  // Handle add/edit submit and refresh products list
   const handleSubmit = async (formData) => {
     const token = localStorage.getItem("token");
     try {
       if (editProduct) {
-        // Edit product
-        await axios.put(
-          `/api/products/${editProduct._id}`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.put(`/api/products/${editProduct._id}`, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } else {
-        // Add product
         await axios.post("/api/products", formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
       closeModal();
-      await fetchProducts(); // Refresh list after add/edit
-      setPage(1); // Reset to first page after change
+      await fetchProducts();
+      setPage(1);
     } catch (err) {
       alert(
         err.response?.data?.message || "Failed to save product. Please try again."
@@ -102,24 +92,22 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (productId) => {
-  const confirmed = window.confirm("Are you sure you want to delete this product?");
-  if (!confirmed) return;
+    const confirmed = window.confirm("Are you sure you want to delete this product?");
+    if (!confirmed) return;
 
-  const token = localStorage.getItem("token");
-  try {
-    await axios.delete(`/api/products/${productId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    await fetchProducts(); // Refresh list after delete
-  } catch (err) {
-    alert(
-      err.response?.data?.message || "Failed to delete product. Please try again."
-    );
-  }
-};
+    const token = localStorage.getItem("token");
+    try {
+      await axios.delete(`/api/products/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await fetchProducts();
+    } catch (err) {
+      alert(
+        err.response?.data?.message || "Failed to delete product. Please try again."
+      );
+    }
+  };
 
-
-  // Pagination controls
   const goToPage = (num) => {
     if (num < 1 || num > totalPages) return;
     setPage(num);
@@ -164,13 +152,15 @@ export default function ProductsPage() {
                 <th className="border border-gray-300 px-3 py-1">Tax</th>
                 <th className="border border-gray-300 px-3 py-1">MRP</th>
                 <th className="border border-gray-300 px-3 py-1">Net Rate</th>
+                <th className="border border-gray-300 px-3 py-1">PTR</th>
+                <th className="border border-gray-300 px-3 py-1">PTS</th>
                 <th className="border border-gray-300 px-3 py-1">Actions</th>
               </tr>
             </thead>
             <tbody>
               {pagedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-4">
+                  <td colSpan={10} className="text-center py-4">
                     No products found.
                   </td>
                 </tr>
@@ -184,22 +174,21 @@ export default function ProductsPage() {
                     <td className="border text-sm border-gray-300 px-3 py-1">{p.tax}</td>
                     <td className="border text-sm border-gray-300 px-3 py-1">{p.mrp}</td>
                     <td className="border text-sm border-gray-300 px-3 py-1">{p.netRate}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1 text-center">
-                     <td className="border text-sm border-gray-300 px-3 py-1 text-center space-x-2">
-  <button
-    onClick={() => openEditModal(p)}
-    className="text-blue-600 hover:underline"
-  >
-    Edit
-  </button>
-  <button
-    onClick={() => handleDelete(p._id)}
-    className="text-red-600 hover:underline"
-  >
-    Delete
-  </button>
-</td>
-
+                    <td className="border text-sm border-gray-300 px-3 py-1">{p.ptr}</td>
+                    <td className="border text-sm border-gray-300 px-3 py-1">{p.pts}</td>
+                    <td className="border text-sm border-gray-300 px-3 py-1 text-center space-x-2">
+                      <button
+                        onClick={() => openEditModal(p)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p._id)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -242,7 +231,6 @@ export default function ProductsPage() {
         </>
       )}
 
-      {/* Add/Edit Product Modal */}
       {modalOpen && (
         <ProductForm
           isOpen={modalOpen}

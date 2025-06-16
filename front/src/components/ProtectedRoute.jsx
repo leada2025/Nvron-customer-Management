@@ -2,7 +2,7 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({ children, redirectPath = "/login" }) => {
+const ProtectedRoute = ({ children, redirectPath = "/" }) => {
   const token = localStorage.getItem("token");
   if (!token) return <Navigate to={redirectPath} replace />;
   return children;

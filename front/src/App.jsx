@@ -58,7 +58,7 @@ function App() {
 
         {/* Admin Login */}
         <Route
-          path="/admin-login"
+          path="/"
           element={token ? <Navigate to="/admin" replace /> : <AdminLogin setToken={setToken} />}
         />
         <Route path="/admin/unauthorized" element={<Unauthorized />} />
@@ -67,7 +67,7 @@ function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute redirectPath="/admin-login">
+            <ProtectedRoute redirectPath="/">
               <AdminLayout setToken={setToken} />
             </ProtectedRoute>
           }
