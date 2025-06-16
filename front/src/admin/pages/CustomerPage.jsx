@@ -169,7 +169,7 @@ const CustomerPage = () => {
               <th className="p-3">Customer Name</th>
               <th className="p-3">Customer Code</th>
               <th className="p-3">Sales Executive Name</th>
-              <th className="p-3">Phone</th>
+              <th className="p-3">Tag</th>
               <th className="p-3">Status</th>
               <th className="p-3 text-center">Actions</th>
             </tr>
@@ -193,7 +193,7 @@ const CustomerPage = () => {
                   Alice Williams
                   <div className="text-xs text-gray-500">alicewilliams123@gmail.com</div>
                 </td>
-                <td className="p-3">87858 65654</td>
+                <td className="p-3">{u.tag}</td>
                 <td className="p-3">
                   <span
                     className={`px-3 py-1 text-xs font-semibold rounded-full ${

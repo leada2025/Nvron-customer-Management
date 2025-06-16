@@ -14,20 +14,25 @@ const userSchema = new mongoose.Schema({
   },
   isActive: {
     type: Boolean,
-    default: true, // true = enabled, false = disabled
+    default: true,
   },
-
-   assignedBy: {
+  assignedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    default: null, // this stores which user added this customer
+    default: null,
   },
   assignedTo: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "User",
-  default: null,
-},
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
 
+  // 👇 Add this line
+  tags: {
+    type: [String],
+    default: [], // e.g., ["Doctor", "Retailer"]
+  },
 });
+
 
 module.exports = mongoose.model("User", userSchema);
