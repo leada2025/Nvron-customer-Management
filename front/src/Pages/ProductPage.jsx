@@ -11,7 +11,8 @@ const ProductPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
-  const userRole = localStorage.getItem("userRole"); // 'doctor', 'retailer', or 'distributor'
+  const userRole = localStorage.getItem("role"); // "Admin" or "Customer"
+  const userPosition = localStorage.getItem("position"); // "doctor", "retailer", "distributor" (only for Customer)
 
   useEffect(() => {
     const fetchProductsAndSpecialPrices = async () => {
@@ -75,6 +76,11 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen bg-[#f1f5f9] p-6 relative">
+      <div className="text-sm text-gray-600 mb-2">
+        Role: {userRole}
+        {userRole === "Customer" && userPosition && ` (${userPosition})`}
+      </div>
+
       {/* Search Input */}
       <div className="flex items-center bg-white p-3 rounded-md shadow-sm mb-4 w-full max-w-xl">
         <Search size={18} className="text-gray-400 mr-2" />
@@ -87,7 +93,7 @@ const ProductPage = () => {
         />
       </div>
 
-      {/* Table */}
+      {/* Product Table */}
       <div className="overflow-x-auto bg-white rounded-xl shadow p-4">
         <table className="min-w-full text-sm text-left">
           <thead className="text-gray-600 uppercase text-xs tracking-wider">
@@ -98,10 +104,15 @@ const ProductPage = () => {
               <th className="py-2 px-3">Packing</th>
               <th className="py-2 px-3">MRP</th>
 
-              {/* Conditional Price Column */}
-              {userRole === "doctor" && <th className="py-2 px-3">Net Rate</th>}
-              {userRole === "retailer" && <th className="py-2 px-3">PTR</th>}
-              {userRole === "distributor" && <th className="py-2 px-3">PTS</th>}
+              {userRole === "Customer" && userPosition === "Doctor" && (
+                <th className="py-2 px-3">Net Rate</th>
+              )}
+              {userRole === "Customer" && userPosition === "retailer" && (
+                <th className="py-2 px-3">PTR</th>
+              )}
+              {userRole === "Customer" && userPosition === "distributor" && (
+                <th className="py-2 px-3">PTS</th>
+              )}
 
               <th className="py-2 px-3">Tax</th>
               <th className="py-2 px-3">Action</th>
@@ -116,27 +127,28 @@ const ProductPage = () => {
                 <td className="py-3 px-3">{product.name}</td>
                 <td className="py-3 px-3">{product.description}</td>
                 <td className="py-3 px-3">{product.dosageForm || "TABLET"}</td>
-                <td className="py-3 px-3">{product.packing || "10X10 PVC BLISTER"}</td>
-                <td className="py-3 px-3">₹{product.price}</td>
+                <td className="py-3 px-3">
+                  {product.packing || "10X10 PVC BLISTER"}
+                </td>
+                <td className="py-3 px-3">₹{product.mrp}</td>
 
-                {/* Conditional Pricing */}
-                {userRole === "doctor" && (
+                {userRole === "Customer" && userPosition === "Doctor" && (
                   <td className="py-3 px-3 text-green-600">
-                    ₹{product.specialPrice || product.price}
+                    ₹{product.specialPrice || product.netRate}
                   </td>
                 )}
-                {userRole === "retailer" && (
+                {userRole === "Customer" && userPosition === "Retailer" && (
                   <td className="py-3 px-3 text-blue-600">
                     ₹{product.ptr || "-"}
                   </td>
                 )}
-                {userRole === "distributor" && (
+                {userRole === "Customer" && userPosition === "Distributor" && (
                   <td className="py-3 px-3 text-purple-600">
                     ₹{product.pts || "-"}
                   </td>
                 )}
 
-                <td className="py-3 px-3">12%</td>
+                <td className="py-3 px-3">{product.tax || 12}%</td>
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-2">
                     <button
