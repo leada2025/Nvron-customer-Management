@@ -3,7 +3,6 @@ import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import axios from "../api/Axios";
 
-// Predefined position options
 const POSITION_OPTIONS = [
   { label: "Doctor", value: "Doctor" },
   { label: "Retailer", value: "Retailer" },
@@ -12,7 +11,7 @@ const POSITION_OPTIONS = [
   { label: "Hospital", value: "Hospital" },
 ];
 
-const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignableUsers }) => {
+const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], assignableUsers = [] }) => {
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [password, setPassword] = useState("");
@@ -23,6 +22,7 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
   const [position, setPosition] = useState(
     user?.position ? { label: user.position, value: user.position } : null
   );
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (role && !user) {
@@ -35,14 +35,14 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
   }, [role]);
 
   const handleCheckboxChange = (perm) => {
-    if (permissions.includes(perm)) {
-      setPermissions(permissions.filter((p) => p !== perm));
-    } else {
-      setPermissions([...permissions, perm]);
-    }
+    setPermissions((prev) =>
+      prev.includes(perm)
+        ? prev.filter((p) => p !== perm)
+        : [...prev, perm]
+    );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name || !email || !role) {
       alert("Name, Email, and Role are required");
       return;
@@ -52,16 +52,31 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
       name,
       email,
       role,
-      assignedTo: roleName === "Customer" ? assignedTo || null : null,
-      permissions: roleName === "Customer" ? [] : permissions,
+      assignedTo: roleName.toLowerCase() === "customer" ? assignedTo || null : null,
+      permissions: roleName.toLowerCase() === "customer" ? [] : permissions,
       position: position?.value || null,
     };
 
-    if (password) {
-      userData.password = password;
-    }
+    if (password) userData.password = password;
 
-    onSave(userData);
+    setLoading(true);
+    try {
+      await onSave(userData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRoleChange = (selected) => {
+    if (!selected) {
+      setRole("");
+      setRoleName("");
+      setPermissions([]);
+    } else {
+      setRole(selected.value);
+      setRoleName(selected.label);
+      setPermissions(selected.permissions || []);
+    }
   };
 
   const roleOptions = allRoles.map((r) => ({
@@ -70,37 +85,22 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
     permissions: r.permissions,
   }));
 
-  const handleRoleChange = (selected) => {
-    if (!selected) {
-      setRole("");
-      setRoleName("");
-      setPermissions([]);
-      return;
-    }
-
-    setRole(selected.value);
-    setRoleName(selected.label);
-    setPermissions(selected.permissions || []);
-  };
-
-  const nonCustomerExecutives = (assignableUsers || []).filter((user) => {
-    const roleName = user.role?.name?.toLowerCase() || "";
-    return roleName !== "customer" && roleName.includes("sales");
+  const salesExecutives = (assignableUsers || []).filter((exec) => {
+    const execRole = exec?.role?.name?.toLowerCase() || "";
+    return execRole !== "customer" && execRole.includes("sales");
   });
 
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-xl">
-        <h2 className="text-xl font-semibold mb-4">
-          {user ? "Edit User" : "Add New User"}
-        </h2>
+      <div className="bg-white rounded-lg p-6 w-full max-w-xl overflow-y-auto max-h-[90vh]">
+        <h2 className="text-xl font-semibold mb-4">{user ? "Edit User" : "Add New User"}</h2>
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium">Name</label>
             <input
               type="text"
-              className="w-full border border-gray-300 px-3 py-2 rounded mt-1"
+              className="w-full border px-3 py-2 rounded mt-1"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -110,7 +110,7 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
             <label className="block text-sm font-medium">Email</label>
             <input
               type="email"
-              className="w-full border border-gray-300 px-3 py-2 rounded mt-1"
+              className="w-full border px-3 py-2 rounded mt-1"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -121,7 +121,7 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
               <label className="block text-sm font-medium">Password</label>
               <input
                 type="password"
-                className="w-full border border-gray-300 px-3 py-2 rounded mt-1"
+                className="w-full border px-3 py-2 rounded mt-1"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -135,19 +135,17 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
               onChange={handleRoleChange}
               options={roleOptions}
               defaultValue={
-                user && user.role
-                  ? {
-                      value: user.role._id,
-                      label: user.role.name,
-                      permissions: user.role.permissions,
-                    }
-                  : null
+                user?.role ? {
+                  value: user.role._id,
+                  label: user.role.name,
+                  permissions: user.role.permissions
+                } : null
               }
               placeholder="Type to search or create role..."
             />
           </div>
 
-          {roleName === "Customer" && (
+          {roleName.toLowerCase() === "customer" && (
             <div>
               <label className="block font-medium mb-1">Assign To (Sales Executive)</label>
               <select
@@ -156,7 +154,7 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
                 className="w-full border px-3 py-2 rounded"
               >
                 <option value="">— None —</option>
-                {nonCustomerExecutives.map((exec) => (
+                {(salesExecutives || []).map((exec) => (
                   <option key={exec._id} value={exec._id}>
                     {exec.name} ({exec.role?.name || "No Role"})
                   </option>
@@ -165,9 +163,8 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
             </div>
           )}
 
-          {/* Position Selection */}
           <div>
-            <label className="block text-sm font-medium mb-1">Position</label>
+            <label className="block text-sm font-medium">Position</label>
             <Select
               isClearable
               options={POSITION_OPTIONS}
@@ -178,11 +175,11 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
             />
           </div>
 
-          {roleName !== "Customer" && (
+          {roleName.toLowerCase() !== "customer" && (
             <div>
               <label className="block text-sm font-medium">Permissions</label>
               <div className="grid grid-cols-2 gap-2 mt-1">
-                {allPermissions.map((perm) => (
+                {(allPermissions || []).map((perm) => (
                   <label key={perm} className="inline-flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -207,9 +204,10 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
 
           <button
             onClick={handleSubmit}
+            disabled={loading}
             className="px-3 py-1 text-sm bg-gray-800 text-white rounded hover:bg-gray-700"
           >
-            {user ? "Update" : "Create"}
+            {loading ? "Saving..." : user ? "Update" : "Create"}
           </button>
 
           {user && (
