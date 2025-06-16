@@ -166,12 +166,23 @@ router.post(
   async (req, res) => {
     try {
       console.log("Authenticated user info:", req.user);
-      const { name, email, password, role, permissions, assignedTo, tags } = req.body;
 
-      if (!password) return res.status(400).json({ message: "Password required" });
+      const {
+        name,
+        email,
+        password,
+        role,
+        permissions,
+        assignedTo,
+        position, // 👈 updated from tags
+      } = req.body;
+
+      if (!password)
+        return res.status(400).json({ message: "Password required" });
 
       const existingUser = await User.findOne({ email });
-      if (existingUser) return res.status(400).json({ message: "User already exists" });
+      if (existingUser)
+        return res.status(400).json({ message: "User already exists" });
 
       const passwordHash = await bcrypt.hash(password, 10);
 
@@ -193,7 +204,7 @@ router.post(
         permissions,
         assignedBy: req.user?.userId || null,
         assignedTo: assignedTo || null,
-        tags: tags || [], // 👈 store tags if provided
+        position: position || null, // 👈 store position if provided
       });
 
       await user.save();
@@ -203,6 +214,7 @@ router.post(
     }
   }
 );
+
 
 // Update user (admin only)
 router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res) => {

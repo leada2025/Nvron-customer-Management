@@ -3,8 +3,8 @@ import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import axios from "../api/Axios";
 
-// Predefined tag options
-const TAG_OPTIONS = [
+// Predefined position options
+const POSITION_OPTIONS = [
   { label: "Doctor", value: "Doctor" },
   { label: "Retailer", value: "Retailer" },
   { label: "Distributor", value: "Distributor" },
@@ -20,7 +20,9 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
   const [roleName, setRoleName] = useState(user?.role?.name || "");
   const [permissions, setPermissions] = useState(user?.permissions || []);
   const [assignedTo, setAssignedTo] = useState(user?.assignedTo || "");
-  const [tags, setTags] = useState(user?.tags?.map((tag) => ({ label: tag, value: tag })) || []);
+  const [position, setPosition] = useState(
+    user?.position ? { label: user.position, value: user.position } : null
+  );
 
   useEffect(() => {
     if (role && !user) {
@@ -52,7 +54,7 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
       role,
       assignedTo: roleName === "Customer" ? assignedTo || null : null,
       permissions: roleName === "Customer" ? [] : permissions,
-      tags: tags.map((t) => t.value),
+      position: position?.value || null,
     };
 
     if (password) {
@@ -78,11 +80,7 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
 
     setRole(selected.value);
     setRoleName(selected.label);
-    if (selected.permissions) {
-      setPermissions(selected.permissions);
-    } else {
-      setPermissions([]);
-    }
+    setPermissions(selected.permissions || []);
   };
 
   const nonCustomerExecutives = (assignableUsers || []).filter((user) => {
@@ -149,7 +147,6 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
             />
           </div>
 
-          {/* Assign To dropdown only for Customer */}
           {roleName === "Customer" && (
             <div>
               <label className="block font-medium mb-1">Assign To (Sales Executive)</label>
@@ -168,20 +165,19 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
             </div>
           )}
 
-          {/* Tags Selection for All */}
+          {/* Position Selection */}
           <div>
-            <label className="block text-sm font-medium mb-1">Tags</label>
+            <label className="block text-sm font-medium mb-1">Position</label>
             <Select
-              isMulti
-              options={TAG_OPTIONS}
-              value={tags}
-              onChange={setTags}
-              placeholder="Select tags..."
+              isClearable
+              options={POSITION_OPTIONS}
+              value={position}
+              onChange={setPosition}
+              placeholder="Select position..."
               classNamePrefix="react-select"
             />
           </div>
 
-          {/* Permissions for non-Customer */}
           {roleName !== "Customer" && (
             <div>
               <label className="block text-sm font-medium">Permissions</label>

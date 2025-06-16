@@ -27,12 +27,12 @@ const userSchema = new mongoose.Schema({
     default: null,
   },
 
-  // 👇 Add this line
-  tags: {
-    type: [String],
-    default: [], // e.g., ["Doctor", "Retailer"]
+  // 👇 Updated field: position with enum
+  position: {
+    type: String,
+    enum: ["Doctor", "Retailer","Distributor"],
+    default: null,
   },
 });
-
 
 module.exports = mongoose.model("User", userSchema);
