@@ -160,45 +160,61 @@ router.get("/assignable", requireAuth({ permission: "Manage Users" }), async (re
 
 
 
-router.post("/",  requireAuth({ permission: "Manage Users" }), async (req, res) => {
-  
-  try {
+router.post(
+  "/",
+  requireAuth({ permission: "Manage Users" }),
+  async (req, res) => {
+    try {
       console.log("Authenticated user info:", req.user);
-    const { name, email, password, role, permissions, assignedTo } = req.body;
-    if (!password) return res.status(400).json({ message: "Password required" });
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
+      const {
+        name,
+        email,
+        password,
+        role,
+        permissions,
+        assignedTo,
+        position, // 👈 updated from tags
+      } = req.body;
 
-    const passwordHash = await bcrypt.hash(password, 10);
+      if (!password)
+        return res.status(400).json({ message: "Password required" });
 
-    let roleId = role;
+      const existingUser = await User.findOne({ email });
+      if (existingUser)
+        return res.status(400).json({ message: "User already exists" });
 
-if (typeof role === "string" && !mongoose.Types.ObjectId.isValid(role)) {
-  let roleDoc = await Role.findOne({ name: role });
-  if (!roleDoc) {
-    roleDoc = await Role.create({ name: role, permissions: [] });
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      let roleId = role;
+
+      if (typeof role === "string" && !mongoose.Types.ObjectId.isValid(role)) {
+        let roleDoc = await Role.findOne({ name: role });
+        if (!roleDoc) {
+          roleDoc = await Role.create({ name: role, permissions: [] });
+        }
+        roleId = roleDoc._id;
+      }
+
+      const user = new User({
+        name,
+        email,
+        passwordHash,
+        role: roleId,
+        permissions,
+        assignedBy: req.user?.userId || null,
+        assignedTo: assignedTo || null,
+        position: position || null, // 👈 store position if provided
+      });
+
+      await user.save();
+      res.status(201).json({ message: "User created" });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
   }
-  roleId = roleDoc._id;
-}
+);
 
-
-    const user = new User({
-      name,
-      email,
-      passwordHash,
-      role: roleId,
-      permissions,
-      assignedBy: req.user?.userId || null, 
-       assignedTo: assignedTo || null
-    });
-
-    await user.save();
-    res.status(201).json({ message: "User created" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
 
 // Update user (admin only)
 router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res) => {

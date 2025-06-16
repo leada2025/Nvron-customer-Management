@@ -10,33 +10,25 @@ const LoginForm = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    try {
-      const res = await axios.post("/api/auth/login", {
-        email,
-        password,
-      });
+  try {
+    const res = await axios.post("/api/auth/login", {
+      email,
+      password,
+    });
 
-      // On success, server returns token, role, name
-      const { token, role, name } = res.data;
+    const { token, user, redirectTo } = res.data;
+    localStorage.setItem("token", token);
+    localStorage.setItem("name", user.name);
+    localStorage.setItem("role", user.role);
 
-      // Save token & user info to localStorage or context/state
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("name", name);
-   
-      // Redirect based on role
-      if (role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/welcome");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Try again.");
-    }
-  };
+    navigate(redirectTo);
+  } catch (err) {
+    setError(err.response?.data?.message || "Login failed. Try again.");
+  }
+};
 
   return (
     <form
