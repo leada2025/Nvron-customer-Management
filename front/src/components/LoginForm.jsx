@@ -9,26 +9,32 @@ const LoginForm = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
 
-  try {
-    const res = await axios.post("/api/auth/login", {
-      email,
-      password,
-    });
+    try {
+      const res = await axios.post("/api/auth/login", { email, password });
 
-    const { token, user, redirectTo } = res.data;
-    localStorage.setItem("token", token);
-    localStorage.setItem("name", user.name);
-    localStorage.setItem("role", user.role);
+      const { token, user, redirectTo } = res.data;
 
-    navigate(redirectTo);
-  } catch (err) {
-    setError(err.response?.data?.message || "Login failed. Try again.");
-  }
-};
+      // Store role & token
+      localStorage.setItem("token", token);
+      localStorage.setItem("name", user.name);
+      localStorage.setItem("role", user.role);
+
+      // ✅ Store position only if user is customer
+      if (user.role === "Customer" && user.position) {
+        localStorage.setItem("position", user.position);
+      } else {
+        localStorage.removeItem("position");
+      }
+
+      navigate(redirectTo);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Login failed. Try again.");
+    }
+  };
 
   return (
     <form

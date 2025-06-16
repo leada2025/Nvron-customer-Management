@@ -11,6 +11,8 @@ const ProductPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
+  const userRole = localStorage.getItem("userRole"); // 'doctor', 'retailer', or 'distributor'
+
   useEffect(() => {
     const fetchProductsAndSpecialPrices = async () => {
       try {
@@ -86,70 +88,88 @@ const ProductPage = () => {
       </div>
 
       {/* Table */}
-     {/* Table */}
-<div className="overflow-x-auto bg-white rounded-xl shadow p-4">
-  <table className="min-w-full text-sm text-left">
-    <thead className="text-gray-600 uppercase text-xs tracking-wider">
-      <tr>
-        <th className="py-2 px-3">Product</th>
-        <th className="py-2 px-3">Description</th>
-        <th className="py-2 px-3">Dosage Form</th>
-        <th className="py-2 px-3">Packing</th>
-        <th className="py-2 px-3">MRP</th>
-        <th className="py-2 px-3">Net Rate</th>
-        <th className="py-2 px-3">Tax</th>
-        <th className="py-2 px-3">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {filteredProducts.map((product) => (
-        <tr
-          key={product._id}
-          className="hover:bg-slate-50 transition border-b last:border-none"
-        >
-          <td className="py-3 px-3">{product.name}</td>
-          <td className="py-3 px-3">{product.description}</td>
-          <td className="py-3 px-3">{product.dosageForm || "TABLET"}</td>
-          <td className="py-3 px-3">{product.packing || "10X10 PVC BLISTER"}</td>
-          <td className="py-3 px-3">₹{product.price}</td>
-          <td className="py-3 px-3 text-green-600">
-            ₹{product.specialPrice || product.price}
-          </td>
-          <td className="py-3 px-3">12%</td>
-          <td className="py-3 px-3">
-            <div className="flex items-center gap-2">
-              <button
-                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                onClick={() => handleQuantityChange(product._id, -1)}
-              >
-                <Minus size={14} />
-              </button>
-              <input
-                type="number"
-                className="w-10 text-center bg-slate-100 rounded"
-                value={quantities[product._id] || 1}
-                readOnly
-              />
-              <button
-                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                onClick={() => handleQuantityChange(product._id, 1)}
-              >
-                <Plus size={14} />
-              </button>
-              <button
-                onClick={() => handleAddToOrder(product)}
-                className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
-              >
-                Add
-              </button>
-            </div>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+      <div className="overflow-x-auto bg-white rounded-xl shadow p-4">
+        <table className="min-w-full text-sm text-left">
+          <thead className="text-gray-600 uppercase text-xs tracking-wider">
+            <tr>
+              <th className="py-2 px-3">Product</th>
+              <th className="py-2 px-3">Description</th>
+              <th className="py-2 px-3">Dosage Form</th>
+              <th className="py-2 px-3">Packing</th>
+              <th className="py-2 px-3">MRP</th>
 
+              {/* Conditional Price Column */}
+              {userRole === "doctor" && <th className="py-2 px-3">Net Rate</th>}
+              {userRole === "retailer" && <th className="py-2 px-3">PTR</th>}
+              {userRole === "distributor" && <th className="py-2 px-3">PTS</th>}
+
+              <th className="py-2 px-3">Tax</th>
+              <th className="py-2 px-3">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProducts.map((product) => (
+              <tr
+                key={product._id}
+                className="hover:bg-slate-50 transition border-b last:border-none"
+              >
+                <td className="py-3 px-3">{product.name}</td>
+                <td className="py-3 px-3">{product.description}</td>
+                <td className="py-3 px-3">{product.dosageForm || "TABLET"}</td>
+                <td className="py-3 px-3">{product.packing || "10X10 PVC BLISTER"}</td>
+                <td className="py-3 px-3">₹{product.price}</td>
+
+                {/* Conditional Pricing */}
+                {userRole === "doctor" && (
+                  <td className="py-3 px-3 text-green-600">
+                    ₹{product.specialPrice || product.price}
+                  </td>
+                )}
+                {userRole === "retailer" && (
+                  <td className="py-3 px-3 text-blue-600">
+                    ₹{product.ptr || "-"}
+                  </td>
+                )}
+                {userRole === "distributor" && (
+                  <td className="py-3 px-3 text-purple-600">
+                    ₹{product.pts || "-"}
+                  </td>
+                )}
+
+                <td className="py-3 px-3">12%</td>
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                      onClick={() => handleQuantityChange(product._id, -1)}
+                    >
+                      <Minus size={14} />
+                    </button>
+                    <input
+                      type="number"
+                      className="w-10 text-center bg-slate-100 rounded"
+                      value={quantities[product._id] || 1}
+                      readOnly
+                    />
+                    <button
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                      onClick={() => handleQuantityChange(product._id, 1)}
+                    >
+                      <Plus size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleAddToOrder(product)}
+                      className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Place Order Button */}
       {orderItems.length > 0 && (
