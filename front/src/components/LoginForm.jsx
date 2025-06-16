@@ -9,7 +9,7 @@ const LoginForm = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -18,20 +18,21 @@ const LoginForm = () => {
 
       const { token, user, redirectTo } = res.data;
 
-      // Store role & token
+      // Store essentials
       localStorage.setItem("token", token);
       localStorage.setItem("name", user.name);
       localStorage.setItem("role", user.role);
 
-      // ✅ Store position only if user is customer
+      // Store position only if role is Customer
       if (user.role === "Customer" && user.position) {
         localStorage.setItem("position", user.position);
       } else {
         localStorage.removeItem("position");
       }
 
+      // Navigate to route
       navigate(redirectTo);
-    } catch (err: any) {
+    } catch (err) {
       setError(err.response?.data?.message || "Login failed. Try again.");
     }
   };
@@ -44,14 +45,15 @@ const LoginForm = () => {
       <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
 
       {error && (
-        <div className="bg-red-100 text-red-700 p-2 mb-4 rounded-md">{error}</div>
+        <div className="bg-red-100 text-red-700 p-2 mb-4 rounded-md">
+          {error}
+        </div>
       )}
 
       <div className="mb-4">
         <label className="block mb-1 font-medium">Email</label>
         <input
           type="email"
-          name="email"
           required
           className="w-full border p-3 rounded-md"
           value={email}
