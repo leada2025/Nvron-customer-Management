@@ -24,11 +24,11 @@ export default function DashboardPage() {
     fetchDashboardStats();
   }, []);
 
-  if (loading) return <p className="p-6">Loading dashboard...</p>;
+  if (loading) return <p className="p-6 text-[#0b7b7b]">Loading dashboard...</p>;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+    <div className="p-6 max-w-7xl mx-auto bg-[#e6f7f7] min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 text-[#0b7b7b]">Dashboard</h1>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -40,26 +40,38 @@ export default function DashboardPage() {
 
       {/* Tables */}
       <div className="grid gap-6">
-        <DataTable title="Sales Executive Performance" headers={["Client Name", "Region", "Customers", "Values"]} data={[
-          ["James", "North", 20, 20],
-          ["James", "South", 15, 15],
-          ["James", "East", 18, 18],
-          ["James", "West", 17, 17],
-        ]} />
+        <DataTable
+          title="Sales Executive Performance"
+          headers={["Client Name", "Region", "Customers", "Values"]}
+          data={[
+            ["James", "North", 20, 20],
+            ["James", "South", 15, 15],
+            ["James", "East", 18, 18],
+            ["James", "West", 17, 17],
+          ]}
+        />
 
         <div className="grid md:grid-cols-2 gap-6">
-          <DataTable title="Sales Executive" headers={["Name", "Email"]} data={[
-            ["John Smith", "Johnsmith123@gmail.com"],
-            ["John Smith", "Johnsmith123@gmail.com"],
-            ["John Smith", "Johnsmith123@gmail.com"],
-            ["John Smith", "Johnsmith123@gmail.com"],
-          ]} />
-          <DataTable title="Billing Executive" headers={["Name", "Email"]} data={[
-            ["Emily", "emily123@gmail.com"],
-            ["Emily", "emily123@gmail.com"],
-            ["Emily", "emily123@gmail.com"],
-            ["Emily", "emily123@gmail.com"],
-          ]} />
+          <DataTable
+            title="Sales Executive"
+            headers={["Name", "Email"]}
+            data={[
+              ["John Smith", "Johnsmith123@gmail.com"],
+              ["John Smith", "Johnsmith123@gmail.com"],
+              ["John Smith", "Johnsmith123@gmail.com"],
+              ["John Smith", "Johnsmith123@gmail.com"],
+            ]}
+          />
+          <DataTable
+            title="Billing Executive"
+            headers={["Name", "Email"]}
+            data={[
+              ["Emily", "emily123@gmail.com"],
+              ["Emily", "emily123@gmail.com"],
+              ["Emily", "emily123@gmail.com"],
+              ["Emily", "emily123@gmail.com"],
+            ]}
+          />
         </div>
       </div>
     </div>
@@ -68,14 +80,17 @@ export default function DashboardPage() {
 
 function StatCard({ title, value, color }) {
   const colors = {
-    blue: "bg-blue-100 text-blue-800",
-    green: "bg-green-100 text-green-800",
-    yellow: "bg-yellow-100 text-yellow-800",
-    red: "bg-red-100 text-red-800",
+    blue: "bg-[#d0ebff] text-blue-900",
+    green: "bg-[#d3f9d8] text-green-900",
+    yellow: "bg-[#fff3bf] text-yellow-900",
+    red: "bg-[#ffc9c9] text-red-900",
   };
+
   return (
-    <div className={`rounded p-6 flex flex-col items-center justify-center shadow ${colors[color]}`}>
-      <p className="text-sm font-semibold mb-2">{title}</p>
+    <div
+      className={`rounded-xl p-6 shadow border border-[#0b7b7b]/10 flex flex-col items-center justify-center ${colors[color]}`}
+    >
+      <p className="text-sm font-medium mb-1">{title}</p>
       <p className="text-3xl font-bold">{value}</p>
     </div>
   );
@@ -83,21 +98,30 @@ function StatCard({ title, value, color }) {
 
 function DataTable({ title, headers, data }) {
   return (
-    <div className="bg-white shadow rounded p-4 overflow-x-auto">
-      <h2 className="text-xl font-semibold mb-4">{title}</h2>
-      <table className="min-w-full text-sm text-left border border-gray-200">
-        <thead className="bg-gray-100">
+    <div className="bg-white shadow rounded-xl p-4 overflow-x-auto border border-[#0b7b7b]/10">
+      <h2 className="text-xl font-semibold text-[#0b7b7b] mb-4">{title}</h2>
+      <table className="min-w-full text-sm text-left border border-[#0b7b7b]/20">
+        <thead className="bg-[#f0fdfa] text-[#0b7b7b]">
           <tr>
             {headers.map((h, i) => (
-              <th key={i} className="px-4 py-2 border">{h}</th>
+              <th key={i} className="px-4 py-2 border border-[#0b7b7b]/10">
+                {h}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {data.map((row, i) => (
-            <tr key={i} className="border-t">
+            <tr
+              key={i}
+              className={`border-t border-[#0b7b7b]/10 ${
+                i % 2 === 0 ? "bg-[#f8ffff]" : "bg-white"
+              }`}
+            >
               {row.map((cell, j) => (
-                <td key={j} className="px-4 py-2 border">{cell}</td>
+                <td key={j} className="px-4 py-2 border border-[#0b7b7b]/10">
+                  {cell}
+                </td>
               ))}
             </tr>
           ))}

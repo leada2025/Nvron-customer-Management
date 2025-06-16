@@ -134,7 +134,7 @@ export default function AdminSidebar({ user, navigate }) {
 
   return (
     <aside className="w-64 min-h-screen bg-[#e6f7f7] text-[#0b7b7b] border-r border-[#0b7b7b]">
-      <div className="px-6 py-4 border-b border-[#0b7b7b]">
+      <div className="px-6 py-4 ">
         <div className="text-xl font-semibold leading-tight">
           Fishman <br />
           <span className="text-sm text-[#0b7b7b] font-normal opacity-70">

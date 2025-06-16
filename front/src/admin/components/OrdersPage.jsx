@@ -187,7 +187,7 @@ const filteredOrders = Array.isArray(orders)
   );
 
   return (
- <div className="p-6 bg-[#f9f9fb] rounded-lg shadow-sm border border-gray-200 max-w-7xl mx-auto">
+ <div className="p-6 bg-[#e6f7f7] rounded-lg shadow-sm border border-gray-200 max-w-7xl mx-auto">
   <h2 className="text-3xl font-medium text-gray-800 mb-6">Sales Orders</h2>
 
 
@@ -222,7 +222,7 @@ const filteredOrders = Array.isArray(orders)
       {/* Orders Table */}
       <div className="overflow-x-auto">
       <table className="w-full border border-gray-300 text-sm  bg-white rounded-md overflow-hidden">
-  <thead className="bg-[#f1f3f6] text-gray-600">
+  <thead className="bg-[#e6f7f7] text-gray-600">
             <tr>
               <th className="p-3 border-b border-gray-300 text-left">Order ID</th>
               <th className="p-3 border-b border-gray-300 text-left">Customer</th>

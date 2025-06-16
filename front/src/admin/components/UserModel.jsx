@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import Select from "react-select";
-import CreatableSelect from "react-select/creatable";
 import axios from "../api/Axios";
+import { Listbox } from "@headlessui/react";
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 const POSITION_OPTIONS = [
   { label: "Doctor", value: "Doctor" },
@@ -11,7 +11,44 @@ const POSITION_OPTIONS = [
   { label: "Hospital", value: "Hospital" },
 ];
 
+<<<<<<< HEAD
 const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], assignableUsers = [] }) => {
+=======
+const Dropdown = ({ value, onChange, options, placeholder }) => (
+  <Listbox value={value} onChange={onChange}>
+    <div className="relative mt-1">
+      <Listbox.Button className="relative w-full border border-[#0b7b7b] bg-white text-[#0b7b7b] rounded-md px-3 py-2 text-left cursor-pointer hover:bg-[#c2efef]">
+        <span className="block truncate">{value?.label || placeholder}</span>
+        <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+          <ChevronUpDownIcon className="w-5 h-5 text-[#0b7b7b]" />
+        </span>
+      </Listbox.Button>
+      <Listbox.Options className="absolute z-10 mt-1 w-full bg-white text-[#0b7b7b] shadow-md rounded-md border border-[#0b7b7b] max-h-60 overflow-auto">
+        {options.map((option) => (
+          <Listbox.Option
+            key={option.value}
+            value={option}
+            className={({ active }) =>
+              `cursor-pointer select-none py-2 px-4 ${
+                active ? "bg-[#c2efef]" : ""
+              }`
+            }
+          >
+            {({ selected }) => (
+              <span className={`block truncate ${selected ? "font-semibold" : "font-normal"}`}>
+                {option.label}
+                {selected && <CheckIcon className="w-4 h-4 inline ml-2 text-[#0b7b7b]" />}
+              </span>
+            )}
+          </Listbox.Option>
+        ))}
+      </Listbox.Options>
+    </div>
+  </Listbox>
+);
+
+const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignableUsers }) => {
+>>>>>>> refs/remotes/origin/main
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [password, setPassword] = useState("");
@@ -36,9 +73,13 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
 
   const handleCheckboxChange = (perm) => {
     setPermissions((prev) =>
+<<<<<<< HEAD
       prev.includes(perm)
         ? prev.filter((p) => p !== perm)
         : [...prev, perm]
+=======
+      prev.includes(perm) ? prev.filter((p) => p !== perm) : [...prev, perm]
+>>>>>>> refs/remotes/origin/main
     );
   };
 
@@ -85,6 +126,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
     permissions: r.permissions,
   }));
 
+<<<<<<< HEAD
   const salesExecutives = (assignableUsers || []).filter((exec) => {
     const execRole = exec?.role?.name?.toLowerCase() || "";
     return execRole !== "customer" && execRole.includes("sales");
@@ -94,46 +136,87 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-xl overflow-y-auto max-h-[90vh]">
         <h2 className="text-xl font-semibold mb-4">{user ? "Edit User" : "Add New User"}</h2>
+=======
+  const selectedRole = roleOptions.find((r) => r.value === role) || null;
+
+  const nonCustomerExecutives = (assignableUsers || []).filter((user) =>
+    (user.role?.name?.toLowerCase() || "").includes("sales")
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+      <div className="bg-[#e6f7f7] rounded-xl p-6 w-full max-w-xl border border-[#0b7b7b] text-[#0b7b7b]">
+        <h2 className="text-xl font-semibold mb-4">
+          {user ? "Edit User" : "Add New User"}
+        </h2>
+>>>>>>> refs/remotes/origin/main
 
         <div className="space-y-4">
+          {/* Name */}
           <div>
             <label className="block text-sm font-medium">Name</label>
             <input
               type="text"
+<<<<<<< HEAD
               className="w-full border px-3 py-2 rounded mt-1"
+=======
+              className="w-full border border-[#0b7b7b] px-3 py-2 rounded mt-1 bg-white"
+>>>>>>> refs/remotes/origin/main
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
+          {/* Email */}
           <div>
             <label className="block text-sm font-medium">Email</label>
             <input
               type="email"
+<<<<<<< HEAD
               className="w-full border px-3 py-2 rounded mt-1"
+=======
+              className="w-full border border-[#0b7b7b] px-3 py-2 rounded mt-1 bg-white"
+>>>>>>> refs/remotes/origin/main
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
+          {/* Password (Only on create) */}
           {!user && (
             <div>
               <label className="block text-sm font-medium">Password</label>
               <input
                 type="password"
+<<<<<<< HEAD
                 className="w-full border px-3 py-2 rounded mt-1"
+=======
+                className="w-full border border-[#0b7b7b] px-3 py-2 rounded mt-1 bg-white"
+>>>>>>> refs/remotes/origin/main
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           )}
 
+          {/* Role */}
           <div>
             <label className="block text-sm font-medium">Role</label>
-            <CreatableSelect
-              isClearable
-              onChange={handleRoleChange}
+            <Dropdown
+              value={selectedRole}
+              onChange={(selected) => {
+                if (!selected) {
+                  setRole("");
+                  setRoleName("");
+                  setPermissions([]);
+                } else {
+                  setRole(selected.value);
+                  setRoleName(selected.label);
+                  setPermissions(selected.permissions || []);
+                }
+              }}
               options={roleOptions}
+<<<<<<< HEAD
               defaultValue={
                 user?.role ? {
                   value: user.role._id,
@@ -146,12 +229,20 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
           </div>
 
           {roleName.toLowerCase() === "customer" && (
+=======
+              placeholder="Select Role"
+            />
+          </div>
+
+          {/* Assign To */}
+          {roleName === "Customer" && (
+>>>>>>> refs/remotes/origin/main
             <div>
-              <label className="block font-medium mb-1">Assign To (Sales Executive)</label>
+              <label className="block text-sm font-medium mb-1">Assign To</label>
               <select
                 value={assignedTo}
                 onChange={(e) => setAssignedTo(e.target.value)}
-                className="w-full border px-3 py-2 rounded"
+                className="w-full border border-[#0b7b7b] px-3 py-2 rounded bg-white"
               >
                 <option value="">— None —</option>
                 {(salesExecutives || []).map((exec) => (
@@ -163,6 +254,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
             </div>
           )}
 
+<<<<<<< HEAD
           <div>
             <label className="block text-sm font-medium">Position</label>
             <Select
@@ -176,6 +268,10 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
           </div>
 
           {roleName.toLowerCase() !== "customer" && (
+=======
+          {/* Permissions */}
+          {roleName !== "Customer" && (
+>>>>>>> refs/remotes/origin/main
             <div>
               <label className="block text-sm font-medium">Permissions</label>
               <div className="grid grid-cols-2 gap-2 mt-1">
@@ -192,20 +288,36 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
               </div>
             </div>
           )}
+
+          {/* Position */}
+          <div>
+            <label className="block text-sm font-medium">Position</label>
+            <Dropdown
+              value={position}
+              onChange={setPosition}
+              options={POSITION_OPTIONS}
+              placeholder="Select Position"
+            />
+          </div>
         </div>
 
+        {/* Footer Buttons */}
         <div className="mt-6 flex flex-wrap gap-2 justify-end">
           <button
             onClick={onClose}
-            className="px-3 py-1 text-sm border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-100"
+            className="px-4 py-1.5 text-sm rounded border border-[#0b7b7b] text-[#0b7b7b] bg-white hover:bg-[#c2efef]"
           >
             Cancel
           </button>
 
           <button
             onClick={handleSubmit}
+<<<<<<< HEAD
             disabled={loading}
             className="px-3 py-1 text-sm bg-gray-800 text-white rounded hover:bg-gray-700"
+=======
+            className="px-4 py-1.5 text-sm rounded bg-[#0b7b7b] text-white hover:bg-[#095f5f]"
+>>>>>>> refs/remotes/origin/main
           >
             {loading ? "Saving..." : user ? "Update" : "Create"}
           </button>
@@ -217,9 +329,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
                   if (window.confirm("Are you sure you want to delete this user?")) {
                     axios
                       .delete(`/admin/users/${user._id}`, {
-                        headers: {
-                          Authorization: `Bearer ${localStorage.getItem("token")}`,
-                        },
+                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                       })
                       .then(() => {
                         alert("User deleted.");
@@ -228,7 +338,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
                       .catch(() => alert("Failed to delete."));
                   }
                 }}
-                className="px-3 py-1 text-sm border border-gray-300 text-red-600 bg-white rounded hover:bg-red-50"
+                className="px-4 py-1.5 text-sm rounded border border-red-500 text-red-600 bg-white hover:bg-red-50"
               >
                 Delete
               </button>
@@ -237,9 +347,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
                 onClick={() => {
                   axios
                     .patch(`/admin/users/toggle-status/${user._id}`, null, {
-                      headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                      },
+                      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                     })
                     .then(() => {
                       alert("User status toggled.");
@@ -247,7 +355,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
                     })
                     .catch(() => alert("Failed to toggle."));
                 }}
-                className="px-3 py-1 text-sm border border-gray-300 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                className="px-4 py-1.5 text-sm rounded border bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
                 {user.isActive ? "Disable A/c" : "Enable A/c"}
               </button>
@@ -273,7 +381,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
                     .then(() => alert("Password reset."))
                     .catch(() => alert("Failed to reset password."));
                 }}
-                className="px-3 py-1 text-sm border border-gray-300 bg-white text-indigo-600 rounded hover:bg-indigo-50"
+                className="px-4 py-1.5 text-sm rounded border border-[#0b7b7b] bg-white text-[#0b7b7b] hover:bg-[#c2efef]"
               >
                 Reset Password
               </button>
