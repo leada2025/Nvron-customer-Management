@@ -66,6 +66,7 @@ const LoginForm = () => {
         <label className="block mb-1 font-medium">Password</label>
         <div className="relative">
           <input
+          name="email"
             type={showPass ? "text" : "password"}
             required
             className="w-full border p-3 rounded-md pr-10"
