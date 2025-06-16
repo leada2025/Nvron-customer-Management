@@ -7,7 +7,7 @@ const User = require("../models/User");
 const router = express.Router();
 
 // Place order
-router.post("/", authenticate, authorizeRoles("customer"), async (req, res) => {
+router.post("/", authenticate, authorizeRoles("Customer"), async (req, res) => {
   try {
     const { items, note, shippingCharge, subtotal, taxAmount, totalAmount } = req.body;
     const order = new Order({
@@ -28,7 +28,7 @@ router.post("/", authenticate, authorizeRoles("customer"), async (req, res) => {
 
 
 // Get customer orders
-router.get("/customer", authenticate, authorizeRoles("customer"), async (req, res) => {
+router.get("/customer", authenticate, authorizeRoles("Customer"), async (req, res) => {
   try {
     const orders = await Order.find({ customerId: req.user.userId }).sort({ createdAt: -1 });
     res.json(orders);
@@ -115,7 +115,7 @@ router.patch("/:id/status", requireAuth({ permissions: "Manage Orders" }),  asyn
 });
 
 // Cancel with feedback
-router.patch("/:id/cancel", authenticate, authorizeRoles("customer"), async (req, res) => {
+router.patch("/:id/cancel", authenticate, authorizeRoles("Customer"), async (req, res) => {
   try {
     const { feedback } = req.body;
     const order = await Order.findOne({ _id: req.params.id, customerId: req.user.userId });
