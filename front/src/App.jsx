@@ -53,8 +53,8 @@ function App() {
     <Router>
       <Routes>
         {/* Public */}
-        <Route path="/" element={<SignupPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        {/* <Route path="/" element={<SignupPage />} /> */}
+        <Route path="/" element={<LoginPage />} />
 
         {/* Admin Login */}
         <Route

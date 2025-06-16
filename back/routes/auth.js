@@ -41,24 +41,27 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Populate the role field to get the name
     const user = await User.findOne({ email }).populate("role");
-
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
-    // In login controller
-if (!user.isActive) {
-  return res.status(403).json({ message: "Your account has been disabled. Contact support." });
-}
 
+    if (!user.isActive) {
+      return res.status(403).json({ message: "Your account has been disabled. Contact support." });
+    }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+    const roleName = user.role?.name || "Customer";
+
+    const rolePermissions = user.role?.permissions || [];
+    const userPermissions = user.permissions || [];
+    const combinedPermissions = [...new Set([...rolePermissions, ...userPermissions])];
+
     const token = jwt.sign(
       {
         userId: user._id,
-        role: user.role.name.toLowerCase(), // use role name
-        permissions: user.permissions || [], // optional: pass permissions for admin
+        role: roleName,
+        permissions: combinedPermissions,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
@@ -66,14 +69,20 @@ if (!user.isActive) {
 
     res.json({
       token,
-      role: user.role.name.toLowerCase(),
-      name: user.name,
-      permissions: user.permissions || [],
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: roleName,
+        permissions: combinedPermissions,
+      },
+      redirectTo: roleName === "Customer" ? "/welcome" : "/admin",
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Server error" });
   }
 });
+
 
 
 router.post("/admin/login", async (req, res) => {
