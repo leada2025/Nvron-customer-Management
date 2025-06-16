@@ -52,7 +52,6 @@ router.post("/login", async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     const roleName = user.role?.name || "Customer";
-
     const rolePermissions = user.role?.permissions || [];
     const userPermissions = user.permissions || [];
     const combinedPermissions = [...new Set([...rolePermissions, ...userPermissions])];
@@ -74,6 +73,7 @@ router.post("/login", async (req, res) => {
         name: user.name,
         email: user.email,
         role: roleName,
+        position: roleName === "Customer" ? user.position : null,
         permissions: combinedPermissions,
       },
       redirectTo: roleName === "Customer" ? "/welcome" : "/admin",
