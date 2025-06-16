@@ -13,11 +13,11 @@ router.get("/", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader?.split(" ")[1];
-
     if (!token) return res.status(401).json({ message: "Unauthorized" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const customerId = decoded.id || decoded._id;
+    const position = decoded.position || "Other"; // <- this is key
 
     const products = await Product.find();
 
@@ -29,13 +29,20 @@ router.get("/", async (req, res) => {
     const priceMap = {};
     negotiatedPrices.forEach((n) => {
       priceMap[n.productId.toString()] = n.approvedPrice;
-
     });
 
-    const enriched = products.map((p) => ({
-      ...p.toObject(),
-      specialPrice: priceMap[p._id.toString()] || null,
-    }));
+    const enriched = products.map((p) => {
+      const basePrice = 
+        position === "Stockist" ? p.pts :
+        position === "Retailer" ? p.ptr :
+        p.netRate;
+
+      return {
+        ...p.toObject(),
+        specialPrice: priceMap[p._id.toString()] || null,
+        displayPrice: basePrice,
+      };
+    });
 
     res.json(enriched);
   } catch (err) {
