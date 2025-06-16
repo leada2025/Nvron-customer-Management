@@ -1,26 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  FiHome,
-  FiUsers,
-  FiSettings,
-  FiDollarSign,
-  FiClipboard,
-  FiFolder,
-  FiRefreshCw, // For Update
-  FiAlertCircle, // For Uncalling Pages
-} from "react-icons/fi";
+  LayoutDashboard,
+  Users,
+  Settings,
+  DollarSign,
+  ClipboardList,
+  Folder,
+  RefreshCw,
+  AlertCircle,
+} from "lucide-react";
 
 const sidebarLinks = [
-  { name: "Dashboard", icon: <FiHome />, path: "" },
+  { name: "Dashboard", icon: <LayoutDashboard size={18} />, path: "" },
   {
     name: "Customers",
-    icon: <FiUsers />,
+    icon: <Users size={18} />,
     submenu: [{ label: "View/Edit", path: "customer" }],
   },
   {
     name: "Sales Executive",
-    icon: <FiUsers />,
+    icon: <Users size={18} />,
     submenu: [
       { label: "Assign Customers", path: "customer" },
       { label: "Track Activity", path: "customers/add" },
@@ -28,8 +28,8 @@ const sidebarLinks = [
     ],
   },
   {
-    name: " Executives",
-    icon: <FiUsers />,
+    name: "Billing Executives",
+    icon: <Users size={18} />,
     submenu: [
       { label: "Assign Tasks", path: "customers/view" },
       { label: "Assign Clients", path: "customers/add" },
@@ -38,7 +38,7 @@ const sidebarLinks = [
   },
   {
     name: "Order Management",
-    icon: <FiClipboard />,
+    icon: <ClipboardList size={18} />,
     submenu: [
       { label: "View All Orders", path: "orders" },
       { label: "By Sales Executive / Customer", path: "customers/add" },
@@ -47,8 +47,8 @@ const sidebarLinks = [
     ],
   },
   {
-    name: "Price Approval ",
-    icon: <FiDollarSign />,
+    name: "Price Approval",
+    icon: <DollarSign size={18} />,
     submenu: [
       { label: "View All Price Requests", path: "priceconsole" },
       { label: "Approve / Reject / Comment", path: "PriceApproval" },
@@ -58,13 +58,12 @@ const sidebarLinks = [
   },
   {
     name: "Requests",
-    icon: <FiFolder />,
+    icon: <Folder size={18} />,
     submenu: [{ label: "Customer Requests", path: "requests" }],
   },
-  // ✅ Newly Added Options Below
   {
     name: "Uncalling Pages",
-    icon: <FiAlertCircle />,
+    icon: <AlertCircle size={18} />,
     submenu: [
       { label: "Page Monitor", path: "uncalling/monitor" },
       { label: "Unlinked Modules", path: "uncalling/unlinked" },
@@ -72,7 +71,7 @@ const sidebarLinks = [
   },
   {
     name: "Update",
-    icon: <FiRefreshCw />,
+    icon: <RefreshCw size={18} />,
     submenu: [
       { label: "Push Updates", path: "update/push" },
       { label: "Changelog", path: "update/logs" },
@@ -82,9 +81,8 @@ const sidebarLinks = [
 
 export default function AdminSidebar({ user, navigate }) {
   const [expandedMenu, setExpandedMenu] = useState(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const menuRefs = useRef({});
   const location = useLocation();
+  const menuRefs = useRef({});
 
   useEffect(() => {
     const handleClickOutsideMenu = (event) => {
@@ -109,7 +107,7 @@ export default function AdminSidebar({ user, navigate }) {
           "sales executive",
           "order management",
           "requests",
-          "price approval ",
+          "price approval",
           "uncalling pages",
         ].includes(link.name.toLowerCase().trim())
       );
@@ -120,7 +118,7 @@ export default function AdminSidebar({ user, navigate }) {
         [
           "dashboard",
           "customers",
-          "invoice executives",
+          "billing executives",
           "price approval",
           "order management",
           "requests",
@@ -135,26 +133,28 @@ export default function AdminSidebar({ user, navigate }) {
   const filteredSidebarLinks = getFilteredSidebarLinks();
 
   return (
-    <aside className={`bg-white shadow-md flex flex-col transition-all duration-300 ${isSidebarCollapsed ? "w-16" : "w-64"}`}>
-      <div className="flex items-center justify-between p-4 border-b">
-        <span className="font-bold text-lg">{!isSidebarCollapsed ? "Nvron Admin" : "N"}</span>
-        <button
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="text-sm text-gray-600"
-        >
-          {isSidebarCollapsed ? "→" : "←"}
-        </button>
+    <aside className="w-64 min-h-screen bg-[#e6f7f7] text-[#0b7b7b] border-r border-[#0b7b7b]">
+      <div className="px-6 py-4 border-b border-[#0b7b7b]">
+        <div className="text-xl font-semibold leading-tight">
+          Fishman <br />
+          <span className="text-sm text-[#0b7b7b] font-normal opacity-70">
+            HealthCare
+          </span>
+        </div>
       </div>
 
-      <nav className="flex-grow relative">
+      <nav className="flex flex-col gap-2 px-4 py-6">
         {filteredSidebarLinks.map(({ name, icon, submenu, path }) => {
-          const routePath = typeof path === "string" ? path : name.toLowerCase().trim().replace(/\s+/g, "");
+          const routePath =
+            typeof path === "string"
+              ? path
+              : name.toLowerCase().trim().replace(/\s+/g, "");
           const isSubmenuActive = submenu?.some((item) =>
             location.pathname.toLowerCase().includes(item.path.toLowerCase())
           );
           const isActive = submenu
             ? isSubmenuActive
-            : location.pathname.toLowerCase().replace(/\/+$/, "") === `/admin/${routePath}`.replace(/\/+$/, "");
+            : location.pathname.toLowerCase().endsWith(`/admin/${routePath}`);
           const isExpanded = expandedMenu === name;
 
           if (!menuRefs.current[name]) menuRefs.current[name] = React.createRef();
@@ -163,37 +163,39 @@ export default function AdminSidebar({ user, navigate }) {
             <div key={name} className="relative" ref={menuRefs.current[name]}>
               <button
                 onClick={() => {
-                  if (submenu) setExpandedMenu(isExpanded ? null : name);
-                  else {
+                  if (submenu) {
+                    setExpandedMenu(isExpanded ? null : name);
+                  } else {
                     setExpandedMenu(null);
                     navigate(`/admin/${routePath}`);
                   }
                 }}
-                className={`flex items-center gap-4 px-4 py-3 w-full rounded-md transition-all duration-200 relative z-20 ${
-                  isActive ? "bg-blue-200 font-semibold text-blue-900" : "text-gray-600 hover:bg-blue-100"
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-md text-sm font-medium transition ${
+                  isActive
+                    ? "bg-[#0b7b7b] text-white"
+                    : "hover:bg-[#c2efef] text-[#0b7b7b]"
                 }`}
-                title={name}
               >
-                <span className="text-lg">{icon}</span>
-                {!isSidebarCollapsed && <span>{name.trim()}</span>}
-                {!isSidebarCollapsed && submenu && (
-                  <span className={`ml-auto transform transition-transform duration-300 text-sm ${isExpanded ? "rotate-150" : "rotate-0"}`}>
-                    ▼
-                  </span>
+                {icon}
+                {name}
+                {submenu && (
+                  <span className="ml-auto text-xs">{isExpanded ? "▲" : "▼"}</span>
                 )}
               </button>
 
               {submenu && isExpanded && (
-                <div className="absolute left-full top-0 mt-2 ml-2 w-56 rounded-lg border border-gray-200 bg-white shadow-xl z-30 transform transition-all duration-300 animate-fade-slide-down">
+                <div className="ml-4 mt-2 flex flex-col gap-1">
                   {submenu.map((item) => (
                     <Link
                       key={item.label}
                       to={`/admin/${item.path}`}
                       onClick={() => setExpandedMenu(null)}
-                      className={`block px-4 py-2 text-sm rounded-md mx-1 my-1 transition-all duration-150 ${
-                        location.pathname.toLowerCase().includes(item.path.toLowerCase())
-                          ? "bg-blue-100 text-blue-800 font-semibold"
-                          : "text-gray-700 hover:bg-gray-100"
+                      className={`block px-3 py-1 text-sm rounded-md transition ${
+                        location.pathname
+                          .toLowerCase()
+                          .includes(item.path.toLowerCase())
+                          ? "bg-[#0b7b7b] text-white"
+                          : "hover:bg-[#c2efef] text-[#0b7b7b]"
                       }`}
                     >
                       {item.label}
