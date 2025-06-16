@@ -1,0 +1,5 @@
+# Environment variables (secrets including Vite and Render credentials)
+.env
+
+# Node.js dependencies
+node_modules/
