@@ -7,6 +7,8 @@ import {
   FiDollarSign,
   FiClipboard,
   FiFolder,
+  FiRefreshCw, // For Update
+  FiAlertCircle, // For Uncalling Pages
 } from "react-icons/fi";
 
 const sidebarLinks = [
@@ -26,7 +28,7 @@ const sidebarLinks = [
     ],
   },
   {
-    name: "Invoice Executives",
+    name: " Executives",
     icon: <FiUsers />,
     submenu: [
       { label: "Assign Tasks", path: "customers/view" },
@@ -59,6 +61,23 @@ const sidebarLinks = [
     icon: <FiFolder />,
     submenu: [{ label: "Customer Requests", path: "requests" }],
   },
+  // ✅ Newly Added Options Below
+  {
+    name: "Uncalling Pages",
+    icon: <FiAlertCircle />,
+    submenu: [
+      { label: "Page Monitor", path: "uncalling/monitor" },
+      { label: "Unlinked Modules", path: "uncalling/unlinked" },
+    ],
+  },
+  {
+    name: "Update",
+    icon: <FiRefreshCw />,
+    submenu: [
+      { label: "Push Updates", path: "update/push" },
+      { label: "Changelog", path: "update/logs" },
+    ],
+  },
 ];
 
 export default function AdminSidebar({ user, navigate }) {
@@ -84,17 +103,29 @@ export default function AdminSidebar({ user, navigate }) {
 
     if (role.includes("sale")) {
       return sidebarLinks.filter((link) =>
-        ["dashboard", "customers", "sales executive", "order management", "requests", "price approval "].includes(
-          link.name.toLowerCase().trim()
-        )
+        [
+          "dashboard",
+          "customers",
+          "sales executive",
+          "order management",
+          "requests",
+          "price approval ",
+          "uncalling pages",
+        ].includes(link.name.toLowerCase().trim())
       );
     }
 
     if (role.includes("invoice") || role.includes("bill")) {
       return sidebarLinks.filter((link) =>
-        ["dashboard", "customers", "invoice executives", "price approval", "order management", "requests"].includes(
-          link.name.toLowerCase().trim()
-        )
+        [
+          "dashboard",
+          "customers",
+          "invoice executives",
+          "price approval",
+          "order management",
+          "requests",
+          "update",
+        ].includes(link.name.toLowerCase().trim())
       );
     }
 
