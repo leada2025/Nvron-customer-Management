@@ -1,0 +1,11 @@
+# Ignore node_modules and build artifacts
+node_modules/
+.vite/
+dist/
+
+# Ignore system and IDE files
+*.log
+*.DS_Store
+*.env
+.env.*
+.vscode/

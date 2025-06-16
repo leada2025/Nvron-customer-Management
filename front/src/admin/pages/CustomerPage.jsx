@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import UserModal from "../components/UserModel";
+import { FaEllipsisV } from "react-icons/fa";
 
 const CustomerPage = () => {
   const [customers, setCustomers] = useState([]);
@@ -8,7 +9,7 @@ const CustomerPage = () => {
   const [allPermissions, setAllPermissions] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(""); // 🔍 Add this
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchCustomers();
@@ -119,101 +120,127 @@ const CustomerPage = () => {
     }
   };
 
-  // 🔍 Filtered customers
   const filteredCustomers = customers.filter((u) =>
     u.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Dummy summary values
+  const totalCustomers = customers.length;
+  const activeCustomers = customers.filter((u) => u.isActive).length;
+  const totalDue = "$8,000"; // Replace with actual value from API if available
+
   return (
-   <div className="p-6 max-w-7xl mx-auto">
-  <div className="flex justify-between items-center mb-6">
-    <h2 className="text-2xl font-semibold text-gray-800">Customer Management</h2>
-    <div className="flex items-center gap-3">
-      <input
-        type="text"
-        placeholder="Search customers..."
-        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-      <button
-        onClick={() => {
-          setEditingCustomer(null);
-          setModalOpen(true);
-        }}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition"
-      >
-        + Add Customer
-      </button>
-    </div>
-  </div>
-
-<div className="overflow-x-auto bg-white border border-gray-300 rounded-md shadow-sm">
-  <table className="min-w-full divide-y divide-gray-100">
-    <thead className="bg-gray-50">
-      <tr>
-        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
-        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
-       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-       
-      </tr>
-    </thead>
-   <tbody>
-
-  {filteredCustomers.map((u) => (
-    <tr
-      key={u._id}
-      className="border-t border-gray-300 hover:bg-gray-100 cursor-pointer"
-      onClick={() => {
-        setEditingCustomer(u);
-        setModalOpen(true);
-      }}
-    >
-      <td className="text-sm p-3">{u.name}</td>
-      <td className=" text-sm p-3">{u.email}</td>
-      <td className=" text-sm  p-3">{u.role?.name || u.role || "—"}</td>
-      <td className=" text-sm  p-3">
-        <span
-          className={`text-xs font-medium rounded-full ml-4 ${
-            u.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Customer</h2>
+        <button
+          onClick={() => {
+            setEditingCustomer(null);
+            setModalOpen(true);
+          }}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md"
         >
-          {u.isActive ? "Active" : "Inactive"}
-        </span>
-      </td>
-    </tr>
-  ))}
+          + Add Executives
+        </button>
+      </div>
 
-  {filteredCustomers.length === 0 && (
-    <tr>
-      <td colSpan="5" className="p-4 text-center text-gray-500">
-        No customers found.
-      </td>
-    </tr>
-  )}
-</tbody>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <SummaryCard title="Total Customers" value={totalCustomers} />
+        <SummaryCard title="Active Customers" value={activeCustomers} />
+        <SummaryCard title="On Due Balance" value={totalDue} />
+      </div>
 
-  </table>
-</div>
-
+      {/* Search + Table */}
+      <div className="bg-white rounded-md border border-gray-300 shadow-sm">
+        <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border px-3 py-2 rounded w-64 focus:outline-none focus:ring focus:ring-blue-500"
+          />
+          <span className="text-sm text-gray-600">{`1–${filteredCustomers.length}/${customers.length}`}</span>
+        </div>
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr className="text-left text-xs text-gray-600 uppercase">
+              <th className="p-3">Customer Name</th>
+              <th className="p-3">Customer Code</th>
+              <th className="p-3">Sales Executive Name</th>
+              <th className="p-3">Phone</th>
+              <th className="p-3">Status</th>
+              <th className="p-3 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredCustomers.map((u) => (
+              <tr
+                key={u._id}
+                className="border-t hover:bg-gray-50 cursor-pointer"
+                onClick={() => {
+                  setEditingCustomer(u);
+                  setModalOpen(true);
+                }}
+              >
+                <td className="p-3 font-medium text-gray-900">
+                  {u.name}
+                  <div className="text-xs text-gray-500">{u.email}</div>
+                </td>
+                <td className="p-3">CUST001</td>
+                <td className="p-3">
+                  Alice Williams
+                  <div className="text-xs text-gray-500">alicewilliams123@gmail.com</div>
+                </td>
+                <td className="p-3">87858 65654</td>
+                <td className="p-3">
+                  <span
+                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                      u.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {u.isActive ? "Active" : "Inactive"}
+                  </span>
+                </td>
+                <td className="p-3 text-center">
+                  <FaEllipsisV className="inline text-gray-500" />
+                </td>
+              </tr>
+            ))}
+            {filteredCustomers.length === 0 && (
+              <tr>
+                <td colSpan="6" className="p-4 text-center text-gray-500">
+                  No customers found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {modalOpen && (
-<UserModal
-  user={editingCustomer}
-  onClose={() => {
-    setModalOpen(false);
-    setEditingCustomer(null);
-    fetchCustomers(); // Refresh data
-  }}
-  onSave={handleSaveCustomer}
-  allRoles={allRoles}
-  allPermissions={allPermissions}
-/>
-
+        <UserModal
+          user={editingCustomer}
+          onClose={() => {
+            setModalOpen(false);
+            setEditingCustomer(null);
+            fetchCustomers();
+          }}
+          onSave={handleSaveCustomer}
+          allRoles={allRoles}
+          allPermissions={allPermissions}
+        />
       )}
     </div>
   );
 };
 
 export default CustomerPage;
+
+const SummaryCard = ({ title, value }) => (
+  <div className="bg-white border border-gray-300 rounded-md p-4 text-center shadow-sm">
+    <div className="text-sm text-gray-600 mb-1">{title}</div>
+    <div className="text-2xl font-bold text-gray-800">{value}</div>
+  </div>
+);
