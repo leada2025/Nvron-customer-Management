@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
-import { Listbox } from "@headlessui/react";
+import Select from "react-select";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 const POSITION_OPTIONS = [
@@ -67,6 +67,12 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
     }
   };
 
+  const roleOptions = allRoles.map((r) => ({
+    value: r._id,
+    label: r.name,
+    permissions: r.permissions,
+  }));
+
   const handleRoleChange = (selected) => {
     if (!selected) {
       setRole("");
@@ -78,12 +84,6 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
       setPermissions(selected.permissions || []);
     }
   };
-
-  const roleOptions = allRoles.map((r) => ({
-    value: r._id,
-    label: r.name,
-    permissions: r.permissions,
-  }));
 
   const salesExecutives = (assignableUsers || []).filter((exec) => {
     const execRole = exec?.role?.name?.toLowerCase() || "";
@@ -134,28 +134,13 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
           {/* Role */}
           <div>
             <label className="block text-sm font-medium">Role</label>
-            <Dropdown
-              value={selectedRole}
-              onChange={(selected) => {
-                if (!selected) {
-                  setRole("");
-                  setRoleName("");
-                  setPermissions([]);
-                } else {
-                  setRole(selected.value);
-                  setRoleName(selected.label);
-                  setPermissions(selected.permissions || []);
-                }
-              }}
+            <Select
+              value={roleOptions.find((r) => r.value === role) || null}
+              onChange={handleRoleChange}
               options={roleOptions}
-              defaultValue={
-                user?.role ? {
-                  value: user.role._id,
-                  label: user.role.name,
-                  permissions: user.role.permissions
-                } : null
-              }
-              placeholder="Type to search or create role..."
+              placeholder="Type to search or select role..."
+              classNamePrefix="react-select"
+              isClearable
             />
           </div>
 
@@ -165,7 +150,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
               <select
                 value={assignedTo}
                 onChange={(e) => setAssignedTo(e.target.value)}
-                className="w-full border border-[#0b7b7b] px-3 py-2 rounded bg-white"
+                className="w-full border px-3 py-2 rounded bg-white"
               >
                 <option value="">— None —</option>
                 {(salesExecutives || []).map((exec) => (
@@ -177,6 +162,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
             </div>
           )}
 
+          {/* Position */}
           <div>
             <label className="block text-sm font-medium">Position</label>
             <Select
@@ -189,6 +175,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
             />
           </div>
 
+          {/* Permissions */}
           {roleName.toLowerCase() !== "customer" && (
             <div>
               <label className="block text-sm font-medium">Permissions</label>
@@ -206,17 +193,6 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
               </div>
             </div>
           )}
-
-          {/* Position */}
-          <div>
-            <label className="block text-sm font-medium">Position</label>
-            <Dropdown
-              value={position}
-              onChange={setPosition}
-              options={POSITION_OPTIONS}
-              placeholder="Select Position"
-            />
-          </div>
         </div>
 
         {/* Footer Buttons */}
