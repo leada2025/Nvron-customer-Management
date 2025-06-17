@@ -12,10 +12,10 @@ const ProductPage = () => {
   const navigate = useNavigate();
 
   const userRole = localStorage.getItem("role"); // "Admin" or "Customer"
-  const userPosition = localStorage.getItem("position")?.toLowerCase(); // doctor, retailer, distributor
+  const userPosition = localStorage.getItem("position"); // "Doctor", "Retailer", "Distributor"
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProductsAndSpecialPrices = async () => {
       try {
         const token = localStorage.getItem("token");
         const [productsRes, specialPricesRes] = await Promise.all([
@@ -26,11 +26,9 @@ const ProductPage = () => {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-        console.log("Fetched Products:", productsRes.data);
-console.log("Fetched Special Prices:", specialPricesRes.data);
 
         const specialPrices = specialPricesRes.data;
-     const enrichedProducts = productsRes.data.map((product) => {
+       const enrichedProducts = productsRes.data.map((product) => {
   const matchedPrices = specialPrices.filter(
     (sp) => sp.productId === product._id
   );
@@ -48,13 +46,13 @@ console.log("Fetched Special Prices:", specialPricesRes.data);
 
         setProducts(enrichedProducts);
       } catch (err) {
-        console.error("Failed to fetch products or prices:", err);
+        console.error("Failed to fetch:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchProductsAndSpecialPrices();
   }, []);
 
   const handleQuantityChange = (id, delta) => {
@@ -68,35 +66,10 @@ console.log("Fetched Special Prices:", specialPricesRes.data);
     const quantity = quantities[product._id] || 1;
     const exists = orderItems.find((item) => item._id === product._id);
 
-    // Determine unitPrice
-    let unitPrice = 0;
-    if (userRole === "Customer") {
-      if (product.recentSpecialPrice) {
-        unitPrice = product.recentSpecialPrice;
-      } else if (userPosition === "doctor") {
-        unitPrice = product.netRate;
-      } else if (userPosition === "retailer") {
-        unitPrice = product.ptr;
-      } else if (userPosition === "distributor") {
-        unitPrice = product.pts;
-      }
-    }
-
     if (exists) {
       setOrderItems(orderItems.filter((item) => item._id !== product._id));
     } else {
-      setOrderItems([
-        ...orderItems,
-        {
-          _id: product._id,
-          productId: product._id,
-          productName: product.name,
-          quantity,
-          description: product.description,
-          unitPrice: unitPrice || 0,
-          tax: product.tax || 12,
-        },
-      ]);
+      setOrderItems([...orderItems, { ...product, quantity }]);
     }
   };
 
@@ -138,97 +111,107 @@ console.log("Fetched Special Prices:", specialPricesRes.data);
               <th className="py-2 px-3">Dosage Form</th>
               <th className="py-2 px-3">Packing</th>
               <th className="py-2 px-3">MRP</th>
-              <th className="py-2 px-3">Price</th>
+
+              {userRole === "Customer" && userPosition === "Doctor" && (
+                <th className="py-2 px-3">Net Rate</th>
+              )}
+              {userRole === "Customer" && userPosition === "Retailer" && (
+                <th className="py-2 px-3">PTR</th>
+              )}
+              {userRole === "Customer" && userPosition === "Distributor" && (
+                <th className="py-2 px-3">PTS</th>
+              )}
+
               <th className="py-2 px-3">Tax</th>
               <th className="py-2 px-3">Action</th>
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => {
-              let displayPrice = "-";
-              let colorClass = "text-gray-700";
+            {filteredProducts.map((product) => (
+              <tr
+                key={product._id}
+                className="hover:bg-slate-50 transition border-b last:border-none"
+              >
+                <td className="py-3 px-3">{product.name}</td>
+                <td className="py-3 px-3">{product.description}</td>
+                <td className="py-3 px-3">{product.dosageForm || "TABLET"}</td>
+                <td className="py-3 px-3">
+                  {product.packing || "10X10 PVC BLISTER"}
+                </td>
+                <td className="py-3 px-3">₹{product.mrp}</td>
 
-              if (userRole === "Customer") {
-                if (product.recentSpecialPrice) {
-                  displayPrice = `₹${product.recentSpecialPrice}`;
-                  colorClass = "text-green-600";
-                } else if (userPosition === "doctor") {
-                  displayPrice = `₹${product.netRate || "-"}`;
-                } else if (userPosition === "retailer") {
-                  displayPrice = `₹${product.ptr || "-"}`;
-                } else if (userPosition === "distributor") {
-                  displayPrice = `₹${product.pts || "-"}`;
-                }
-              }
+                {userRole === "Customer" && (
+                  <>
+                    {userPosition === "Doctor" && (
+                      <td className="py-3 px-3 text-green-600">
+                        ₹{product.specialPrice || product.netRate || "-"}
+                      </td>
+                    )}
+                    {userPosition === "Retailer" && (
+                      <td className="py-3 px-3 text-blue-600">
+                        ₹{product.specialPrice || product.ptr || "-"}
+                      </td>
+                    )}
+                    {userPosition === "Distributor" && (
+                      <td className="py-3 px-3 text-purple-600">
+                        ₹{product.specialPrice || product.pts || "-"}
+                      </td>
+                    )}
+                  </>
+                )}
 
-              return (
-                <tr
-                  key={product._id}
-                  className="hover:bg-slate-50 transition border-b last:border-none"
-                >
-                  <td className="py-3 px-3">{product.name}</td>
-                  <td className="py-3 px-3">{product.description}</td>
-                  <td className="py-3 px-3">{product.dosageForm || "TABLET"}</td>
-                  <td className="py-3 px-3">
-                    {product.packing || "10X10 PVC BLISTER"}
-                  </td>
-                  <td className="py-3 px-3">₹{product.mrp}</td>
-                  <td className={`py-3 px-3 font-semibold ${colorClass}`}>
-                    {displayPrice}
-                  </td>
-                  <td className="py-3 px-3">{product.tax || 12}%</td>
-                  <td className="py-3 px-3">
-                    <div className="flex items-center gap-2">
+                <td className="py-3 px-3">{product.tax || 12}%</td>
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                      onClick={() => handleQuantityChange(product._id, -1)}
+                    >
+                      <Minus size={14} />
+                    </button>
+
+                    <input
+                      type="number"
+                      className="w-12 text-center bg-slate-100 rounded"
+                      value={quantities[product._id] || 1}
+                      onChange={(e) => {
+                        const newQty = parseInt(e.target.value);
+                        if (!isNaN(newQty) && newQty > 0) {
+                          setQuantities((prev) => ({
+                            ...prev,
+                            [product._id]: newQty,
+                          }));
+                        }
+                      }}
+                      min="1"
+                    />
+
+                    <button
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                      onClick={() => handleQuantityChange(product._id, 1)}
+                    >
+                      <Plus size={14} />
+                    </button>
+
+                    {orderItems.some((item) => item._id === product._id) ? (
                       <button
-                        className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                        onClick={() => handleQuantityChange(product._id, -1)}
+                        onClick={() => handleAddToOrder(product)}
+                        className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
                       >
-                        <Minus size={14} />
+                        Remove
                       </button>
-
-                      <input
-                        type="number"
-                        className="w-12 text-center bg-slate-100 rounded"
-                        value={quantities[product._id] || 1}
-                        onChange={(e) => {
-                          const newQty = parseInt(e.target.value);
-                          if (!isNaN(newQty) && newQty > 0) {
-                            setQuantities((prev) => ({
-                              ...prev,
-                              [product._id]: newQty,
-                            }));
-                          }
-                        }}
-                        min="1"
-                      />
-
+                    ) : (
                       <button
-                        className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                        onClick={() => handleQuantityChange(product._id, 1)}
+                        onClick={() => handleAddToOrder(product)}
+                        className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
                       >
-                        <Plus size={14} />
+                        Add
                       </button>
-
-                      {orderItems.some((item) => item._id === product._id) ? (
-                        <button
-                          onClick={() => handleAddToOrder(product)}
-                          className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
-                        >
-                          Remove
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleAddToOrder(product)}
-                          className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
-                        >
-                          Add
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -247,4 +230,4 @@ console.log("Fetched Special Prices:", specialPricesRes.data);
   );
 };
 
-export default ProductPage;
+export default ProductPage; 
