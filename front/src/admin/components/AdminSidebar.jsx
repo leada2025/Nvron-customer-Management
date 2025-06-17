@@ -22,7 +22,7 @@ const sidebarLinks = [
     name: "Sales Executive",
     icon: <Users size={18} />,
     submenu: [
-      { label: "Assign Customers", path: "customer" },
+      { label: "Assign Customers", path: "salesexecutive" },
       { label: "Track Activity", path: "customers/add" },
       { label: "Sales Target", path: "customers/reports" },
     ],
@@ -210,3 +210,4 @@ export default function AdminSidebar({ user, navigate }) {
     </aside>
   );
 }
+     
