@@ -82,29 +82,17 @@ router.get("/pending", requireAuth({ permission: "Approve Pricing" }), async (re
   }
 });
 
+
 router.get("/special-prices", requireAuth(), async (req, res) => {
   try {
     const customerId = req.user.userId;
 
-    const approvedNegotiations = await NegotiationRequest.find({
+    const specialPrices = await NegotiationRequest.find({
       customerId,
       status: "approved",
-      approvedPrice: { $ne: null },
-    })
-      .sort({ updatedAt: -1 }) // sort latest first
-      .select("productId approvedPrice updatedAt");
+    }).select("productId approvedPrice");
 
-    // Use a Map to keep only latest per product
-    const latestPerProduct = new Map();
-
-    for (const negotiation of approvedNegotiations) {
-      const key = negotiation.productId.toString();
-      if (!latestPerProduct.has(key)) {
-        latestPerProduct.set(key, negotiation); // first one is the latest due to sort
-      }
-    }
-
-    res.json(Array.from(latestPerProduct.values()));
+    res.json(specialPrices);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch special prices" });
