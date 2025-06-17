@@ -41,9 +41,9 @@ const sidebarLinks = [
     icon: <ClipboardList size={18} />,
     submenu: [
       { label: "View All Orders", path: "orders" },
-      { label: "By Sales Executive / Customer", path: "customers/add" },
+      // { label: "By Sales Executive / Customer", path: "customers/add" },
       { label: "Add/Edit Products", path: "Products" },
-      { label: "Upload Product Rates (CSV)", path: "customers/reports" },
+      // { label: "Upload Product Rates (CSV)", path: "customers/reports" },
     ],
   },
   {
@@ -52,7 +52,7 @@ const sidebarLinks = [
     submenu: [
       { label: "View All Price Requests", path: "priceconsole" },
       { label: "Approve / Reject / Comment", path: "PriceApproval" },
-      { label: "Set Role-Based Limits", path: "pricing/roles" },
+      // { label: "Set Role-Based Limits", path: "pricing/roles" },
       { label: "Price History Log", path: "pricing/history" },
     ],
   },
