@@ -80,6 +80,7 @@ const approvedPricing = await Pricing.distinct("productId", { status: "approved"
     res.status(500).json({ message: "Failed to fetch dashboard stats" });
   }
 });
+
 router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sales executive"] }), async (req, res) => {
   try {
     const customerRoleId = "6836fade2aa75e74345b8f1f"; // replace with actual role ObjectId

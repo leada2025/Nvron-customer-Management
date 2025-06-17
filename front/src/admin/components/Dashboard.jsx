@@ -24,22 +24,41 @@ function Dashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      const role = localStorage.getItem("role")?.toLowerCase();
+      const token = localStorage.getItem("token");
+
       try {
-        const res = await axios.get("/admin/users/dashboard-stats", {
-          withCredentials: true,
+        const endpoint =
+          role === "sales" || role === "sales executive" || role === "sale"
+            ? "/admin/users/sales-dashboard-stats"
+            : "/admin/users/dashboard-stats";
+
+        const res = await axios.get(endpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
-        const { users, products, pendingOrders, approvedPricing } = res.data;
+        if (role === "sales" || role === "sales executive" || role === "sale") {
+          const { assignedCustomers, orders, totalSales } = res.data;
+          setStats({ assignedCustomers, orders, totalSales });
 
-        setStats({ users, products, pendingOrders, approvedPricing });
+          setChartData([
+            { name: "Customers", value: assignedCustomers },
+            { name: "Orders", value: orders },
+            { name: "Sales ₹", value: parseFloat(totalSales.toFixed(2)) },
+          ]);
+        } else {
+          const { users, products, pendingOrders, approvedPricing } = res.data;
+          setStats({ users, products, pendingOrders, approvedPricing });
 
-        // Example structure for chart
-        setChartData([
-          { name: "Users", value: users },
-          { name: "Products", value: products },
-          { name: "Pending", value: pendingOrders },
-          { name: "Pricings", value: approvedPricing },
-        ]);
+          setChartData([
+            { name: "Users", value: users },
+            { name: "Products", value: products },
+            { name: "Pending", value: pendingOrders },
+            { name: "Pricings", value: approvedPricing },
+          ]);
+        }
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
         setError("Failed to load dashboard stats.");
@@ -54,6 +73,8 @@ function Dashboard() {
   if (loading) return <div className="p-6 text-center">Loading...</div>;
   if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
 
+  const role = localStorage.getItem("role")?.toLowerCase();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-white p-4 sm:p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
@@ -62,30 +83,55 @@ function Dashboard() {
         </h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <StatCard
-            title="Total Users"
-            value={stats.users}
-            color="blue"
-            icon={<User className="w-6 h-6" />}
-          />
-          <StatCard
-            title="Products"
-            value={stats.products}
-            color="green"
-            icon={<PackageCheck className="w-6 h-6" />}
-          />
-          <StatCard
-            title="Pending Orders"
-            value={stats.pendingOrders}
-            color="yellow"
-            icon={<Hourglass className="w-6 h-6" />}
-          />
-          <StatCard
-            title="Approved Pricings"
-            value={stats.approvedPricing}
-            color="red"
-            icon={<BadgeDollarSign className="w-6 h-6" />}
-          />
+          {role === "sales" || role === "sales executive" || role === "sale" ? (
+            <>
+              <StatCard
+                title="Assigned Customers"
+                value={stats.assignedCustomers}
+                color="blue"
+                icon={<User className="w-6 h-6" />}
+              />
+              <StatCard
+                title="Orders"
+                value={stats.orders}
+                color="yellow"
+                icon={<Hourglass className="w-6 h-6" />}
+              />
+              <StatCard
+                title="Total Sales ₹"
+                value={`₹${stats.totalSales.toFixed(2)}`}
+                color="green"
+                icon={<BadgeDollarSign className="w-6 h-6" />}
+              />
+            </>
+          ) : (
+            <>
+              <StatCard
+                title="Total Users"
+                value={stats.users}
+                color="blue"
+                icon={<User className="w-6 h-6" />}
+              />
+              <StatCard
+                title="Products"
+                value={stats.products}
+                color="green"
+                icon={<PackageCheck className="w-6 h-6" />}
+              />
+              <StatCard
+                title="Pending Orders"
+                value={stats.pendingOrders}
+                color="yellow"
+                icon={<Hourglass className="w-6 h-6" />}
+              />
+              <StatCard
+                title="Approved Pricings"
+                value={stats.approvedPricing}
+                color="red"
+                icon={<BadgeDollarSign className="w-6 h-6" />}
+              />
+            </>
+          )}
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
@@ -94,7 +140,10 @@ function Dashboard() {
           </h2>
 
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData} margin={{ top: 10, right: 30, bottom: 10, left: 0 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 10, right: 30, bottom: 10, left: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis allowDecimals={false} />
