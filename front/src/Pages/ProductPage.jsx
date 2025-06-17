@@ -107,10 +107,10 @@ const ProductPage = () => {
               {userRole === "Customer" && userPosition === "Doctor" && (
                 <th className="py-2 px-3">Net Rate</th>
               )}
-              {userRole === "Customer" && userPosition === "retailer" && (
+              {userRole === "Customer" && userPosition === "Retailer" && (
                 <th className="py-2 px-3">PTR</th>
               )}
-              {userRole === "Customer" && userPosition === "distributor" && (
+              {userRole === "Customer" && userPosition === "Distributor" && (
                 <th className="py-2 px-3">PTS</th>
               )}
 

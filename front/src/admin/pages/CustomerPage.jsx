@@ -83,19 +83,11 @@ const CustomerPage = () => {
     u.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-<<<<<<< HEAD
-=======
-  const totalCustomers = customers.length;
-  const activeCustomers = customers.filter((u) => u.isActive).length;
-  const totalDue = "$8,000";
-
->>>>>>> refs/remotes/origin/main
   return (
     <div className="p-6 max-w-7xl mx-auto bg-[#e6f7f7] min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-[#0b7b7b]">Customer</h2>
         <button
-<<<<<<< HEAD
           onClick={() => {
             setEditingCustomer(null);
             setModalOpen(true);
@@ -108,6 +100,7 @@ const CustomerPage = () => {
 
       <div className="bg-white rounded-md border border-gray-300 shadow-sm">
         <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
+<<<<<<< HEAD
 =======
   onClick={() => {
     setEditingCustomer(null);
@@ -131,6 +124,8 @@ const CustomerPage = () => {
       <div className="bg-white rounded-xl border border-[#0b7b7b]/20 shadow">
         <div className="flex justify-between items-center px-4 py-3 border-b border-[#0b7b7b]/10">
 >>>>>>> refs/remotes/origin/main
+=======
+>>>>>>> refs/remotes/origin/main
           <input
             type="text"
             placeholder="Search"
@@ -138,10 +133,6 @@ const CustomerPage = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-[#0b7b7b]/30 px-3 py-2 rounded w-64 focus:outline-none focus:ring-2 focus:ring-[#0b7b7b]"
           />
-<<<<<<< HEAD
-=======
-          <span className="text-sm text-[#0b7b7b]/70">{`1–${filteredCustomers.length}/${customers.length}`}</span>
->>>>>>> refs/remotes/origin/main
         </div>
         <table className="min-w-full text-sm text-left">
           <thead className="bg-[#f0fdfa] text-[#0b7b7b]">
@@ -167,15 +158,10 @@ const CustomerPage = () => {
                   <div className="text-xs text-[#0b7b7b]/60">{u.email}</div>
                 </td>
                 <td className="p-3">
-<<<<<<< HEAD
                   {u.assignedExecutive?.name || "N/A"}
                   <div className="text-xs text-gray-500">
                     {u.assignedExecutive?.email || ""}
                   </div>
-=======
-                  Alice Williams
-                  <div className="text-xs text-[#0b7b7b]/60">alicewilliams123@gmail.com</div>
->>>>>>> refs/remotes/origin/main
                 </td>
                 <td className="p-3">
                   <span
@@ -195,11 +181,7 @@ const CustomerPage = () => {
             ))}
             {filteredCustomers.length === 0 && (
               <tr>
-<<<<<<< HEAD
                 <td colSpan="4" className="p-4 text-center text-gray-500">
-=======
-                <td colSpan="6" className="p-4 text-center text-[#0b7b7b]/60">
->>>>>>> refs/remotes/origin/main
                   No customers found.
                 </td>
               </tr>
@@ -226,13 +208,3 @@ const CustomerPage = () => {
 };
 
 export default CustomerPage;
-<<<<<<< HEAD
-=======
-
-const SummaryCard = ({ title, value }) => (
-  <div className="bg-white border border-[#0b7b7b]/20 rounded-xl p-4 text-center shadow">
-    <div className="text-sm text-[#0b7b7b]/80 mb-1">{title}</div>
-    <div className="text-2xl font-bold text-[#0b7b7b]">{value}</div>
-  </div>
-);
->>>>>>> refs/remotes/origin/main
