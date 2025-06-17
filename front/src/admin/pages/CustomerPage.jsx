@@ -119,7 +119,7 @@ const CustomerPage = () => {
 </button>
 
       </div>
-
+ 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <SummaryCard title="Total Customers" value={totalCustomers} />
