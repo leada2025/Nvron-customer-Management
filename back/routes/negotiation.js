@@ -9,17 +9,31 @@ const User = require("../models/User"); // Adjust path if needed
 
 router.post("/", authenticate, async (req, res) => {
   try {
-    const { productId, proposedPrice } = req.body;
+    const { productId, proposedPrice, customerId: bodyCustomerId } = req.body;
+
+    let customerId;
+
+    // 🔐 If admin, allow sending customerId from frontend
+    if (req.user.role === "admin") {
+      if (!bodyCustomerId) {
+        return res.status(400).json({ message: "Customer ID is required" });
+      }
+      customerId = bodyCustomerId;
+    } else {
+      // ✅ For customers, use the logged-in user’s ID
+      customerId = req.user.userId;
+    }
 
     const negotiation = new NegotiationRequest({
       productId,
-      customerId: req.user.userId, 
+      customerId,
       proposedPrice,
     });
 
     await negotiation.save();
     res.status(201).json({ message: "Negotiation request submitted", negotiation });
   } catch (err) {
+    console.error("Negotiation creation error:", err);
     res.status(500).json({ message: err.message });
   }
 });
