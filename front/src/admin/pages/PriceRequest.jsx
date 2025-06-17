@@ -1,158 +1,187 @@
+// PriceRequest.jsx
+
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
+import {
+  Box,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TextField,
+  Button,
+  Typography,
+  Paper,
+  CircularProgress
+} from "@mui/material";
 
-const SalesNegotiationPanel = () => {
-  const [pendingRequests, setPendingRequests] = useState([]);
-  const [approvedRequests, setApprovedRequests] = useState([]);
-  const [proposedRates, setProposedRates] = useState({});
+export default function PriceRequest() {
+  const [pending, setPending] = useState([]);
+  const [approved, setApproved] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [rates, setRates] = useState({});
   const [loading, setLoading] = useState(true);
 
+  const fetchAll = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("token");
+    const headers = { Authorization: `Bearer ${token}` };
+
+    try {
+      const [pendRes, apprRes] = await Promise.all([
+        axios.get("/api/negotiations", { headers }),
+        axios.get("/api/negotiations/approved", { headers })
+      ]);
+      setPending(pendRes.data);
+      setApproved(apprRes.data);
+
+      // Build history array: combine approved + pending for admin historical view
+      setHistory([...apprRes.data, ...pendRes.data]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchAllNegotiations();
+    fetchAll();
   }, []);
 
-  const fetchAllNegotiations = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const [pendingRes, approvedRes] = await Promise.all([
-        axios.get("/api/negotiations", { headers }),
-        axios.get("/api/negotiations/approved", { headers }),
-      ]);
-
-      setPendingRequests(pendingRes.data);
-      setApprovedRequests(approvedRes.data);
-    } catch (err) {
-      console.error("Failed to fetch negotiations:", err);
-    }
-    setLoading(false);
+  const handleRateChange = (id, v) => {
+    setRates(prev => ({ ...prev, [id]: v }));
   };
 
-  const handleSubmit = async (id) => {
+  const doApprove = async id => {
+    const rate = rates[id];
+    if (!rate || isNaN(rate)) return alert("Enter a valid price");
+
+    const token = localStorage.getItem("token");
+    const headers = { Authorization: `Bearer ${token}` };
+
     try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `/api/negotiations/${id}/propose`,
-        { proposedRate: proposedRates[id] },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("Proposed rate submitted!");
-      fetchAllNegotiations();
+      await axios.put(`/api/negotiations/${id}/propose`, { proposedRate: rate }, { headers });
+      await axios.patch(`/api/negotiations/approve/${id}`, {}, { headers });
+      fetchAll();
     } catch (err) {
-      console.error("Error submitting proposed rate:", err);
-      alert("Submission failed.");
+      console.error(err);
+      alert("Failed to approve");
     }
   };
 
-  const handleReopen = async (id) => {
+  const doDeny = async id => {
+    const token = localStorage.getItem("token");
+    const headers = { Authorization: `Bearer ${token}` };
+
     try {
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        `/api/negotiations/reopen/${id}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("Negotiation reopened.");
-      fetchAllNegotiations();
+      await axios.patch(`/api/negotiations/reopen/${id}`, {}, { headers });
+      fetchAll();
     } catch (err) {
-      console.error("Error reopening negotiation:", err);
-      alert("Reopen failed.");
+      console.error(err);
+      alert("Failed to deny");
     }
   };
 
-  const handleRateChange = (id, value) => {
-    setProposedRates((prev) => ({ ...prev, [id]: value }));
-  };
-
-  if (loading) return <div className="p-6">Loading...</div>;
+  if (loading) return <Box p={4}><CircularProgress/></Box>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-semibold text-gray-600 mb-6">Pending Negotiation Requests</h1>
-      {pendingRequests.length === 0 ? (
-        <p className="text-gray-500">No pending requests.</p>
-      ) : (
-        <table className="w-full border border-gray-300 rounded mb-10">
-          <thead className="bg-gray-100 text-gray-600">
-            <tr>
-              <th className="px-4 py-2 border border-gray-300">Customer</th>
-              <th className="px-4 py-2 border border-gray-300">Product</th>
-              <th className="px-4 py-2 border border-gray-300">MRP</th>
-              <th className="px-4 py-2 border border-gray-300">Requested Price</th>
-              <th className="px-4 py-2 border border-gray-300">Proposed Rate</th>
-              <th className="px-4 py-2 border border-gray-300">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pendingRequests.map((req) => (
-              <tr key={req._id} className="border-t border-gray-300">
-                <td className="px-4 py-2 border text-sm border-gray-300">{req.customerId?.name || "-"}</td>
-                <td className="px-4 py-2 border text-sm border-gray-300">{req.productId?.name || "-"}</td>
-                <td className="px-4 py-2 border text-sm border-gray-300">₹{req.productId?.mrp}</td>
-                <td className="px-4 py-2 border text-sm border-gray-300 text-blue-600">₹{req.proposedPrice}</td>
-                <td className="px-4 py-2 border text-sm border-gray-300">
-                  <input
+    <Box p={4} maxWidth="900px" mx="auto">
+      <Typography variant="h5">Pending Negotiations</Typography>
+      <Paper variant="outlined" sx={{ mb: 4, mt: 2 }}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Customer</TableCell>
+              <TableCell>Product</TableCell>
+              <TableCell>MRP</TableCell>
+              <TableCell>Requested</TableCell>
+              <TableCell>Proposed Rate</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {pending.map(req => (
+              <TableRow key={req._id}>
+                <TableCell>{req.customerId.name}</TableCell>
+                <TableCell>{req.productId.name}</TableCell>
+                <TableCell>₹{req.productId.mrp}</TableCell>
+                <TableCell>₹{req.proposedPrice}</TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
                     type="number"
-                    className="border border-gray-300 px-2 py-1 rounded w-24 text-sm"
-                    value={proposedRates[req._id] || ""}
-                    onChange={(e) => handleRateChange(req._id, e.target.value)}
-                    placeholder="₹"
+                    value={rates[req._id] || ""}
+                    onChange={e => handleRateChange(req._id, e.target.value)}
+                    sx={{ width: 90 }}
                   />
-                </td>
-                <td className="px-4 py-2 border border-gray-300">
-                  <button
-                    onClick={() => handleSubmit(req._id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
-                  >
-                    Submit
-                  </button>
-                </td>
-              </tr>
+                </TableCell>
+                <TableCell>
+                  <Button variant="contained" color="success" size="small" onClick={() => doApprove(req._id)} sx={{ mr: 1 }}>
+                    Approve
+                  </Button>
+                  <Button variant="outlined" color="error" size="small" onClick={() => doDeny(req._id)}>
+                    Deny
+                  </Button>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      )}
+            {pending.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} align="center">No pending requests</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Paper>
 
-      <h2 className="text-xl font-semibold text-gray-600 mb-4">Approved Negotiations</h2>
-      {approvedRequests.length === 0 ? (
-        <p className="text-gray-500">No approved negotiations.</p>
-      ) : (
-        <table className="w-full border border-gray-300 rounded">
-          <thead className="bg-green-50 text-gray-600">
-            <tr>
-              <th className="px-4 py-2 border border-gray-300">Customer</th>
-              <th className="px-4 py-2 border border-gray-300">Product</th>
-              <th className="px-4 py-2 border border-gray-300">MRP</th>
-              <th className="px-4 py-2 border border-gray-300">Approved Price</th>
-              <th className="px-4 py-2 border border-gray-300">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {approvedRequests.map((req) => (
-              <tr key={req._id} className="border-t border-gray-300 ">
-                <td className="px-4 text-sm py-2 border border-gray-300">{req.customerId?.name || "-"}</td>
-                <td className="px-4 py-2 text-sm border border-gray-300">{req.productId?.name || "-"}</td>
-                <td className="px-4 py-2 text-sm border border-gray-300">₹{req.productId?.mrp}</td>
-                <td className="px-4 py-2 text-smborder border-gray-300 text-green-700 font-medium">
-                  ₹{req.approvedPrice || req.salesProposedRate || "-"}
-                </td>
-                <td className="px-4 py-2 text-sm border border-gray-300">
-                  <button
-                    onClick={() => handleReopen(req._id)}
-                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
-                  >
-                    Reopen
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <Typography variant="h5" sx={{ mt: 4 }}>Negotiation History</Typography>
+<Paper variant="outlined" sx={{ mt: 2 }}>
+  <Table size="small">
+    <TableHead>
+      <TableRow>
+        <TableCell>Customer</TableCell>
+        <TableCell>Product</TableCell>
+        <TableCell>Status</TableCell>
+        <TableCell>Requested</TableCell>
+        <TableCell>Proposed</TableCell>
+        <TableCell>Approved</TableCell>
+        <TableCell>Date</TableCell>
+        <TableCell>Actions</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {history.map(item => (
+        <TableRow key={item._id}>
+          <TableCell>{item.customerId?.name || "N/A"}</TableCell>
+          <TableCell>{item.productId?.name || "N/A"}</TableCell>
+          <TableCell>{item.status}</TableCell>
+          <TableCell>₹{item.proposedPrice}</TableCell>
+          <TableCell>{item.salesProposedRate ? `₹${item.salesProposedRate}` : "-"}</TableCell>
+          <TableCell>{item.approvedPrice ? `₹${item.approvedPrice}` : "-"}</TableCell>
+          <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
+          <TableCell>
+            {["approved", "rejected", "denied", "proposed"].includes(item.status) && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => doDeny(item._id)}
+              >
+                Reopen
+              </Button>
+            )}
+          </TableCell>
+        </TableRow>
+      ))}
+      {history.length === 0 && (
+        <TableRow>
+          <TableCell colSpan={8} align="center">No history available</TableCell>
+        </TableRow>
       )}
-    </div>
+    </TableBody>
+  </Table>
+</Paper>
+
+    </Box>
   );
-};
-
-export default SalesNegotiationPanel;
+}

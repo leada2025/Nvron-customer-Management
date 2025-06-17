@@ -12,10 +12,10 @@ const ProductPage = () => {
   const navigate = useNavigate();
 
   const userRole = localStorage.getItem("role"); // "Admin" or "Customer"
-  const userPosition = localStorage.getItem("position"); // "Doctor", "Retailer", "Distributor"
+  const userPosition = localStorage.getItem("position")?.toLowerCase(); // doctor, retailer, distributor
 
   useEffect(() => {
-    const fetchProductsAndSpecialPrices = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         const [productsRes, specialPricesRes] = await Promise.all([
@@ -29,23 +29,39 @@ const ProductPage = () => {
 
         const specialPrices = specialPricesRes.data;
         const enrichedProducts = productsRes.data.map((product) => {
-          const matched = specialPrices.find(
-            (sp) => sp.productId === product._id
-          );
-          return matched
-            ? { ...product, specialPrice: matched.approvedPrice }
-            : product;
-        });
+  const matchedPrices = specialPrices.filter((sp) => {
+    const spProductId = sp.productId?._id || sp.productId;
+    return String(spProductId) === String(product._id);
+  });
 
+  // Sort matched prices by updatedAt or createdAt
+  const sortedByDate = matchedPrices.sort((a, b) => {
+    const dateA = new Date(a.updatedAt || a.createdAt);
+    const dateB = new Date(b.updatedAt || b.createdAt);
+    return dateB - dateA;
+  });
+
+  // Get the most recent approvedPrice that is defined and not null
+  const latestValid = sortedByDate.find(
+    (item) => item.approvedPrice !== undefined && item.approvedPrice !== null
+  );
+
+  return {
+    ...product,
+    recentSpecialPrice: latestValid?.approvedPrice,
+  };
+});
+
+ 
         setProducts(enrichedProducts);
       } catch (err) {
-        console.error("Failed to fetch:", err);
+        console.error("Failed to fetch products or prices:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProductsAndSpecialPrices();
+    fetchData();
   }, []);
 
   const handleQuantityChange = (id, delta) => {
@@ -59,10 +75,35 @@ const ProductPage = () => {
     const quantity = quantities[product._id] || 1;
     const exists = orderItems.find((item) => item._id === product._id);
 
+    // Determine unitPrice
+    let unitPrice = 0;
+    if (userRole === "Customer") {
+      if (product.recentSpecialPrice) {
+        unitPrice = product.recentSpecialPrice;
+      } else if (userPosition === "doctor") {
+        unitPrice = product.netRate;
+      } else if (userPosition === "retailer") {
+        unitPrice = product.ptr;
+      } else if (userPosition === "distributor") {
+        unitPrice = product.pts;
+      }
+    }
+
     if (exists) {
       setOrderItems(orderItems.filter((item) => item._id !== product._id));
     } else {
-      setOrderItems([...orderItems, { ...product, quantity }]);
+      setOrderItems([
+        ...orderItems,
+        {
+          _id: product._id,
+          productId: product._id,
+          productName: product.name,
+          quantity,
+          description: product.description,
+          unitPrice: unitPrice || 0,
+          tax: product.tax || 12,
+        },
+      ]);
     }
   };
 
@@ -104,107 +145,97 @@ const ProductPage = () => {
               <th className="py-2 px-3">Dosage Form</th>
               <th className="py-2 px-3">Packing</th>
               <th className="py-2 px-3">MRP</th>
-
-              {userRole === "Customer" && userPosition === "Doctor" && (
-                <th className="py-2 px-3">Net Rate</th>
-              )}
-              {userRole === "Customer" && userPosition === "Retailer" && (
-                <th className="py-2 px-3">PTR</th>
-              )}
-              {userRole === "Customer" && userPosition === "Distributor" && (
-                <th className="py-2 px-3">PTS</th>
-              )}
-
+              <th className="py-2 px-3">Price</th>
               <th className="py-2 px-3">Tax</th>
               <th className="py-2 px-3">Action</th>
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => (
-              <tr
-                key={product._id}
-                className="hover:bg-slate-50 transition border-b last:border-none"
-              >
-                <td className="py-3 px-3">{product.name}</td>
-                <td className="py-3 px-3">{product.description}</td>
-                <td className="py-3 px-3">{product.dosageForm || "TABLET"}</td>
-                <td className="py-3 px-3">
-                  {product.packing || "10X10 PVC BLISTER"}
-                </td>
-                <td className="py-3 px-3">₹{product.mrp}</td>
+            {filteredProducts.map((product) => {
+              let displayPrice = "-";
+              let colorClass = "text-gray-700";
 
-                {userRole === "Customer" && (
-                  <>
-                    {userPosition === "Doctor" && (
-                      <td className="py-3 px-3 text-green-600">
-                        ₹{product.specialPrice || product.netRate || "-"}
-                      </td>
-                    )}
-                    {userPosition === "Retailer" && (
-                      <td className="py-3 px-3 text-blue-600">
-                        ₹{product.specialPrice || product.ptr || "-"}
-                      </td>
-                    )}
-                    {userPosition === "Distributor" && (
-                      <td className="py-3 px-3 text-purple-600">
-                        ₹{product.specialPrice || product.pts || "-"}
-                      </td>
-                    )}
-                  </>
-                )}
+              if (userRole === "Customer") {
+                if (product.recentSpecialPrice) {
+                  displayPrice = `₹${product.recentSpecialPrice}`;
+                  colorClass = "text-green-600";
+                } else if (userPosition === "doctor") {
+                  displayPrice = `₹${product.netRate || "-"}`;
+                } else if (userPosition === "retailer") {
+                  displayPrice = `₹${product.ptr || "-"}`;
+                } else if (userPosition === "distributor") {
+                  displayPrice = `₹${product.pts || "-"}`;
+                }
+              }
 
-                <td className="py-3 px-3">{product.tax || 12}%</td>
-                <td className="py-3 px-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                      onClick={() => handleQuantityChange(product._id, -1)}
-                    >
-                      <Minus size={14} />
-                    </button>
-
-                    <input
-                      type="number"
-                      className="w-12 text-center bg-slate-100 rounded"
-                      value={quantities[product._id] || 1}
-                      onChange={(e) => {
-                        const newQty = parseInt(e.target.value);
-                        if (!isNaN(newQty) && newQty > 0) {
-                          setQuantities((prev) => ({
-                            ...prev,
-                            [product._id]: newQty,
-                          }));
-                        }
-                      }}
-                      min="1"
-                    />
-
-                    <button
-                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                      onClick={() => handleQuantityChange(product._id, 1)}
-                    >
-                      <Plus size={14} />
-                    </button>
-
-                    {orderItems.some((item) => item._id === product._id) ? (
+              return (
+                <tr
+                  key={product._id}
+                  className="hover:bg-slate-50 transition border-b last:border-none"
+                >
+                  <td className="py-3 px-3">{product.name}</td>
+                  <td className="py-3 px-3">{product.description}</td>
+                  <td className="py-3 px-3">{product.dosageForm || "TABLET"}</td>
+                  <td className="py-3 px-3">
+                    {product.packing || "10X10 PVC BLISTER"}
+                  </td>
+                  <td className="py-3 px-3">₹{product.mrp}</td>
+                  <td className={`py-3 px-3 font-semibold ${colorClass}`}>
+                    {displayPrice}
+                  </td>
+                  <td className="py-3 px-3">{product.tax || 12}%</td>
+                  <td className="py-3 px-3">
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleAddToOrder(product)}
-                        className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                        className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                        onClick={() => handleQuantityChange(product._id, -1)}
                       >
-                        Remove
+                        <Minus size={14} />
                       </button>
-                    ) : (
+
+                      <input
+                        type="number"
+                        className="w-12 text-center bg-slate-100 rounded"
+                        value={quantities[product._id] || 1}
+                        onChange={(e) => {
+                          const newQty = parseInt(e.target.value);
+                          if (!isNaN(newQty) && newQty > 0) {
+                            setQuantities((prev) => ({
+                              ...prev,
+                              [product._id]: newQty,
+                            }));
+                          }
+                        }}
+                        min="1"
+                      />
+
                       <button
-                        onClick={() => handleAddToOrder(product)}
-                        className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
+                        className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                        onClick={() => handleQuantityChange(product._id, 1)}
                       >
-                        Add
+                        <Plus size={14} />
                       </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
+
+                      {orderItems.some((item) => item._id === product._id) ? (
+                        <button
+                          onClick={() => handleAddToOrder(product)}
+                          className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                        >
+                          Remove
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleAddToOrder(product)}
+                          className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
+                        >
+                          Add
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
