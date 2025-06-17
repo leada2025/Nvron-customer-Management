@@ -1,8 +1,24 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
+import {
+  User,
+  PackageCheck,
+  Hourglass,
+  BadgeDollarSign,
+} from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Bar,
+  CartesianGrid,
+} from "recharts";
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -12,7 +28,18 @@ function Dashboard() {
         const res = await axios.get("/admin/users/dashboard-stats", {
           withCredentials: true,
         });
-        setStats(res.data);
+
+        const { users, products, pendingOrders, approvedPricing } = res.data;
+
+        setStats({ users, products, pendingOrders, approvedPricing });
+
+        // Example structure for chart
+        setChartData([
+          { name: "Users", value: users },
+          { name: "Products", value: products },
+          { name: "Pending", value: pendingOrders },
+          { name: "Pricings", value: approvedPricing },
+        ]);
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
         setError("Failed to load dashboard stats.");
@@ -24,51 +51,80 @@ function Dashboard() {
     fetchStats();
   }, []);
 
-  if (loading) {
-    return <div className="p-6 text-center">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="p-6 text-center text-red-500">{error}</div>;
-  }
+  if (loading) return <div className="p-6 text-center">Loading...</div>;
+  if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-white p-4 sm:p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-6 text-[#0b7b7b]">
+        <h1 className="text-3xl font-semibold mb-8 text-[#0b7b7b] text-center">
           Welcome to Fishman Healthcare Dashboard
         </h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard title="Total Users" value={stats.users} color="blue" />
-          <StatCard title="Products" value={stats.products} color="green" />
-          <StatCard title="Pending Orders" value={stats.pendingOrders} color="yellow" />
-          <StatCard title="Approved Pricings" value={stats.approvedPricing} color="red" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <StatCard
+            title="Total Users"
+            value={stats.users}
+            color="blue"
+            icon={<User className="w-6 h-6" />}
+          />
+          <StatCard
+            title="Products"
+            value={stats.products}
+            color="green"
+            icon={<PackageCheck className="w-6 h-6" />}
+          />
+          <StatCard
+            title="Pending Orders"
+            value={stats.pendingOrders}
+            color="yellow"
+            icon={<Hourglass className="w-6 h-6" />}
+          />
+          <StatCard
+            title="Approved Pricings"
+            value={stats.approvedPricing}
+            color="red"
+            icon={<BadgeDollarSign className="w-6 h-6" />}
+          />
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
             Summary Chart
           </h2>
-          <div className="text-center text-gray-400 italic">[Chart Placeholder]</div>
+
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData} margin={{ top: 10, right: 30, bottom: 10, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="value" fill="#0b7b7b" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
   );
 }
 
-function StatCard({ title, value, color }) {
-  const colors = {
-    blue: "bg-blue-50 text-blue-800 border-blue-300",
-    green: "bg-green-50 text-green-800 border-green-300",
-    yellow: "bg-yellow-50 text-yellow-800 border-yellow-300",
-    red: "bg-red-50 text-red-800 border-red-300",
+function StatCard({ title, value, color, icon }) {
+  const styles = {
+    blue: "bg-blue-50 text-blue-800 border-blue-200",
+    green: "bg-green-50 text-green-800 border-green-200",
+    yellow: "bg-yellow-50 text-yellow-800 border-yellow-200",
+    red: "bg-red-50 text-red-800 border-red-200",
   };
 
   return (
-    <div className={`rounded-xl p-5 flex flex-col items-center justify-center border shadow-sm ${colors[color]}`}>
-      <p className="text-sm font-medium mb-1">{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
+    <div
+      className={`rounded-2xl p-5 border shadow-sm flex items-center space-x-4 ${styles[color]}`}
+    >
+      <div className="p-3 rounded-full bg-white shadow-inner">{icon}</div>
+      <div>
+        <p className="text-sm font-medium">{title}</p>
+        <p className="text-2xl font-bold">{value}</p>
+      </div>
     </div>
   );
 }
