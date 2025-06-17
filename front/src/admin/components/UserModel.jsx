@@ -11,44 +11,7 @@ const POSITION_OPTIONS = [
   { label: "Hospital", value: "Hospital" },
 ];
 
-<<<<<<< HEAD
 const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], assignableUsers = [] }) => {
-=======
-const Dropdown = ({ value, onChange, options, placeholder }) => (
-  <Listbox value={value} onChange={onChange}>
-    <div className="relative mt-1">
-      <Listbox.Button className="relative w-full border border-[#0b7b7b] bg-white text-[#0b7b7b] rounded-md px-3 py-2 text-left cursor-pointer hover:bg-[#c2efef]">
-        <span className="block truncate">{value?.label || placeholder}</span>
-        <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-          <ChevronUpDownIcon className="w-5 h-5 text-[#0b7b7b]" />
-        </span>
-      </Listbox.Button>
-      <Listbox.Options className="absolute z-10 mt-1 w-full bg-white text-[#0b7b7b] shadow-md rounded-md border border-[#0b7b7b] max-h-60 overflow-auto">
-        {options.map((option) => (
-          <Listbox.Option
-            key={option.value}
-            value={option}
-            className={({ active }) =>
-              `cursor-pointer select-none py-2 px-4 ${
-                active ? "bg-[#c2efef]" : ""
-              }`
-            }
-          >
-            {({ selected }) => (
-              <span className={`block truncate ${selected ? "font-semibold" : "font-normal"}`}>
-                {option.label}
-                {selected && <CheckIcon className="w-4 h-4 inline ml-2 text-[#0b7b7b]" />}
-              </span>
-            )}
-          </Listbox.Option>
-        ))}
-      </Listbox.Options>
-    </div>
-  </Listbox>
-);
-
-const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignableUsers }) => {
->>>>>>> refs/remotes/origin/main
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [password, setPassword] = useState("");
@@ -73,13 +36,9 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
 
   const handleCheckboxChange = (perm) => {
     setPermissions((prev) =>
-<<<<<<< HEAD
       prev.includes(perm)
         ? prev.filter((p) => p !== perm)
         : [...prev, perm]
-=======
-      prev.includes(perm) ? prev.filter((p) => p !== perm) : [...prev, perm]
->>>>>>> refs/remotes/origin/main
     );
   };
 
@@ -126,7 +85,6 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
     permissions: r.permissions,
   }));
 
-<<<<<<< HEAD
   const salesExecutives = (assignableUsers || []).filter((exec) => {
     const execRole = exec?.role?.name?.toLowerCase() || "";
     return execRole !== "customer" && execRole.includes("sales");
@@ -136,20 +94,6 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-xl overflow-y-auto max-h-[90vh]">
         <h2 className="text-xl font-semibold mb-4">{user ? "Edit User" : "Add New User"}</h2>
-=======
-  const selectedRole = roleOptions.find((r) => r.value === role) || null;
-
-  const nonCustomerExecutives = (assignableUsers || []).filter((user) =>
-    (user.role?.name?.toLowerCase() || "").includes("sales")
-  );
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-      <div className="bg-[#e6f7f7] rounded-xl p-6 w-full max-w-xl border border-[#0b7b7b] text-[#0b7b7b]">
-        <h2 className="text-xl font-semibold mb-4">
-          {user ? "Edit User" : "Add New User"}
-        </h2>
->>>>>>> refs/remotes/origin/main
 
         <div className="space-y-4">
           {/* Name */}
@@ -157,11 +101,7 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
             <label className="block text-sm font-medium">Name</label>
             <input
               type="text"
-<<<<<<< HEAD
               className="w-full border px-3 py-2 rounded mt-1"
-=======
-              className="w-full border border-[#0b7b7b] px-3 py-2 rounded mt-1 bg-white"
->>>>>>> refs/remotes/origin/main
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -172,11 +112,7 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
             <label className="block text-sm font-medium">Email</label>
             <input
               type="email"
-<<<<<<< HEAD
               className="w-full border px-3 py-2 rounded mt-1"
-=======
-              className="w-full border border-[#0b7b7b] px-3 py-2 rounded mt-1 bg-white"
->>>>>>> refs/remotes/origin/main
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -188,11 +124,7 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
               <label className="block text-sm font-medium">Password</label>
               <input
                 type="password"
-<<<<<<< HEAD
                 className="w-full border px-3 py-2 rounded mt-1"
-=======
-                className="w-full border border-[#0b7b7b] px-3 py-2 rounded mt-1 bg-white"
->>>>>>> refs/remotes/origin/main
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -216,7 +148,6 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
                 }
               }}
               options={roleOptions}
-<<<<<<< HEAD
               defaultValue={
                 user?.role ? {
                   value: user.role._id,
@@ -229,14 +160,6 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
           </div>
 
           {roleName.toLowerCase() === "customer" && (
-=======
-              placeholder="Select Role"
-            />
-          </div>
-
-          {/* Assign To */}
-          {roleName === "Customer" && (
->>>>>>> refs/remotes/origin/main
             <div>
               <label className="block text-sm font-medium mb-1">Assign To</label>
               <select
@@ -254,7 +177,6 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
             </div>
           )}
 
-<<<<<<< HEAD
           <div>
             <label className="block text-sm font-medium">Position</label>
             <Select
@@ -268,10 +190,6 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
           </div>
 
           {roleName.toLowerCase() !== "customer" && (
-=======
-          {/* Permissions */}
-          {roleName !== "Customer" && (
->>>>>>> refs/remotes/origin/main
             <div>
               <label className="block text-sm font-medium">Permissions</label>
               <div className="grid grid-cols-2 gap-2 mt-1">
@@ -312,12 +230,8 @@ const UserModal = ({ user, onClose, onSave, allRoles, allPermissions, assignable
 
           <button
             onClick={handleSubmit}
-<<<<<<< HEAD
             disabled={loading}
             className="px-3 py-1 text-sm bg-gray-800 text-white rounded hover:bg-gray-700"
-=======
-            className="px-4 py-1.5 text-sm rounded bg-[#0b7b7b] text-white hover:bg-[#095f5f]"
->>>>>>> refs/remotes/origin/main
           >
             {loading ? "Saving..." : user ? "Update" : "Create"}
           </button>
