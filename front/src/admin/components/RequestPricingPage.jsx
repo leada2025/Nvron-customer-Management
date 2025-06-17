@@ -58,14 +58,16 @@ export default function RequestPricingPage() {
     }
   };
 
-  const getProductName = (productId) => {
-    const product = products.find((p) => p._id === productId);
-    return product ? product.name : "N/A";
+  const getProductName = (product) => {
+    if (product && typeof product === "object") return product.name;
+    const found = products.find((p) => p._id === product);
+    return found ? found.name : "N/A";
   };
 
-  const getCustomerName = (customerId) => {
-    const customer = customers.find((c) => c._id === customerId);
-    return customer ? customer.name : "N/A";
+  const getCustomerName = (customer) => {
+    if (customer && typeof customer === "object") return customer.name;
+    const found = customers.find((c) => c._id === customer);
+    return found ? found.name : "N/A";
   };
 
   return (
