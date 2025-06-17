@@ -1,151 +1,124 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
-import { FaEllipsisV } from "react-icons/fa";
+import { Button } from "@mui/material";
 import PricingRequestModal from "../components/PricingRequestModal";
 
-const RequestPricingPage = () => {
+export default function RequestPricingPage() {
   const [requests, setRequests] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [products, setProducts] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRequest, setEditingRequest] = useState(null);
-  const [customers, setCustomers] = useState([]);
-  const [products, setProducts] = useState([]);
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  const fetchInitialData = async () => {
+  const fetchData = async () => {
     try {
-      const [negotiationRes, customerRes, productRes] = await Promise.all([
+      const [reqRes, productRes, customerRes] = await Promise.all([
         axios.get("/api/negotiations", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("/admin/users?onlyRole=Customer", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get("/api/products", {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        axios.get("/admin/users?onlyRole=Customer", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
-      setRequests(negotiationRes.data);
-      setCustomers(customerRes.data);
+      setRequests(reqRes.data);
       setProducts(productRes.data);
+      setCustomers(customerRes.data);
     } catch (err) {
-      console.error("Error fetching data:", err);
-      alert("Failed to load data.");
+      console.error("Failed to fetch data:", err);
     }
   };
 
-  const handleSaveRequest = async (formData) => {
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleSave = async (data) => {
     try {
       if (editingRequest) {
-        await axios.put(`/api/negotiations/${editingRequest._id}`, formData, {
+        await axios.put(`/api/negotiations/${editingRequest._id}`, data, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else {
-        await axios.post("/api/negotiations", formData, {
+        await axios.post("/api/negotiations", data, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
 
       setModalOpen(false);
       setEditingRequest(null);
-      fetchInitialData();
+      fetchData();
     } catch (err) {
-      console.error("Error saving request:", err);
-      alert("Failed to save request");
+      console.error("Error saving negotiation:", err);
     }
   };
 
-  const getCustomerName = (id) =>
-    customers.find((c) => String(c._id) === String(id))?.name || "N/A";
+  const getProductName = (productId) => {
+    const product = products.find((p) => p._id === productId);
+    return product ? product.name : "N/A";
+  };
 
-  const getProductName = (id) =>
-    products.find((p) => String(p._id) === String(id))?.name || "N/A";
-
-  const filteredRequests = requests.filter((r) =>
-    getCustomerName(r.customerId).toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getCustomerName = (customerId) => {
+    const customer = customers.find((c) => c._id === customerId);
+    return customer ? customer.name : "N/A";
+  };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto bg-[#f5faff] min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-[#0b7b7b]">Pricing Requests</h2>
-        <button
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold text-gray-700">Pricing Requests</h2>
+        <Button
+          variant="contained"
+          color="primary"
           onClick={() => {
             setEditingRequest(null);
             setModalOpen(true);
           }}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md"
         >
           + New Request
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-white rounded-md border border-gray-300 shadow-sm">
-        <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
-          <input
-            type="text"
-            placeholder="Search by customer name"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border border-[#0b7b7b]/30 px-3 py-2 rounded w-64 focus:outline-none focus:ring-2 focus:ring-[#0b7b7b]"
-          />
-        </div>
-        <table className="min-w-full text-sm text-left">
-          <thead className="bg-[#f0fdfa] text-[#0b7b7b]">
+      <div className="overflow-x-auto bg-white border rounded-lg shadow">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <thead className="bg-gray-100 text-gray-700">
             <tr>
-              <th className="p-3">Customer</th>
-              <th className="p-3">Product</th>
-              <th className="p-3">Proposed Price</th>
-              <th className="p-3">Status</th>
-              <th className="p-3 text-center">Actions</th>
+              <th className="px-4 py-3 text-left">Customer</th>
+              <th className="px-4 py-3 text-left">Product</th>
+              <th className="px-4 py-3 text-left">Proposed Price</th>
+              <th className="px-4 py-3 text-left">Status</th>
+              <th className="px-4 py-3 text-left">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {filteredRequests.map((r) => (
-              <tr
-                key={r._id}
-                className="border-t border-[#0b7b7b]/10 hover:bg-[#f8ffff] cursor-pointer"
-                onClick={() => {
-                  setEditingRequest({
-                    ...r,
-                    productId: r.productId,
-                    customerId: r.customerId,
-                  });
-                  setModalOpen(true);
-                }}
-              >
-                <td className="p-3 text-[#0b7b7b] font-medium">
-                  {getCustomerName(r.customerId)}
-                </td>
-                <td className="p-3">{getProductName(r.productId)}</td>
-                <td className="p-3">₹{r.proposedPrice}</td>
-                <td className="p-3">
-                  <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                      r.status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : r.status === "approved"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
+          <tbody className="divide-y divide-gray-200 text-gray-700">
+            {requests.map((r) => (
+              <tr key={r._id}>
+                <td className="px-4 py-2">{getCustomerName(r.customerId)}</td>
+                <td className="px-4 py-2">{getProductName(r.productId)}</td>
+                <td className="px-4 py-2">₹{r.proposedPrice}</td>
+                <td className="px-4 py-2 capitalize">{r.status}</td>
+                <td className="px-4 py-2">
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      setEditingRequest(r);
+                      setModalOpen(true);
+                    }}
                   >
-                    {r.status}
-                  </span>
-                </td>
-                <td className="p-3 text-center">
-                  <FaEllipsisV className="inline text-[#0b7b7b]/60" />
+                    Edit
+                  </Button>
                 </td>
               </tr>
             ))}
-            {filteredRequests.length === 0 && (
+            {requests.length === 0 && (
               <tr>
-                <td colSpan="5" className="p-4 text-center text-gray-500">
+                <td colSpan={5} className="text-center py-4 text-gray-500">
                   No pricing requests found.
                 </td>
               </tr>
@@ -157,16 +130,10 @@ const RequestPricingPage = () => {
       {modalOpen && (
         <PricingRequestModal
           request={editingRequest}
-          onClose={() => {
-            setModalOpen(false);
-            setEditingRequest(null);
-            fetchInitialData();
-          }}
-          onSave={handleSaveRequest}
+          onClose={() => setModalOpen(false)}
+          onSave={handleSave}
         />
       )}
     </div>
   );
-};
-
-export default RequestPricingPage;
+}

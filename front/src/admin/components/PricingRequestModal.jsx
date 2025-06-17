@@ -14,7 +14,7 @@ export default function PricingRequestModal({ request, onClose, onSave }) {
   const [formData, setFormData] = useState({
     productId: "",
     proposedPrice: 0,
-    customerId: "", // NEW
+    customerId: "", 
   });
 
   const [products, setProducts] = useState([]);
@@ -25,49 +25,48 @@ export default function PricingRequestModal({ request, onClose, onSave }) {
     const user = JSON.parse(localStorage.getItem("user"));
     setUserRole(user?.role || "");
 
+    fetchProducts();
+    if (user?.role?.toLowerCase() !== "customer") {
+      fetchCustomers();
+    }
+
     if (request) {
       setFormData({
         productId: request.productId || "",
         proposedPrice: request.proposedPrice || 0,
-        customerId: request.customerId || user?.userId || "", // fallback for customer login
+        customerId: request.customerId || "",
       });
     } else {
-      setFormData({
-        productId: "",
-        proposedPrice: 0,
-        customerId: user?.userId || "", // for customer role
-      });
-    }
-
-    fetchProducts();
-    if (user?.role?.toLowerCase() !== "customer") {
-      fetchCustomers();
+      setFormData((prev) => ({
+        ...prev,
+        customerId: user?.role?.toLowerCase() === "customer" ? user?.userId : "",
+      }));
     }
   }, [request]);
 
   const fetchProducts = async () => {
     try {
-      const { data } = await axios.get("/api/products", {
+      const res = await axios.get("/api/products", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setProducts(data);
+      setProducts(res.data);
     } catch (err) {
-      console.error("Failed to fetch products:", err);
+      console.error("Failed to fetch products", err);
     }
   };
 
   const fetchCustomers = async () => {
     try {
-      const { data } = await axios.get("/admin/users?onlyRole=Customer", {
+      const res = await axios.get("/admin/users?onlyRole=Customer", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setCustomers(data);
+      setCustomers(res.data);
     } catch (err) {
-      console.error("Failed to fetch customers:", err);
+      console.error("Failed to fetch customers", err);
     }
   };
 
@@ -77,7 +76,7 @@ export default function PricingRequestModal({ request, onClose, onSave }) {
 
   const handleSubmit = () => {
     if (!formData.productId || !formData.proposedPrice || !formData.customerId) {
-      alert("Please fill in all fields.");
+      alert("Please fill in all fields");
       return;
     }
 
@@ -86,16 +85,13 @@ export default function PricingRequestModal({ request, onClose, onSave }) {
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle className="text-[#0b7b7b] font-bold">
-        {request ? "Edit Pricing Request" : "New Pricing Request"}
-      </DialogTitle>
-
+      <DialogTitle>{request ? "Edit" : "New"} Pricing Request</DialogTitle>
       <DialogContent>
-        {/* Select Product */}
+        {/* Product Dropdown */}
         <TextField
           select
-          label="Select Product"
           name="productId"
+          label="Product"
           value={formData.productId}
           onChange={handleChange}
           fullWidth
@@ -108,12 +104,12 @@ export default function PricingRequestModal({ request, onClose, onSave }) {
           ))}
         </TextField>
 
-        {/* Select Customer (if not a customer) */}
+        {/* Customer Dropdown (Admin Only) */}
         {userRole.toLowerCase() !== "customer" && (
           <TextField
             select
-            label="Select Customer"
             name="customerId"
+            label="Customer"
             value={formData.customerId}
             onChange={handleChange}
             fullWidth
@@ -127,10 +123,10 @@ export default function PricingRequestModal({ request, onClose, onSave }) {
           </TextField>
         )}
 
-        {/* Proposed Price */}
+        {/* Price Field */}
         <TextField
-          label="Proposed Price (₹)"
           name="proposedPrice"
+          label="Proposed Price (₹)"
           type="number"
           value={formData.proposedPrice}
           onChange={handleChange}
@@ -138,12 +134,9 @@ export default function PricingRequestModal({ request, onClose, onSave }) {
           margin="normal"
         />
       </DialogContent>
-
-      <DialogActions className="px-6 pb-4">
-        <Button onClick={onClose} color="inherit">
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary">
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSubmit} variant="contained">
           {request ? "Update" : "Submit"}
         </Button>
       </DialogActions>
