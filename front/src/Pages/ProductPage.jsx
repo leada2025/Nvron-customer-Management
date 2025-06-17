@@ -26,16 +26,25 @@ const ProductPage = () => {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
+        console.log("Fetched Products:", productsRes.data);
+console.log("Fetched Special Prices:", specialPricesRes.data);
 
         const specialPrices = specialPricesRes.data;
-        const enrichedProducts = productsRes.data.map((product) => {
-          const matched = specialPrices.find(
-            (sp) => sp.productId === product._id
-          );
-          return matched
-            ? { ...product, specialPrice: matched.approvedPrice }
-            : product;
-        });
+     const enrichedProducts = productsRes.data.map((product) => {
+  const matchedPrices = specialPrices.filter(
+    (sp) => sp.productId === product._id
+  );
+
+  // pick the latest by ObjectId (or you can use createdAt if available)
+  const latest = matchedPrices.sort((a, b) =>
+    a._id < b._id ? 1 : -1
+  )[0];
+
+  return latest
+    ? { ...product, specialPrice: latest.approvedPrice }
+    : product;
+});
+
 
         setProducts(enrichedProducts);
       } catch (err) {
