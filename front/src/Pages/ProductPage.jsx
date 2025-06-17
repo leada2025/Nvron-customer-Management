@@ -55,13 +55,19 @@ const ProductPage = () => {
     }));
   };
 
-  const handleAddToOrder = (product) => {
-    const quantity = quantities[product._id] || 1;
-    const existing = orderItems.find((item) => item._id === product._id);
-    if (!existing) {
-      setOrderItems([...orderItems, { ...product, quantity }]);
-    }
-  };
+const handleAddToOrder = (product) => {
+  const quantity = quantities[product._id] || 1;
+  const exists = orderItems.find((item) => item._id === product._id);
+
+  if (exists) {
+    // Remove product if already added
+    setOrderItems(orderItems.filter((item) => item._id !== product._id));
+  } else {
+    // Add product with quantity
+    setOrderItems([...orderItems, { ...product, quantity }]);
+  }
+};
+
 
   const handleProceed = () => {
     localStorage.setItem("orderItems", JSON.stringify(orderItems));
@@ -149,34 +155,57 @@ const ProductPage = () => {
                 )}
 
                 <td className="py-3 px-3">{product.tax || 12}%</td>
-                <td className="py-3 px-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                      onClick={() => handleQuantityChange(product._id, -1)}
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <input
-                      type="number"
-                      className="w-10 text-center bg-slate-100 rounded"
-                      value={quantities[product._id] || 1}
-                      readOnly
-                    />
-                    <button
-                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                      onClick={() => handleQuantityChange(product._id, 1)}
-                    >
-                      <Plus size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleAddToOrder(product)}
-                      className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </td>
+               <td className="py-3 px-3">
+  <div className="flex items-center gap-2">
+    <button
+      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+      onClick={() => handleQuantityChange(product._id, -1)}
+    >
+      <Minus size={14} />
+    </button>
+
+    <input
+      type="number"
+      className="w-12 text-center bg-slate-100 rounded"
+      value={quantities[product._id] || 1}
+      onChange={(e) => {
+        const newQty = parseInt(e.target.value);
+        if (!isNaN(newQty) && newQty > 0) {
+          setQuantities((prev) => ({
+            ...prev,
+            [product._id]: newQty,
+          }));
+        }
+      }}
+      min="1"
+    />
+
+    <button
+      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+      onClick={() => handleQuantityChange(product._id, 1)}
+    >
+      <Plus size={14} />
+    </button>
+
+   {orderItems.some((item) => item._id === product._id) ? (
+  <button
+    onClick={() => handleAddToOrder(product)}
+    className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+  >
+    Remove
+  </button>
+) : (
+  <button
+    onClick={() => handleAddToOrder(product)}
+    className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
+  >
+    Add
+  </button>
+)}
+
+  </div>
+</td>
+
               </tr>
             ))}
           </tbody>
