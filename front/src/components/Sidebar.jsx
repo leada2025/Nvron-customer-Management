@@ -22,24 +22,27 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 min-h-screen bg-slate-100 text-gray-800 border-r">
-      <div className="px-6 py-4 border-b">
-        <div className="text-xl font-semibold leading-tight">
-          Fishman <br />
-          <span className="text-sm text-gray-600 font-normal">HealthCare</span>
+    <aside className="w-64 min-h-screen bg-[#e6f7f7] text-[#0b7b7b] border-r border-[#0b7b7b]">
+      {/* Logo/Title */}
+      <div className="px-6 py-5 border-b border-[#0b7b7b]">
+        <div className="text-2xl font-bold leading-snug">
+          Fishman
+          <br />
+          <span className="text-sm font-medium opacity-70">HealthCare</span>
         </div>
       </div>
 
-      <nav className="flex flex-col gap-2 px-4 py-6">
+      {/* Navigation Links */}
+      <nav className="flex flex-col gap-1 px-4 py-6">
         {navItems.map(({ label, path, icon }) => (
           <NavLink
             key={label}
             to={path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition ${
+              `flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? "bg-[#0b7b7b] text-white"
-                  : "hover:bg-gray-200 text-gray-700"
+                  ? "bg-[#0b7b7b] text-white shadow-md"
+                  : "hover:bg-[#d1f3f3] text-[#0b7b7b]"
               }`
             }
           >
@@ -48,7 +51,6 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
-
     </aside>
   );
 };
