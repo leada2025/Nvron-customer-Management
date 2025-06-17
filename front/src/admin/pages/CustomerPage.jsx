@@ -100,32 +100,6 @@ const CustomerPage = () => {
 
       <div className="bg-white rounded-md border border-gray-300 shadow-sm">
         <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
-<<<<<<< HEAD
-=======
-  onClick={() => {
-    setEditingCustomer(null);
-    setModalOpen(true);
-  }}
-  className="bg-[#0b7b7b] hover:bg-[#095e5e] text-white px-4 py-2 rounded-md"
->
-  + Add Customers
-</button>
-
-      </div>
- 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <SummaryCard title="Total Customers" value={totalCustomers} />
-        <SummaryCard title="Active Customers" value={activeCustomers} />
-        <SummaryCard title="On Due Balance" value={totalDue} />
-      </div>
-
-      {/* Search & Table */}
-      <div className="bg-white rounded-xl border border-[#0b7b7b]/20 shadow">
-        <div className="flex justify-between items-center px-4 py-3 border-b border-[#0b7b7b]/10">
->>>>>>> refs/remotes/origin/main
-=======
->>>>>>> refs/remotes/origin/main
           <input
             type="text"
             placeholder="Search"
