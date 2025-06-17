@@ -85,14 +85,14 @@ export default function AdminSidebar({ user, navigate }) {
   const menuRefs = useRef({});
 
   useEffect(() => {
-    const handleClickOutsideMenu = (event) => {
-      const isClickInsideAnyMenu = Object.values(menuRefs.current).some(
-        (ref) => ref.current && ref.current.contains(event.target)
+    const handleClickOutside = (e) => {
+      const clickedOutside = !Object.values(menuRefs.current).some(
+        (ref) => ref.current?.contains(e.target)
       );
-      if (!isClickInsideAnyMenu) setExpandedMenu(null);
+      if (clickedOutside) setExpandedMenu(null);
     };
-    document.addEventListener("mousedown", handleClickOutsideMenu);
-    return () => document.removeEventListener("mousedown", handleClickOutsideMenu);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const getFilteredSidebarLinks = () => {
@@ -109,7 +109,7 @@ export default function AdminSidebar({ user, navigate }) {
           "requests",
           "price approval",
           "uncalling pages",
-        ].includes(link.name.toLowerCase().trim())
+        ].includes(link.name.toLowerCase())
       );
     }
 
@@ -123,7 +123,7 @@ export default function AdminSidebar({ user, navigate }) {
           "order management",
           "requests",
           "update",
-        ].includes(link.name.toLowerCase().trim())
+        ].includes(link.name.toLowerCase())
       );
     }
 
@@ -133,69 +133,65 @@ export default function AdminSidebar({ user, navigate }) {
   const filteredSidebarLinks = getFilteredSidebarLinks();
 
   return (
-    <aside className="w-64 min-h-screen bg-[#e6f7f7] text-[#0b7b7b] border-r border-[#0b7b7b]">
-      <div className="px-6 py-4 ">
-        <div className="text-xl font-semibold leading-tight">
-          Fishman <br />
-          <span className="text-sm text-[#0b7b7b] font-normal opacity-70">
-            HealthCare
-          </span>
-        </div>
+    <aside className="w-64 min-h-screen bg-[#e6f7f7] border-r border-[#0b7b7b] text-[#0b7b7b] shadow-md">
+      <div className="px-6 py-6 border-b border-[#0b7b7b]/20">
+        <h1 className="text-2xl font-bold">Fishman</h1>
+        <p className="text-sm opacity-70">HealthCare</p>
       </div>
 
-      <nav className="flex flex-col gap-2 px-4 py-6">
+      <nav className="px-4 py-6 space-y-2">
         {filteredSidebarLinks.map(({ name, icon, submenu, path }) => {
           const routePath =
             typeof path === "string"
               ? path
-              : name.toLowerCase().trim().replace(/\s+/g, "");
+              : name.toLowerCase().replace(/\s+/g, "");
           const isSubmenuActive = submenu?.some((item) =>
-            location.pathname.toLowerCase().includes(item.path.toLowerCase())
+            location.pathname.includes(item.path)
           );
           const isActive = submenu
             ? isSubmenuActive
-            : location.pathname.toLowerCase().endsWith(`/admin/${routePath}`);
+            : location.pathname.endsWith(`/admin/${routePath}`);
           const isExpanded = expandedMenu === name;
 
           if (!menuRefs.current[name]) menuRefs.current[name] = React.createRef();
 
           return (
-            <div key={name} className="relative" ref={menuRefs.current[name]}>
+            <div key={name} ref={menuRefs.current[name]}>
               <button
                 onClick={() => {
-                  if (submenu) {
-                    setExpandedMenu(isExpanded ? null : name);
-                  } else {
-                    setExpandedMenu(null);
-                    navigate(`/admin/${routePath}`);
-                  }
+                  submenu
+                    ? setExpandedMenu(isExpanded ? null : name)
+                    : (setExpandedMenu(null), navigate(`/admin/${routePath}`));
                 }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-md text-sm font-medium transition ${
+                className={`flex items-center w-full gap-3 px-4 py-2 rounded-lg font-medium text-sm transition relative group ${
                   isActive
-                    ? "bg-[#0b7b7b] text-white"
-                    : "hover:bg-[#c2efef] text-[#0b7b7b]"
+                    ? "bg-[#0b7b7b] text-white shadow-inner"
+                    : "hover:bg-[#c2efef]"
                 }`}
               >
+                <div
+                  className={`absolute left-0 top-0 h-full w-1.5 rounded-r-full ${
+                    isActive ? "bg-white" : "group-hover:bg-[#0b7b7b]/50"
+                  }`}
+                />
                 {icon}
-                {name}
+                <span className="flex-grow">{name}</span>
                 {submenu && (
-                  <span className="ml-auto text-xs">{isExpanded ? "▲" : "▼"}</span>
+                  <span className="text-xs">{isExpanded ? "▲" : "▼"}</span>
                 )}
               </button>
 
               {submenu && isExpanded && (
-                <div className="ml-4 mt-2 flex flex-col gap-1">
+                <div className="ml-6 mt-1 border-l border-[#0b7b7b]/20 pl-3 space-y-1">
                   {submenu.map((item) => (
                     <Link
                       key={item.label}
                       to={`/admin/${item.path}`}
                       onClick={() => setExpandedMenu(null)}
-                      className={`block px-3 py-1 text-sm rounded-md transition ${
-                        location.pathname
-                          .toLowerCase()
-                          .includes(item.path.toLowerCase())
+                      className={`block px-3 py-1.5 rounded-md text-sm transition font-medium ${
+                        location.pathname.includes(item.path)
                           ? "bg-[#0b7b7b] text-white"
-                          : "hover:bg-[#c2efef] text-[#0b7b7b]"
+                          : "hover:bg-[#d7f3f3] text-[#0b7b7b]"
                       }`}
                     >
                       {item.label}
@@ -210,4 +206,3 @@ export default function AdminSidebar({ user, navigate }) {
     </aside>
   );
 }
-     
