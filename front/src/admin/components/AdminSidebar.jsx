@@ -61,22 +61,7 @@ const sidebarLinks = [
     icon: <Folder size={18} />,
     submenu: [{ label: "Customer Requests", path: "requests" }],
   },
-  {
-    name: "Uncalling Pages",
-    icon: <AlertCircle size={18} />,
-    submenu: [
-      { label: "Page Monitor", path: "uncalling/monitor" },
-      { label: "Unlinked Modules", path: "uncalling/unlinked" },
-    ],
-  },
-  {
-    name: "Update",
-    icon: <RefreshCw size={18} />,
-    submenu: [
-      { label: "Push Updates", path: "update/push" },
-      { label: "Changelog", path: "update/logs" },
-    ],
-  },
+
 ];
 
 export default function AdminSidebar({ user, navigate }) {
