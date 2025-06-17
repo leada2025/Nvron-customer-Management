@@ -40,7 +40,7 @@ export default function AdminNavbar({ onLogout, navigate }) {
   };
 
   return (
-    <header className="h-[83px] bg-[#e6f7f7] border-b border-[#0b7b7b] flex items-center justify-between px-6 sticky top-0 z-10">
+    <header className="h-[100px] bg-[#e6f7f7] border-b border-[#0b7b7b] flex items-center justify-between px-6 sticky top-0 z-10">
       <h1 className="text-lg font-semibold text-[#0b7b7b]">
         {getCurrentPageTitle()}
       </h1>
