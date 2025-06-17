@@ -10,92 +10,90 @@ const OrderSummaryPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-useEffect(() => {
-  const fetchData = async () => {
-    const token = localStorage.getItem("token");
-    const rawPosition = localStorage.getItem("position");
-    const position = (rawPosition || "").trim().toLowerCase();
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("token");
+      const rawPosition = localStorage.getItem("position");
+      const position = (rawPosition || "").trim().toLowerCase();
 
-    try {
-      const { data: specialPrices } = await axios.get("/api/negotiations/special-prices", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        const { data: specialPrices } = await axios.get("/api/negotiations/special-prices", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      const priceMap = {};
-      specialPrices.forEach((entry) => {
-        priceMap[entry.productId] = entry.approvedPrice;
-      });
+        const priceMap = {};
+        specialPrices.forEach((entry) => {
+          priceMap[entry.productId] = entry.approvedPrice;
+        });
 
-      const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
+        const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
 
-      const updatedItems = items.map((item) => {
-        const quantity = Number(item.quantity) || 1;
-        const tax = Number(item.tax) || 0;
+        const updatedItems = items.map((item) => {
+          const quantity = Number(item.quantity) || 1;
+          const tax = Number(item.tax) || 0;
+          const approvedPrice = priceMap[item._id];
 
-        let finalPrice = 0;
-        if (position === "doctor") {
-          finalPrice = priceMap[item._id] ?? Number(item.netRate);
-        } else if (position === "retailer") {
-          finalPrice = Number(item.ptr);
-        } else if (position === "distributor") {
-          finalPrice = Number(item.pts);
-        } else {
-          finalPrice = Number(item.netRate); // fallback
-        }
+          let finalPrice = 0;
+          if (approvedPrice) {
+            finalPrice = approvedPrice;
+          } else if (position === "doctor") {
+            finalPrice = Number(item.netRate);
+          } else if (position === "retailer") {
+            finalPrice = Number(item.ptr);
+          } else if (position === "distributor") {
+            finalPrice = Number(item.pts);
+          } else {
+            finalPrice = Number(item.netRate); // fallback
+          }
 
-        console.log(`Product: ${item.name}, Unit Price: ₹${finalPrice}, Position: ${position}`);
+          return {
+            ...item,
+            quantity,
+            tax,
+            unitPrice: finalPrice,
+            productId: item._id,
+            productName: item.name,
+            description: item.description,
+          };
+        });
 
-        return {
-          ...item,
-          quantity,
-          tax,
-          unitPrice: finalPrice,
-          productId: item._id,
-          productName: item.name,
-          description: item.description,
-        };
-      });
+        setOrderItems(updatedItems);
+      } catch (err) {
+        console.error("Price load error:", err);
+        const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
 
-      setOrderItems(updatedItems);
-    } catch (err) {
-      console.error("Price load error:", err);
-      const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
+        const fallback = items.map((item) => {
+          const quantity = Number(item.quantity) || 1;
+          const tax = Number(item.tax) || 0;
+          let finalPrice = 0;
 
-      const fallback = items.map((item) => {
-        const quantity = Number(item.quantity) || 1;
-        const tax = Number(item.tax) || 0;
-        let finalPrice = 0;
+          if (position === "doctor") {
+            finalPrice = Number(item.netRate);
+          } else if (position === "retailer") {
+            finalPrice = Number(item.ptr);
+          } else if (position === "distributor") {
+            finalPrice = Number(item.pts);
+          } else {
+            finalPrice = Number(item.netRate);
+          }
 
-        if (position === "retailer") {
-          finalPrice = Number(item.ptr);
-        } else if (position === "distributor") {
-          finalPrice = Number(item.pts);
-        } else {
-          finalPrice = Number(item.netRate);
-        }
+          return {
+            ...item,
+            quantity,
+            tax,
+            unitPrice: finalPrice,
+            productId: item._id,
+            productName: item.name,
+            description: item.description,
+          };
+        });
 
-        console.log(`(Fallback) Product: ${item.name}, Unit Price: ₹${finalPrice}, Position: ${position}`);
+        setOrderItems(fallback);
+      }
+    };
 
-        return {
-          ...item,
-          quantity,
-          tax,
-          unitPrice: finalPrice,
-          productId: item._id,
-          productName: item.name,
-          description: item.description,
-        };
-      });
-
-      setOrderItems(fallback);
-    }
-  };
-
-  fetchData();
-}, []);
-
-
-
+    fetchData();
+  }, []);
 
   const subtotal = orderItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const totalTax = orderItems.reduce(

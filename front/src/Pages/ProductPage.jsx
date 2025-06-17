@@ -12,7 +12,7 @@ const ProductPage = () => {
   const navigate = useNavigate();
 
   const userRole = localStorage.getItem("role"); // "Admin" or "Customer"
-  const userPosition = localStorage.getItem("position"); // "doctor", "retailer", "distributor" (only for Customer)
+  const userPosition = localStorage.getItem("position"); // "Doctor", "Retailer", "Distributor"
 
   useEffect(() => {
     const fetchProductsAndSpecialPrices = async () => {
@@ -55,19 +55,16 @@ const ProductPage = () => {
     }));
   };
 
-const handleAddToOrder = (product) => {
-  const quantity = quantities[product._id] || 1;
-  const exists = orderItems.find((item) => item._id === product._id);
+  const handleAddToOrder = (product) => {
+    const quantity = quantities[product._id] || 1;
+    const exists = orderItems.find((item) => item._id === product._id);
 
-  if (exists) {
-    // Remove product if already added
-    setOrderItems(orderItems.filter((item) => item._id !== product._id));
-  } else {
-    // Add product with quantity
-    setOrderItems([...orderItems, { ...product, quantity }]);
-  }
-};
-
+    if (exists) {
+      setOrderItems(orderItems.filter((item) => item._id !== product._id));
+    } else {
+      setOrderItems([...orderItems, { ...product, quantity }]);
+    }
+  };
 
   const handleProceed = () => {
     localStorage.setItem("orderItems", JSON.stringify(orderItems));
@@ -87,7 +84,6 @@ const handleAddToOrder = (product) => {
         {userRole === "Customer" && userPosition && ` (${userPosition})`}
       </div>
 
-      {/* Search Input */}
       <div className="flex items-center bg-white p-3 rounded-md shadow-sm mb-4 w-full max-w-xl">
         <Search size={18} className="text-gray-400 mr-2" />
         <input
@@ -99,7 +95,6 @@ const handleAddToOrder = (product) => {
         />
       </div>
 
-      {/* Product Table */}
       <div className="overflow-x-auto bg-white rounded-xl shadow p-4">
         <table className="min-w-full text-sm text-left">
           <thead className="text-gray-600 uppercase text-xs tracking-wider">
@@ -138,81 +133,82 @@ const handleAddToOrder = (product) => {
                 </td>
                 <td className="py-3 px-3">₹{product.mrp}</td>
 
-                {userRole === "Customer" && userPosition === "Doctor" && (
-                  <td className="py-3 px-3 text-green-600">
-                    ₹{product.specialPrice || product.netRate}
-                  </td>
-                )}
-                {userRole === "Customer" && userPosition === "Retailer" && (
-                  <td className="py-3 px-3 text-blue-600">
-                    ₹{product.ptr || "-"}
-                  </td>
-                )}
-                {userRole === "Customer" && userPosition === "Distributor" && (
-                  <td className="py-3 px-3 text-purple-600">
-                    ₹{product.pts || "-"}
-                  </td>
+                {userRole === "Customer" && (
+                  <>
+                    {userPosition === "Doctor" && (
+                      <td className="py-3 px-3 text-green-600">
+                        ₹{product.specialPrice || product.netRate || "-"}
+                      </td>
+                    )}
+                    {userPosition === "Retailer" && (
+                      <td className="py-3 px-3 text-blue-600">
+                        ₹{product.specialPrice || product.ptr || "-"}
+                      </td>
+                    )}
+                    {userPosition === "Distributor" && (
+                      <td className="py-3 px-3 text-purple-600">
+                        ₹{product.specialPrice || product.pts || "-"}
+                      </td>
+                    )}
+                  </>
                 )}
 
                 <td className="py-3 px-3">{product.tax || 12}%</td>
-               <td className="py-3 px-3">
-  <div className="flex items-center gap-2">
-    <button
-      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-      onClick={() => handleQuantityChange(product._id, -1)}
-    >
-      <Minus size={14} />
-    </button>
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                      onClick={() => handleQuantityChange(product._id, -1)}
+                    >
+                      <Minus size={14} />
+                    </button>
 
-    <input
-      type="number"
-      className="w-12 text-center bg-slate-100 rounded"
-      value={quantities[product._id] || 1}
-      onChange={(e) => {
-        const newQty = parseInt(e.target.value);
-        if (!isNaN(newQty) && newQty > 0) {
-          setQuantities((prev) => ({
-            ...prev,
-            [product._id]: newQty,
-          }));
-        }
-      }}
-      min="1"
-    />
+                    <input
+                      type="number"
+                      className="w-12 text-center bg-slate-100 rounded"
+                      value={quantities[product._id] || 1}
+                      onChange={(e) => {
+                        const newQty = parseInt(e.target.value);
+                        if (!isNaN(newQty) && newQty > 0) {
+                          setQuantities((prev) => ({
+                            ...prev,
+                            [product._id]: newQty,
+                          }));
+                        }
+                      }}
+                      min="1"
+                    />
 
-    <button
-      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-      onClick={() => handleQuantityChange(product._id, 1)}
-    >
-      <Plus size={14} />
-    </button>
+                    <button
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                      onClick={() => handleQuantityChange(product._id, 1)}
+                    >
+                      <Plus size={14} />
+                    </button>
 
-   {orderItems.some((item) => item._id === product._id) ? (
-  <button
-    onClick={() => handleAddToOrder(product)}
-    className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
-  >
-    Remove
-  </button>
-) : (
-  <button
-    onClick={() => handleAddToOrder(product)}
-    className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
-  >
-    Add
-  </button>
-)}
-
-  </div>
-</td>
-
+                    {orderItems.some((item) => item._id === product._id) ? (
+                      <button
+                        onClick={() => handleAddToOrder(product)}
+                        className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleAddToOrder(product)}
+                        className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
+                      >
+                        Add
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Place Order Button */}
       {orderItems.length > 0 && (
         <div className="fixed bottom-6 right-6">
           <button
