@@ -4,7 +4,7 @@ import ProfileDropdown from "./ProfileDropdown";
 
 export default function Navbar() {
   return (
-    <header className="h-[107px] bg-[#0b7b7b] text-white flex items-center justify-between px-6">
+    <header className="h-[75px] bg-[#0b7b7b] text-white flex items-center justify-between px-6">
       <h1 className="text-lg font-semibold tracking-wide">Fishman HealthCare</h1>
       <div className="flex items-center gap-5">
         <NotificationsDropdown />

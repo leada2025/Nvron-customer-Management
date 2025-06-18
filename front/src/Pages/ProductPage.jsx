@@ -9,10 +9,13 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [quantities, setQuantities] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 16;
   const navigate = useNavigate();
 
-  const userRole = localStorage.getItem("role"); // "Admin" or "Customer"
-  const userPosition = localStorage.getItem("position"); // "Doctor", "Retailer", "Distributor"
+  const userRole = localStorage.getItem("role");
+  const userPosition = localStorage.getItem("position");
 
   useEffect(() => {
     const fetchProductsAndSpecialPrices = async () => {
@@ -28,21 +31,19 @@ const ProductPage = () => {
         ]);
 
         const specialPrices = specialPricesRes.data;
-       const enrichedProducts = productsRes.data.map((product) => {
-  const matchedPrices = specialPrices.filter(
-    (sp) => sp.productId === product._id
-  );
 
-  // pick the latest by ObjectId (or you can use createdAt if available)
-  const latest = matchedPrices.sort((a, b) =>
-    a._id < b._id ? 1 : -1
-  )[0];
+        const enrichedProducts = productsRes.data.map((product) => {
+          const matchedPrices = specialPrices.filter(
+            (sp) => sp.productId === product._id
+          );
+          const latest = matchedPrices.sort((a, b) =>
+            a._id < b._id ? 1 : -1
+          )[0];
 
-  return latest
-    ? { ...product, specialPrice: latest.approvedPrice }
-    : product;
-});
-
+          return latest
+            ? { ...product, specialPrice: latest.approvedPrice }
+            : product;
+        });
 
         setProducts(enrichedProducts);
       } catch (err) {
@@ -82,6 +83,12 @@ const ProductPage = () => {
     p.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   if (loading) return <div className="p-6">Loading products...</div>;
 
   return (
@@ -97,124 +104,145 @@ const ProductPage = () => {
           type="text"
           placeholder="Search by product name or code"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1); // Reset to first page on search
+          }}
           className="w-full outline-none bg-transparent"
         />
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-xl shadow p-4">
-        <table className="min-w-full text-sm text-left">
-          <thead className="text-gray-600 uppercase text-xs tracking-wider">
-            <tr>
-              <th className="py-2 px-3">Product</th>
-              <th className="py-2 px-3">Description</th>
-              <th className="py-2 px-3">Dosage Form</th>
-              <th className="py-2 px-3">Packing</th>
-              <th className="py-2 px-3">MRP</th>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {paginatedProducts.map((product) => {
+          const quantity = quantities[product._id] || 1;
+          const isAdded = orderItems.some((item) => item._id === product._id);
 
-              {userRole === "Customer" && userPosition === "Doctor" && (
-                <th className="py-2 px-3">Net Rate</th>
-              )}
-              {userRole === "Customer" && userPosition === "Retailer" && (
-                <th className="py-2 px-3">PTR</th>
-              )}
-              {userRole === "Customer" && userPosition === "Distributor" && (
-                <th className="py-2 px-3">PTS</th>
+          let priceLabel = null;
+          if (userRole === "Customer") {
+            if (userPosition === "Doctor")
+              priceLabel = product.specialPrice || product.netRate || "-";
+            if (userPosition === "Retailer")
+              priceLabel = product.specialPrice || product.ptr || "-";
+            if (userPosition === "Distributor")
+              priceLabel = product.specialPrice || product.pts || "-";
+          }
+
+          return (
+            <div
+              key={product._id}
+              className="bg-white p-4 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 className="text-md font-semibold mb-1">{product.name}</h3>
+              <p className="text-sm text-gray-500 mb-1">{product.description}</p>
+              <p className="text-xs text-gray-400 mb-1">
+                Dosage: {product.dosageForm || "TABLET"}
+              </p>
+              <p className="text-xs text-gray-400 mb-1">
+                Packing: {product.packing || "10X10 PVC BLISTER"}
+              </p>
+              <p className="text-sm text-gray-700 font-medium">
+                MRP: ₹{product.mrp}
+              </p>
+
+              {userRole === "Customer" && (
+                <p className="text-sm font-semibold mt-1">
+                  {userPosition === "Doctor" && (
+                    <span className="text-green-600">Net Rate: ₹{priceLabel}</span>
+                  )}
+                  {userPosition === "Retailer" && (
+                    <span className="text-blue-600">PTR: ₹{priceLabel}</span>
+                  )}
+                  {userPosition === "Distributor" && (
+                    <span className="text-purple-600">PTS: ₹{priceLabel}</span>
+                  )}
+                </p>
               )}
 
-              <th className="py-2 px-3">Tax</th>
-              <th className="py-2 px-3">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((product) => (
-              <tr
-                key={product._id}
-                className="hover:bg-slate-50 transition border-b last:border-none"
+              <p className="text-xs text-gray-500 mt-1">Tax: {product.tax || 12}%</p>
+
+              <div className="flex items-center gap-2 mt-3">
+                <button
+                  className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                  onClick={() => handleQuantityChange(product._id, -1)}
+                >
+                  <Minus size={14} />
+                </button>
+
+                <input
+                  type="number"
+                  className="w-12 text-center bg-slate-100 rounded"
+                  value={quantity}
+                  onChange={(e) => {
+                    const newQty = parseInt(e.target.value);
+                    if (!isNaN(newQty) && newQty > 0) {
+                      setQuantities((prev) => ({
+                        ...prev,
+                        [product._id]: newQty,
+                      }));
+                    }
+                  }}
+                  min="1"
+                />
+
+                <button
+                  className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                  onClick={() => handleQuantityChange(product._id, 1)}
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+
+              <button
+                onClick={() => handleAddToOrder(product)}
+                className={`mt-3 px-3 py-1 text-xs rounded text-white ${
+                  isAdded
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-teal-600 hover:bg-teal-700"
+                }`}
               >
-                <td className="py-3 px-3">{product.name}</td>
-                <td className="py-3 px-3">{product.description}</td>
-                <td className="py-3 px-3">{product.dosageForm || "TABLET"}</td>
-                <td className="py-3 px-3">
-                  {product.packing || "10X10 PVC BLISTER"}
-                </td>
-                <td className="py-3 px-3">₹{product.mrp}</td>
-
-                {userRole === "Customer" && (
-                  <>
-                    {userPosition === "Doctor" && (
-                      <td className="py-3 px-3 text-green-600">
-                        ₹{product.specialPrice || product.netRate || "-"}
-                      </td>
-                    )}
-                    {userPosition === "Retailer" && (
-                      <td className="py-3 px-3 text-blue-600">
-                        ₹{product.specialPrice || product.ptr || "-"}
-                      </td>
-                    )}
-                    {userPosition === "Distributor" && (
-                      <td className="py-3 px-3 text-purple-600">
-                        ₹{product.specialPrice || product.pts || "-"}
-                      </td>
-                    )}
-                  </>
-                )}
-
-                <td className="py-3 px-3">{product.tax || 12}%</td>
-                <td className="py-3 px-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                      onClick={() => handleQuantityChange(product._id, -1)}
-                    >
-                      <Minus size={14} />
-                    </button>
-
-                    <input
-                      type="number"
-                      className="w-12 text-center bg-slate-100 rounded"
-                      value={quantities[product._id] || 1}
-                      onChange={(e) => {
-                        const newQty = parseInt(e.target.value);
-                        if (!isNaN(newQty) && newQty > 0) {
-                          setQuantities((prev) => ({
-                            ...prev,
-                            [product._id]: newQty,
-                          }));
-                        }
-                      }}
-                      min="1"
-                    />
-
-                    <button
-                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                      onClick={() => handleQuantityChange(product._id, 1)}
-                    >
-                      <Plus size={14} />
-                    </button>
-
-                    {orderItems.some((item) => item._id === product._id) ? (
-                      <button
-                        onClick={() => handleAddToOrder(product)}
-                        className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
-                      >
-                        Remove
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleAddToOrder(product)}
-                        className="ml-2 px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs"
-                      >
-                        Add
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                {isAdded ? "Remove" : "Add"}
+              </button>
+            </div>
+          );
+        })}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-gray-200 text-sm rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          {[...Array(totalPages)].map((_, index) => {
+            const page = index + 1;
+            return (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 text-sm rounded ${
+                  currentPage === page
+                    ? "bg-teal-600 text-white"
+                    : "bg-gray-100 hover:bg-gray-200"
+                }`}
+              >
+                {page}
+              </button>
+            );
+          })}
+
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-gray-200 text-sm rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {orderItems.length > 0 && (
         <div className="fixed bottom-6 right-6">
@@ -230,4 +258,4 @@ const ProductPage = () => {
   );
 };
 
-export default ProductPage; 
+export default ProductPage;

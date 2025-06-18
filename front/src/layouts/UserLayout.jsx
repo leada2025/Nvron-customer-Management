@@ -1,15 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../Pages/Navbar";
 import Footer from "../components/Footer";
 import { Outlet } from "react-router-dom";
 
 const UserLayout = () => {
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
     <div className="flex min-h-screen bg-white text-gray-800">
       {/* Sidebar */}
-      <div className="w-64 bg-[#e6f7f7] border-r border-[#0b7b7b] hidden lg:block">
-        <Sidebar />
+      <div
+        className={`${
+          collapsed ? "w-16" : "w-64"
+        } transition-all duration-300 bg-[#e6f7f7] border-r border-[#0b7b7b] hidden lg:block`}
+      >
+        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       </div>
 
       {/* Main content area */}

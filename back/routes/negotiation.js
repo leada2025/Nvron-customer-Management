@@ -13,15 +13,15 @@ router.post("/", authenticate, async (req, res) => {
 
     let customerId;
 
-    // 🔐 If admin, allow sending customerId from frontend
-    if (req.user.role === "admin") {
+    if (req.user.role === "admin" || req.user.role === "sales") {
       if (!bodyCustomerId) {
         return res.status(400).json({ message: "Customer ID is required" });
       }
       customerId = bodyCustomerId;
-    } else {
-      // ✅ For customers, use the logged-in user’s ID
+    } else if (req.user.role === "customer") {
       customerId = req.user.userId;
+    } else {
+      return res.status(403).json({ message: "Unauthorized role" });
     }
 
     const negotiation = new NegotiationRequest({

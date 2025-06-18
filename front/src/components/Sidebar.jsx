@@ -1,16 +1,17 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
-  LayoutDashboard,
   Home,
   BookOpen,
   ShoppingCart,
   Settings,
   FileText,
   Package,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
-const Sidebar = () => {
+const Sidebar = ({ collapsed, setCollapsed }) => {
   const navItems = [
     { label: "Home", path: "/products", icon: <Home size={18} /> },
     { label: "Catalogue", path: "/catalog", icon: <BookOpen size={18} /> },
@@ -21,24 +22,32 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 min-h-screen bg-[#e6f7f7] text-[#0b7b7b] border-r border-[#0b7b7b]">
-      {/* Logo/Title */}
-      <div className="px-6 py-5 border-b border-[#0b7b7b]">
-        <div className="text-2xl font-bold leading-snug">
-          Fishman
-          <br />
-          <span className="text-sm font-medium opacity-70">HealthCare</span>
-        </div>
+    <aside className="min-h-screen text-[#0b7b7b] bg-[#e6f7f7] border-r border-[#0b7b7b] transition-all duration-300">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-5 ">
+        {!collapsed && (
+          <div className="text-2xl font-bold leading-snug">
+            Fishman
+            <br />
+            <span className="text-sm font-medium opacity-70">HealthCare</span>
+          </div>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="text-[#0b7b7b] p-1 hover:bg-[#c4eded] rounded"
+        >
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex flex-col gap-1 px-4 py-6">
+      {/* Navigation */}
+      <nav className="flex flex-col gap-1 px-2 py-4">
         {navItems.map(({ label, path, icon }) => (
           <NavLink
             key={label}
             to={path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive
                   ? "bg-[#0b7b7b] text-white shadow-md"
                   : "hover:bg-[#d1f3f3] text-[#0b7b7b]"
@@ -46,7 +55,7 @@ const Sidebar = () => {
             }
           >
             {icon}
-            {label}
+            {!collapsed && <span>{label}</span>}
           </NavLink>
         ))}
       </nav>

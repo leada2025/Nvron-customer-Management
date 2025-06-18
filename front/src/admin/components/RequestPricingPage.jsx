@@ -1,7 +1,9 @@
+// RequestPricingPage.jsx
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import { Button } from "@mui/material";
 import PricingRequestModal from "../components/PricingRequestModal";
+import { jwtDecode } from "jwt-decode";
 
 export default function RequestPricingPage() {
   const [requests, setRequests] = useState([]);
@@ -9,11 +11,15 @@ export default function RequestPricingPage() {
   const [customers, setCustomers] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRequest, setEditingRequest] = useState(null);
+  const [userRole, setUserRole] = useState("");
 
   const token = localStorage.getItem("token");
 
   const fetchData = async () => {
     try {
+      const decoded = jwtDecode(token);
+      setUserRole(decoded.role);
+
       const [reqRes, productRes, customerRes] = await Promise.all([
         axios.get("/api/negotiations", {
           headers: { Authorization: `Bearer ${token}` },
@@ -26,7 +32,12 @@ export default function RequestPricingPage() {
         }),
       ]);
 
-      setRequests(reqRes.data);
+      const visibleRequests =
+        decoded.role === "sales"
+          ? reqRes.data.filter((r) => r.createdBy === decoded.id)
+          : reqRes.data;
+
+      setRequests(visibleRequests);
       setProducts(productRes.data);
       setCustomers(customerRes.data);
     } catch (err) {
@@ -40,12 +51,18 @@ export default function RequestPricingPage() {
 
   const handleSave = async (data) => {
     try {
+      const payload = {
+        productId: data.productId,
+        proposedPrice: data.proposedPrice,
+        customerId: data.customerId,
+      };
+
       if (editingRequest) {
-        await axios.put(`/api/negotiations/${editingRequest._id}`, data, {
+        await axios.put(`/api/negotiations/${editingRequest._id}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else {
-        await axios.post("/api/negotiations", data, {
+        await axios.post("/api/negotiations", payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
@@ -74,16 +91,18 @@ export default function RequestPricingPage() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-700">Pricing Requests</h2>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => {
-            setEditingRequest(null);
-            setModalOpen(true);
-          }}
-        >
-          + New Request
-        </Button>
+        {(userRole === "admin" || userRole === "sales") && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              setEditingRequest(null);
+              setModalOpen(true);
+            }}
+          >
+            + New Request
+          </Button>
+        )}
       </div>
 
       <div className="overflow-x-auto bg-white border rounded-lg shadow">
@@ -105,16 +124,18 @@ export default function RequestPricingPage() {
                 <td className="px-4 py-2">₹{r.proposedPrice}</td>
                 <td className="px-4 py-2 capitalize">{r.status}</td>
                 <td className="px-4 py-2">
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => {
-                      setEditingRequest(r);
-                      setModalOpen(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
+                  {(userRole === "sales" || userRole === "admin") && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        setEditingRequest(r);
+                        setModalOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -134,6 +155,8 @@ export default function RequestPricingPage() {
           request={editingRequest}
           onClose={() => setModalOpen(false)}
           onSave={handleSave}
+          customers={customers}
+          products={products}
         />
       )}
     </div>
