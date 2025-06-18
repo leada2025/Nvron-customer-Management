@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "../api/Axios";
 import UserModal from "../components/UserModel";
 import { FaEllipsisV } from "react-icons/fa";
@@ -22,7 +22,7 @@ const CustomerPage = () => {
       const response = await axios.get("/admin/users?onlyRole=Customer", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-console.log("Sample customer:", response.data[2]); 
+      console.log("Sample customer:", response.data[2]);
       console.log("Fetched customers:", response.data);
       setCustomers(response.data);
     } catch (err) {
@@ -80,13 +80,21 @@ console.log("Sample customer:", response.data[2]);
     }
   };
 
+  const userMap = useMemo(() => {
+    const map = {};
+    assignableUsers.forEach((user) => {
+      map[user._id] = user;
+    });
+    return map;
+  }, [assignableUsers]);
+
   const filteredCustomers = customers.filter((u) =>
     u.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    const execA = a.assignedTo?.name || "";
-    const execB = b.assignedTo?.name || "";
+    const execA = userMap[a.assignedTo]?.name || "";
+    const execB = userMap[b.assignedTo]?.name || "";
     return execA.localeCompare(execB);
   });
 
@@ -140,10 +148,19 @@ console.log("Sample customer:", response.data[2]);
                   <div className="text-xs text-[#0b7b7b]/60">{u.email}</div>
                 </td>
                <td className="p-3">
-  {u.assignedTo ? (
+  {u.assignedTo && userMap[u.assignedTo] ? (
     <>
-      {u.assignedTo.name}
-      <div className="text-xs text-gray-500">{u.assignedTo.email}</div>
+      {userMap[u.assignedTo].name}
+      <div className="text-xs text-gray-500">
+        {userMap[u.assignedTo].email}
+      </div>
+    </>
+  ) : u.assignedBy && userMap[u.assignedBy] ? (
+    <>
+      {userMap[u.assignedBy].name}
+      <div className="text-xs text-gray-500">
+        {userMap[u.assignedBy].email}
+      </div>
     </>
   ) : (
     <span className="text-red-500 italic">Not Assigned</span>

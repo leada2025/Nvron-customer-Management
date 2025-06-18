@@ -222,7 +222,7 @@ router.post(
 // Update user (admin only)
 router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res) => {
   try {
-    const { name, email, password, role, permissions } = req.body;
+    const { name, email, password, role, permissions,position } = req.body;
 
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
