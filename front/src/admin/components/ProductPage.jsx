@@ -232,12 +232,17 @@ export default function ProductsPage() {
       )}
 
       {modalOpen && (
-        <ProductForm
-          isOpen={modalOpen}
-          onClose={closeModal}
-          onSubmit={handleSubmit}
-          initialData={editProduct}
-        />
+       <ProductForm
+  isOpen={modalOpen}
+  onClose={closeModal}
+  onSubmit={async () => {
+    await fetchProducts();
+    closeModal();
+    setPage(1);
+  }}
+  initialData={editProduct}
+/>
+
       )}
     </div>
   );

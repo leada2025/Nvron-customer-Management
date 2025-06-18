@@ -48,6 +48,7 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
     setSuccessMsg("");
   }, [initialData, isOpen]);
 
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {
@@ -56,68 +57,72 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccessMsg("");
+  e.preventDefault();
 
-    const token = localStorage.getItem("token");
+  // ✅ Prevent duplicate submissions
+  if (loading) return;
 
-    const cleanedForm = {
-      ...form,
-      tax: Number(form.tax),
-      mrp: parseFloat(form.mrp),
-      netRate: parseFloat(form.netRate),
-      ptr: parseFloat(form.ptr),
-      pts: parseFloat(form.pts),
-    };
+  setLoading(true);
+  setError("");
+  setSuccessMsg("");
 
-    if (initialData?.approved) {
-      delete cleanedForm.mrp;
-      delete cleanedForm.netRate;
-    }
+  const token = localStorage.getItem("token");
 
-    try {
-      if (initialData && initialData._id) {
-        await axios.put(`/api/products/${initialData._id}`, cleanedForm, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        setSuccessMsg("Product updated successfully!");
-      } else {
-        await axios.post("/api/products", cleanedForm, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        setSuccessMsg("Product added successfully!");
-        setForm({
-          name: "",
-          packing: "",
-          dosageForm: "",
-          description: "",
-          tax: 12,
-          mrp: "",
-          netRate: "",
-          ptr: "",
-          pts: "",
-        });
-      }
-
-      if (onSubmit) {
-        onSubmit(cleanedForm);
-      }
-    } catch (err) {
-      console.error("API error:", err);
-      setError(err.response?.data?.message || "Failed to save product. Please try again.");
-      setSuccessMsg("");
-    } finally {
-      setLoading(false);
-    }
+  const cleanedForm = {
+    ...form,
+    tax: Number(form.tax),
+    mrp: parseFloat(form.mrp),
+    netRate: parseFloat(form.netRate),
+    ptr: parseFloat(form.ptr),
+    pts: parseFloat(form.pts),
   };
+
+  if (initialData?.approved) {
+    delete cleanedForm.mrp;
+    delete cleanedForm.netRate;
+  }
+
+  try {
+    if (initialData && initialData._id) {
+      await axios.put(`/api/products/${initialData._id}`, cleanedForm, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      setSuccessMsg("Product updated successfully!");
+    } else {
+      await axios.post("/api/products", cleanedForm, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      setSuccessMsg("Product added successfully!");
+      setForm({
+        name: "",
+        packing: "",
+        dosageForm: "",
+        description: "",
+        tax: 12,
+        mrp: "",
+        netRate: "",
+        ptr: "",
+        pts: "",
+      });
+    }
+
+   onSubmit && onSubmit(); 
+
+  } catch (err) {
+    console.error("API error:", err);
+    setError(err.response?.data?.message || "Failed to save product. Please try again.");
+    setSuccessMsg("");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
