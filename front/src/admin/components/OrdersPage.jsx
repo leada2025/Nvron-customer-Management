@@ -168,16 +168,22 @@ useEffect(() => {
 
 
 
+const userRole = localStorage.getItem("role")?.toLowerCase(); // assuming 'role' is stored in localStorage
+
 const filteredOrders = Array.isArray(orders)
   ? orders.filter((order) => {
+      if (userRole === "billing") return true; // 👈 show all for billing role
+
       const matchSearch =
         order.customerId?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order._id.toLowerCase().includes(searchTerm.toLowerCase());
       const matchStatus =
         statusFilter === "All" || order.status === statusFilter.toLowerCase();
+
       return matchSearch && matchStatus;
     })
   : [];
+
 
   const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE);
 

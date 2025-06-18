@@ -69,13 +69,14 @@ router.get("/:id", authenticate, async (req, res) => {
 // Get all orders for billing/sales
 router.get("/", requireAuth({ permission: "Manage Orders" }), async (req, res) => {
   try {
-    const isAdmin = req.user.role?.toLowerCase() === "admin";
-    const hasViewAllAccess = req.user.permissions?.includes("View Orders");
+    const role = req.user.role?.toLowerCase();
+    const isAdmin = role === "admin";
+    const isBilling = role === "billing";
 
     let filter = {};
 
-    if (!isAdmin && !hasViewAllAccess) {
-      // Get customers either assignedBy or assignedTo this user
+    if (!isAdmin && !isBilling) {
+      // Only show orders for assigned customers
       const assignedCustomers = await User.find({
         $or: [
           { assignedBy: req.user.userId },
@@ -97,6 +98,7 @@ router.get("/", requireAuth({ permission: "Manage Orders" }), async (req, res) =
     res.status(500).json({ message: err.message });
   }
 });
+
 
 
 // Update order status
