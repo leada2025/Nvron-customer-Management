@@ -92,13 +92,6 @@ const LoginForm = () => {
           >
             Login
           </button>
-
-          <p className="text-center text-sm mt-4 text-[#0b7b7b]">
-            Create account?{" "}
-            <a href="/" className="text-blue-600 hover:underline">
-              Sign up
-            </a>
-          </p>
         </form>
       </div>
     </div>
