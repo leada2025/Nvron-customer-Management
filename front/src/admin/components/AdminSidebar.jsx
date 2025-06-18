@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -31,42 +31,18 @@ const sidebarLinks = [
     name: "Sales Executive",
     icon: <Users size={18} />,
     submenu: [
-      {
-        label: "Assign Customers",
-        path: "salesexecutive",
-        roles: ["admin"],
-      },
-      {
-        label: "Track Activity",
-        path: "customers/add",
-        roles: ["admin"],
-      },
-      {
-        label: "Sales Target",
-        path: "customers/reports",
-        roles: ["admin"],
-      },
+      { label: "Assign Customers", path: "salesexecutive", roles: ["admin"] },
+      { label: "Track Activity", path: "customers/add", roles: ["admin"] },
+      { label: "Sales Target", path: "customers/reports", roles: ["admin"] },
     ],
   },
   {
     name: "Billing Executives",
     icon: <Users size={18} />,
     submenu: [
-      {
-        label: "Assign Tasks",
-        path: "customers/view",
-        roles: ["admin"],
-      },
-      {
-        label: "Assign Clients",
-        path: "customers/add",
-        roles: ["admin"],
-      },
-      {
-        label: "Track Activity",
-        path: "customers/reports",
-        roles: ["admin"],
-      },
+      { label: "Assign Tasks", path: "customers/view", roles: ["admin"] },
+      { label: "Assign Clients", path: "customers/add", roles: ["admin"] },
+      { label: "Track Activity", path: "customers/reports", roles: ["admin"] },
     ],
   },
   {
@@ -77,13 +53,9 @@ const sidebarLinks = [
         label: "View All Orders",
         path: "orders",
         icon: <ClipboardList size={18} />,
-        roles: ["admin", "sales","billing"],
+        roles: ["admin", "sales", "billing"],
       },
-      {
-        label: "Add/Edit Products",
-        path: "Products",
-        roles: ["admin"],
-      },
+      { label: "Add/Edit Products", path: "Products", roles: ["admin"] },
     ],
   },
   {
@@ -96,21 +68,9 @@ const sidebarLinks = [
         icon: <DollarSign size={18} />,
         roles: ["admin", "sales"],
       },
-      {
-        label: "View All Price Requests",
-        path: "priceconsole",
-        roles: ["admin"],
-      },
-      {
-        label: "Approve / Reject / Comment",
-        path: "PriceApproval",
-        roles: ["admin"],
-      },
-      {
-        label: "Price History Log",
-        path: "pricing/history",
-        roles: ["admin"],
-      },
+      { label: "View All Price Requests", path: "priceconsole", roles: ["admin"] },
+      { label: "Approve / Reject / Comment", path: "PriceApproval", roles: ["admin"] },
+      { label: "Price History Log", path: "pricing/history", roles: ["admin"] },
     ],
   },
   {
@@ -156,7 +116,7 @@ export default function AdminSidebar() {
         }
       } else {
         if (isAdmin) {
-          items.push(link); // Preserve nested menu
+          items.push(link);
         } else {
           const allowedSubs = link.submenu.filter((sub) =>
             sub.roles.includes(role)
@@ -188,8 +148,15 @@ export default function AdminSidebar() {
         {sidebarItems.map((item, index) => {
           const isSubmenu = item.submenu;
           const isExpanded = expandedMenu === item.name;
-          const isSubmenuActive = isSubmenu && item.submenu.some((sub) => location.pathname.includes(sub.path));
-          const isActive = !isSubmenu && location.pathname.includes(item.path);
+
+          const currentPath = location.pathname.replace("/admin/", "");
+          const isSubmenuActive =
+            isSubmenu && item.submenu.some((sub) => currentPath.startsWith(sub.path));
+          const isActive =
+            !isSubmenu &&
+            (item.path === ""
+              ? currentPath === ""
+              : currentPath.startsWith(item.path));
 
           if (isAdmin && isSubmenu) {
             return (
@@ -226,7 +193,7 @@ export default function AdminSidebar() {
                           navigate(`/admin/${sub.path}`);
                         }}
                         className={`block px-3 py-1.5 rounded-md text-sm transition font-medium w-full text-left ${
-                          location.pathname.includes(sub.path)
+                          currentPath.startsWith(sub.path)
                             ? "bg-[#0b7b7b] text-white"
                             : "hover:bg-[#d7f3f3] text-[#0b7b7b]"
                         }`}
@@ -240,7 +207,6 @@ export default function AdminSidebar() {
             );
           }
 
-          // Flat items for non-admin or submenu items
           return (
             <button
               key={item.label}
