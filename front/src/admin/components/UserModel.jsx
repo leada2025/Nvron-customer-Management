@@ -6,8 +6,6 @@ const POSITION_OPTIONS = [
   { label: "Doctor", value: "Doctor" },
   { label: "Retailer", value: "Retailer" },
   { label: "Distributor", value: "Distributor" },
-  { label: "Wholesaler", value: "Wholesaler" },
-  { label: "Hospital", value: "Hospital" },
 ];
 
 const UserModal = ({
