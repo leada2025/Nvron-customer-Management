@@ -42,7 +42,7 @@ const NegotiationApprovalPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f3fbfc] p-6">
+    <div className="min-h-screen bg-[#e1f4f6] p-6">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-semibold text-[#0b7b7b] mb-6">Pending Price Approvals</h2>
 

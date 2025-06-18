@@ -56,8 +56,6 @@ const UserPage = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setAssignableUsers(data);
-      console.log("setAssignableUsers(data)");
-      
     } catch (err) {
       console.error("Failed to fetch assignable users", err);
     }
@@ -93,24 +91,27 @@ const UserPage = () => {
   });
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">User Management</h2>
+      <div className="flex justify-between items-center mb-6 bg-[#e1f4f6] p-5 rounded-lg border border-[#0b7b7b]/20 shadow">
+        <div>
+          <h2 className="text-2xl font-bold text-[#0b7b7b]">User Management</h2>
+          <p className="text-sm text-gray-600">Manage roles, permissions, and user details</p>
+        </div>
         <div className="flex items-center space-x-2">
           <input
             type="text"
             placeholder="Search name, email, role..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-3 py-2 border rounded w-64"
+            className="px-3 py-2 border border-[#0b7b7b]/30 rounded w-64 text-sm"
           />
           <button
             onClick={() => {
               setEditingUser(null);
               setModalOpen(true);
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded shadow"
+            className="bg-[#0b7b7b] text-white px-4 py-2 rounded-lg text-sm font-medium shadow hover:bg-[#095e5e] transition"
           >
             + Add User
           </button>
@@ -118,30 +119,30 @@ const UserPage = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto border border-gray-300 bg-white rounded shadow">
-        <table className="min-w-full">
-          <thead className="bg-gray-100 text-gray-700 text-sm text-left">
+      <div className="overflow-x-auto bg-[#e6f7f7] border border-[#0b7b7b]/20 rounded-lg shadow-md">
+        <table className="min-w-full text-sm text-left text-[#0b7b7b]">
+          <thead className="bg-[#c2efef] text-[#0b7b7b] font-semibold uppercase">
             <tr>
-              <th className="p-3">Name</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Role</th>
-              <th className="p-3">Status</th>
+              <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Role</th>
+              <th className="px-4 py-3">Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-[#bde8e8]">
             {filteredUsers.map((u) => (
               <tr
                 key={u._id}
-                className="border-t border-gray-300 hover:bg-gray-100 cursor-pointer"
+                className="hover:bg-[#d7f3f3] transition cursor-pointer"
                 onClick={() => {
                   setEditingUser(u);
                   setModalOpen(true);
                 }}
               >
-                <td className="text-sm p-3">{u.name}</td>
-                <td className="text-sm p-3">{u.email}</td>
-                <td className="text-sm p-3">{u.role?.name || u.role || "—"}</td>
-                <td className="text-sm p-3">
+                <td className="px-4 py-2">{u.name}</td>
+                <td className="px-4 py-2">{u.email}</td>
+                <td className="px-4 py-2">{u.role?.name || u.role || "—"}</td>
+                <td className="px-4 py-2">
                   <span
                     className={`text-xs font-medium rounded-full px-2 py-1 ${
                       u.isActive
@@ -154,6 +155,13 @@ const UserPage = () => {
                 </td>
               </tr>
             ))}
+            {filteredUsers.length === 0 && (
+              <tr>
+                <td colSpan={4} className="text-center py-4 text-gray-500">
+                  No users found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
