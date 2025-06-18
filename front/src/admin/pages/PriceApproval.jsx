@@ -42,40 +42,64 @@ const NegotiationApprovalPage = () => {
   }, []);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-600 mb-6">Pending Price Approvals</h2>
-      {Array.isArray(negotiations) && negotiations.length > 0 ? (
-        <div className="grid gap-4">
-          {negotiations.map((item) => (
-            <div key={item._id} className="border border-gray-300 rounded-lg p-5 bg-white shadow-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <p className="text-sm text-gray-600">
-                  <strong className="font-medium text-gray-700">Product:</strong> {item.productId?.name || "-"}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong className="font-medium text-gray-700">Customer:</strong> {item.customerId?.name || "-"}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong className="font-medium text-gray-700">Requested Price:</strong> ₹{item.proposedPrice}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong className="font-medium text-gray-700">Sales Proposed Rate:</strong> ₹{item.salesProposedRate}
-                </p>
+    <div className="min-h-screen bg-[#f3fbfc] p-6">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-3xl font-semibold text-[#0b7b7b] mb-6">Pending Price Approvals</h2>
+
+        {Array.isArray(negotiations) && negotiations.length > 0 ? (
+          <div className="grid gap-6">
+            {negotiations.map((item) => (
+              <div
+                key={item._id}
+                className="bg-white border border-gray-200 rounded-xl p-6 shadow-md"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Product</p>
+                    <p className="text-base font-medium text-gray-800">
+                      {item.productId?.name || "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Customer</p>
+                    <p className="text-base font-medium text-gray-800">
+                      {item.customerId?.name || "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Requested Price</p>
+                    <p className="text-base font-medium text-[#d97706]">
+                      ₹{item.proposedPrice}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Sales Proposed Rate</p>
+                    <p className="text-base font-medium text-[#0284c7]">
+                      ₹{item.salesProposedRate}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => handleApprove(item._id)}
+                    className="bg-[#0b7b7b] hover:bg-[#086969] text-white text-sm px-5 py-2 rounded-md transition"
+                  >
+                    Approve
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => handleApprove(item._id)}
-                  className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded shadow"
-                >
-                  Approve
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-gray-500">No pending negotiations.</p>
-      )}
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-gray-500 text-lg">
+            No pending negotiations.
+          </div>
+        )}
+      </div>
     </div>
   );
 };

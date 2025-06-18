@@ -19,12 +19,14 @@ const CustomerPage = () => {
 
   const fetchCustomers = async () => {
     try {
-      const { data } = await axios.get("/admin/users?onlyRole=Customer", {
+      const response = await axios.get("/admin/users?onlyRole=Customer", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      setCustomers(data);
+console.log("Sample customer:", response.data[2]); 
+      console.log("Fetched customers:", response.data);
+      setCustomers(response.data);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching customers:", err);
     }
   };
 
@@ -48,8 +50,7 @@ const CustomerPage = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setAssignableUsers(data);
-      console.log("setAssignableUsers(data)");
-      
+      console.log("Assignable users:", data);
     } catch (err) {
       console.error("Failed to fetch assignable users", err);
     }
@@ -83,6 +84,12 @@ const CustomerPage = () => {
     u.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+    const execA = a.assignedTo?.name || "";
+    const execB = b.assignedTo?.name || "";
+    return execA.localeCompare(execB);
+  });
+
   return (
     <div className="p-6 max-w-7xl mx-auto bg-[#e6f7f7] min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -113,12 +120,13 @@ const CustomerPage = () => {
             <tr>
               <th className="p-3">Customer Name</th>
               <th className="p-3">Sales Executive</th>
+              <th className="p-3">Position</th>
               <th className="p-3">Status</th>
               <th className="p-3 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredCustomers.map((u) => (
+            {sortedCustomers.map((u) => (
               <tr
                 key={u._id}
                 className="border-t border-[#0b7b7b]/10 hover:bg-[#f8ffff] cursor-pointer"
@@ -131,12 +139,18 @@ const CustomerPage = () => {
                   {u.name}
                   <div className="text-xs text-[#0b7b7b]/60">{u.email}</div>
                 </td>
-                <td className="p-3">
-                  {u.assignedExecutive?.name || "N/A"}
-                  <div className="text-xs text-gray-500">
-                    {u.assignedExecutive?.email || ""}
-                  </div>
-                </td>
+               <td className="p-3">
+  {u.assignedTo ? (
+    <>
+      {u.assignedTo.name}
+      <div className="text-xs text-gray-500">{u.assignedTo.email}</div>
+    </>
+  ) : (
+    <span className="text-red-500 italic">Not Assigned</span>
+  )}
+</td>
+
+                <td className="p-3">{u.position || "N/A"}</td>
                 <td className="p-3">
                   <span
                     className={`px-3 py-1 text-xs font-semibold rounded-full ${
@@ -153,9 +167,9 @@ const CustomerPage = () => {
                 </td>
               </tr>
             ))}
-            {filteredCustomers.length === 0 && (
+            {sortedCustomers.length === 0 && (
               <tr>
-                <td colSpan="4" className="p-4 text-center text-gray-500">
+                <td colSpan="5" className="p-4 text-center text-gray-500">
                   No customers found.
                 </td>
               </tr>

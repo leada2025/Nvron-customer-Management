@@ -1,7 +1,5 @@
-// RequestPricingPage.jsx
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
-import { Button } from "@mui/material";
 import PricingRequestModal from "../components/PricingRequestModal";
 import { jwtDecode } from "jwt-decode";
 
@@ -89,52 +87,53 @@ export default function RequestPricingPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold text-gray-700">Pricing Requests</h2>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-[#0b7b7b]">Pricing Requests</h2>
+          <p className="text-sm text-gray-500">Manage and review proposed prices</p>
+        </div>
         {(userRole === "admin" || userRole === "sales") && (
-          <Button
-            variant="contained"
-            color="primary"
+          <button
             onClick={() => {
               setEditingRequest(null);
               setModalOpen(true);
             }}
+            className="bg-[#0b7b7b] text-white px-4 py-2 rounded-lg text-sm font-medium shadow hover:bg-[#095e5e] transition"
           >
             + New Request
-          </Button>
+          </button>
         )}
       </div>
 
-      <div className="overflow-x-auto bg-white border rounded-lg shadow">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-100 text-gray-700">
+      <div className="overflow-x-auto bg-[#e6f7f7] border border-[#0b7b7b]/20 rounded-lg shadow-md">
+        <table className="min-w-full text-sm text-left text-[#0b7b7b]">
+          <thead className="bg-[#c2efef] text-[#0b7b7b] font-semibold uppercase">
             <tr>
-              <th className="px-4 py-3 text-left">Customer</th>
-              <th className="px-4 py-3 text-left">Product</th>
-              <th className="px-4 py-3 text-left">Proposed Price</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-left">Actions</th>
+              <th className="px-4 py-3">Customer</th>
+              <th className="px-4 py-3">Product</th>
+              <th className="px-4 py-3">Proposed Price</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 text-gray-700">
+          <tbody className="divide-y divide-[#bde8e8]">
             {requests.map((r) => (
-              <tr key={r._id}>
+              <tr key={r._id} className="hover:bg-[#d7f3f3] transition">
                 <td className="px-4 py-2">{getCustomerName(r.customerId)}</td>
                 <td className="px-4 py-2">{getProductName(r.productId)}</td>
                 <td className="px-4 py-2">₹{r.proposedPrice}</td>
                 <td className="px-4 py-2 capitalize">{r.status}</td>
                 <td className="px-4 py-2">
                   {(userRole === "sales" || userRole === "admin") && (
-                    <Button
-                      variant="outlined"
-                      size="small"
+                    <button
                       onClick={() => {
                         setEditingRequest(r);
                         setModalOpen(true);
                       }}
+                      className="px-3 py-1 text-sm bg-white border border-[#0b7b7b] text-[#0b7b7b] rounded hover:bg-[#c2efef] transition"
                     >
                       Edit
-                    </Button>
+                    </button>
                   )}
                 </td>
               </tr>
