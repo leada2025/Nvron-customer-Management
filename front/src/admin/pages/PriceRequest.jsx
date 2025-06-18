@@ -121,7 +121,7 @@ export default function PriceRequest() {
                     Approve
                   </Button>
                   <Button variant="outlined" color="error" size="small" onClick={() => doDeny(req._id)}>
-                    Deny
+                   Reject
                   </Button>
                 </TableCell>
               </TableRow>
