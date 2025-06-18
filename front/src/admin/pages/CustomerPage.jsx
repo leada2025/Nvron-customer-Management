@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import UserModal from "../components/UserModel";
 import { FaEllipsisV } from "react-icons/fa";
@@ -22,7 +22,7 @@ const CustomerPage = () => {
       const response = await axios.get("/admin/users?onlyRole=Customer", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      console.log("Sample customer:", response.data[2]);
+console.log("Sample customer:", response.data[2]); 
       console.log("Fetched customers:", response.data);
       setCustomers(response.data);
     } catch (err) {
@@ -80,23 +80,17 @@ const CustomerPage = () => {
     }
   };
 
-  const userMap = useMemo(() => {
-    const map = {};
-    assignableUsers.forEach((user) => {
-      map[user._id] = user;
-    });
-    return map;
-  }, [assignableUsers]);
-
   const filteredCustomers = customers.filter((u) =>
     u.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    const execA = userMap[a.assignedTo]?.name || "";
-    const execB = userMap[b.assignedTo]?.name || "";
-    return execA.localeCompare(execB);
-  });
+const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+  const execA = a.assignedTo?.name || a.assignedBy?.name || "";
+  const execB = b.assignedTo?.name || b.assignedBy?.name || "";
+  return execA.localeCompare(execB);
+});
+
+
 
   return (
     <div className="p-6 max-w-7xl mx-auto bg-[#e6f7f7] min-h-screen">
@@ -147,25 +141,23 @@ const CustomerPage = () => {
                   {u.name}
                   <div className="text-xs text-[#0b7b7b]/60">{u.email}</div>
                 </td>
-               <td className="p-3">
-  {u.assignedTo && userMap[u.assignedTo] ? (
+              <td className="p-3">
+  {u.assignedTo ? (
     <>
-      {userMap[u.assignedTo].name}
-      <div className="text-xs text-gray-500">
-        {userMap[u.assignedTo].email}
-      </div>
+      {u.assignedTo.name}
+      <div className="text-xs text-gray-500">{u.assignedTo.email}</div>
     </>
-  ) : u.assignedBy && userMap[u.assignedBy] ? (
+  ) : u.assignedBy ? (
     <>
-      {userMap[u.assignedBy].name}
-      <div className="text-xs text-gray-500">
-        {userMap[u.assignedBy].email}
-      </div>
+      {u.assignedBy.name}
+      <div className="text-xs text-gray-500">{u.assignedBy.email}</div>
+      <div className="text-[10px] italic text-gray-400">(Assigned By)</div>
     </>
   ) : (
     <span className="text-red-500 italic">Not Assigned</span>
   )}
 </td>
+
 
                 <td className="p-3">{u.position || "N/A"}</td>
                 <td className="p-3">
