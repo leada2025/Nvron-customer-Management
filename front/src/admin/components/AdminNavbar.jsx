@@ -4,8 +4,14 @@ import { FiSettings, FiLogOut } from "react-icons/fi";
 
 export default function AdminNavbar({ onLogout, navigate }) {
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
+  const [role, setRole] = useState(null);
   const settingsRef = useRef(null);
   const location = useLocation();
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role");
+    setRole(storedRole?.toLowerCase() || null);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -46,54 +52,59 @@ export default function AdminNavbar({ onLogout, navigate }) {
       </h1>
 
       <div className="flex items-center gap-4 relative" ref={settingsRef}>
-        {/* Settings button */}
-        <button
-          onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
-          className="text-[#0b7b7b] hover:text-black"
-          title="Settings"
-        >
-          <FiSettings className="w-5 h-5" />
-        </button>
+        {/* Show settings only for admin */}
+        {role === "admin" && (
+          <>
+            {/* Settings button */}
+            <button
+              onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
+              className="text-[#0b7b7b] hover:text-black"
+              title="Settings"
+            >
+              <FiSettings className="w-5 h-5" />
+            </button>
 
-        {/* Dropdown menu */}
-        {settingsDropdownOpen && (
-          <div className="absolute right-0 top-10 w-56 bg-white border border-[#0b7b7b] rounded-md shadow z-50">
-            <ul className="text-sm text-[#0b7b7b] py-2">
-              <li>
-                <button
-                  onClick={() => {
-                    navigate("/admin/users");
-                    setSettingsDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-[#c2efef]"
-                >
-                  User Access
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    navigate("/admin/pricing/roles");
-                    setSettingsDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-[#c2efef]"
-                >
-                  Branding Settings
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    navigate("/admin/pricing/history");
-                    setSettingsDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-[#c2efef]"
-                >
-                  Terms & Policies
-                </button>
-              </li>
-            </ul>
-          </div>
+            {/* Dropdown menu */}
+            {settingsDropdownOpen && (
+              <div className="absolute right-0 top-10 w-56 bg-white border border-[#0b7b7b] rounded-md shadow z-50">
+                <ul className="text-sm text-[#0b7b7b] py-2">
+                  <li>
+                    <button
+                      onClick={() => {
+                        navigate("/admin/users");
+                        setSettingsDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-[#c2efef]"
+                    >
+                      User Access
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        navigate("/admin/pricing/roles");
+                        setSettingsDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-[#c2efef]"
+                    >
+                      Branding Settings
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        navigate("/admin/pricing/history");
+                        setSettingsDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-[#c2efef]"
+                    >
+                      Terms & Policies
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </>
         )}
 
         {/* Logout button */}

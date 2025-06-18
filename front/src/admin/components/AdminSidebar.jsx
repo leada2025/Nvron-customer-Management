@@ -1,122 +1,181 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
-  Settings,
   DollarSign,
   ClipboardList,
   Folder,
-  RefreshCw,
-  AlertCircle,
 } from "lucide-react";
 
 const sidebarLinks = [
-  { name: "Dashboard", icon: <LayoutDashboard size={18} />, path: "" },
+  {
+    name: "Dashboard",
+    icon: <LayoutDashboard size={18} />,
+    path: "",
+    roles: ["admin", "sales", "billing", "customer"],
+  },
   {
     name: "Customers",
     icon: <Users size={18} />,
-    submenu: [{ label: "View/Edit", path: "customer" }],
+    submenu: [
+      {
+        label: "Customer View/Edit",
+        path: "customer",
+        icon: <Users size={18} />,
+        roles: ["admin", "sales"],
+      },
+    ],
   },
   {
     name: "Sales Executive",
     icon: <Users size={18} />,
     submenu: [
-      { label: "Assign Customers", path: "salesexecutive" },
-      { label: "Track Activity", path: "customers/add" },
-      { label: "Sales Target", path: "customers/reports" },
+      {
+        label: "Assign Customers",
+        path: "salesexecutive",
+        roles: ["admin"],
+      },
+      {
+        label: "Track Activity",
+        path: "customers/add",
+        roles: ["admin"],
+      },
+      {
+        label: "Sales Target",
+        path: "customers/reports",
+        roles: ["admin"],
+      },
     ],
   },
   {
     name: "Billing Executives",
     icon: <Users size={18} />,
     submenu: [
-      { label: "Assign Tasks", path: "customers/view" },
-      { label: "Assign Clients", path: "customers/add" },
-      { label: "Track Activity", path: "customers/reports" },
+      {
+        label: "Assign Tasks",
+        path: "customers/view",
+        roles: ["admin"],
+      },
+      {
+        label: "Assign Clients",
+        path: "customers/add",
+        roles: ["admin"],
+      },
+      {
+        label: "Track Activity",
+        path: "customers/reports",
+        roles: ["admin"],
+      },
     ],
   },
   {
     name: "Order Management",
     icon: <ClipboardList size={18} />,
     submenu: [
-      { label: "View All Orders", path: "orders" },
-      // { label: "By Sales Executive / Customer", path: "customers/add" },
-      { label: "Add/Edit Products", path: "Products" },
-      // { label: "Upload Product Rates (CSV)", path: "customers/reports" },
+      {
+        label: "View All Orders",
+        path: "orders",
+        icon: <ClipboardList size={18} />,
+        roles: ["admin", "sales","billing"],
+      },
+      {
+        label: "Add/Edit Products",
+        path: "Products",
+        roles: ["admin"],
+      },
     ],
   },
   {
     name: "Price Approval",
     icon: <DollarSign size={18} />,
     submenu: [
-      { label: "Request Pricing", path: "request-pricing" },
-      { label: "View All Price Requests", path: "priceconsole" },
-      { label: "Approve / Reject / Comment", path: "PriceApproval" },
-      // { label: "Set Role-Based Limits", path: "pricing/roles" },
-      { label: "Price History Log", path: "pricing/history" },
+      {
+        label: "Request Pricing",
+        path: "request-pricing",
+        icon: <DollarSign size={18} />,
+        roles: ["admin", "sales"],
+      },
+      {
+        label: "View All Price Requests",
+        path: "priceconsole",
+        roles: ["admin"],
+      },
+      {
+        label: "Approve / Reject / Comment",
+        path: "PriceApproval",
+        roles: ["admin"],
+      },
+      {
+        label: "Price History Log",
+        path: "pricing/history",
+        roles: ["admin"],
+      },
     ],
   },
   {
     name: "Requests",
     icon: <Folder size={18} />,
-    submenu: [{ label: "Customer Requests", path: "requests" }],
+    submenu: [
+      {
+        label: "Customer Requests",
+        path: "requests",
+        icon: <Folder size={18} />,
+        roles: ["admin", "sales", "billing"],
+      },
+    ],
   },
-
 ];
 
-export default function AdminSidebar({ user, navigate }) {
+export default function AdminSidebar() {
+  const [role, setRole] = useState(null);
   const [expandedMenu, setExpandedMenu] = useState(null);
   const location = useLocation();
-  const menuRefs = useRef({});
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      const clickedOutside = !Object.values(menuRefs.current).some(
-        (ref) => ref.current?.contains(e.target)
-      );
-      if (clickedOutside) setExpandedMenu(null);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    const storedRole = localStorage.getItem("role");
+    setRole(storedRole?.toLowerCase() || null);
   }, []);
 
-  const getFilteredSidebarLinks = () => {
-    const role = user?.role;
-    if (!role || role === "admin") return sidebarLinks;
+  const isAdmin = role === "admin";
 
-    if (role.includes("sale")) {
-      return sidebarLinks.filter((link) =>
-        [
-          "dashboard",
-          "customers",
-          "sales executive",
-          "order management",
-          "requests",
-          "price approval",
-          "uncalling pages",
-        ].includes(link.name.toLowerCase())
-      );
+  const getSidebarItems = () => {
+    if (!role) return [];
+
+    const items = [];
+
+    for (const link of sidebarLinks) {
+      if (!link.submenu) {
+        if (!link.roles || link.roles.includes(role)) {
+          items.push({
+            label: link.name,
+            path: link.path,
+            icon: link.icon,
+          });
+        }
+      } else {
+        if (isAdmin) {
+          items.push(link); // Preserve nested menu
+        } else {
+          const allowedSubs = link.submenu.filter((sub) =>
+            sub.roles.includes(role)
+          );
+          for (const sub of allowedSubs) {
+            items.push({
+              label: sub.label,
+              path: sub.path,
+              icon: sub.icon || link.icon,
+            });
+          }
+        }
+      }
     }
 
-    if (role.includes("invoice") || role.includes("bill")) {
-      return sidebarLinks.filter((link) =>
-        [
-          "dashboard",
-          "customers",
-          "billing executives",
-          "price approval",
-          "order management",
-          "requests",
-          "update",
-        ].includes(link.name.toLowerCase())
-      );
-    }
-
-    return [];
+    return items;
   };
 
-  const filteredSidebarLinks = getFilteredSidebarLinks();
+  const sidebarItems = getSidebarItems();
 
   return (
     <aside className="w-64 min-h-screen bg-[#e6f7f7] border-r border-[#0b7b7b] text-[#0b7b7b] shadow-md">
@@ -126,66 +185,80 @@ export default function AdminSidebar({ user, navigate }) {
       </div>
 
       <nav className="px-4 py-6 space-y-2">
-        {filteredSidebarLinks.map(({ name, icon, submenu, path }) => {
-          const routePath =
-            typeof path === "string"
-              ? path
-              : name.toLowerCase().replace(/\s+/g, "");
-          const isSubmenuActive = submenu?.some((item) =>
-            location.pathname.includes(item.path)
-          );
-          const isActive = submenu
-            ? isSubmenuActive
-            : location.pathname.endsWith(`/admin/${routePath}`);
-          const isExpanded = expandedMenu === name;
+        {sidebarItems.map((item, index) => {
+          const isSubmenu = item.submenu;
+          const isExpanded = expandedMenu === item.name;
+          const isSubmenuActive = isSubmenu && item.submenu.some((sub) => location.pathname.includes(sub.path));
+          const isActive = !isSubmenu && location.pathname.includes(item.path);
 
-          if (!menuRefs.current[name]) menuRefs.current[name] = React.createRef();
-
-          return (
-            <div key={name} ref={menuRefs.current[name]}>
-              <button
-                onClick={() => {
-                  submenu
-                    ? setExpandedMenu(isExpanded ? null : name)
-                    : (setExpandedMenu(null), navigate(`/admin/${routePath}`));
-                }}
-                className={`flex text-left w-full gap-3 px-4 py-2 rounded-lg font-medium text-sm transition relative group ${
-                  isActive
-                    ? "bg-[#0b7b7b] text-white shadow-inner"
-                    : "hover:bg-[#c2efef]"
-                }`}
-              >
-                <div
-                  className={`absolute left-0 top-0 h-full w-1.5 rounded-r-full ${
-                    isActive ? "bg-white" : "group-hover:bg-[#0b7b7b]/50"
+          if (isAdmin && isSubmenu) {
+            return (
+              <div key={index}>
+                <button
+                  onClick={() =>
+                    setExpandedMenu(isExpanded ? null : item.name)
+                  }
+                  className={`flex text-left w-full gap-3 px-4 py-2 rounded-lg font-medium text-sm transition relative group ${
+                    isSubmenuActive
+                      ? "bg-[#0b7b7b] text-white shadow-inner"
+                      : "hover:bg-[#c2efef]"
                   }`}
-                />
-                {icon}
-                <span className="flex-grow">{name}</span>
-                {submenu && (
+                >
+                  <div
+                    className={`absolute left-0 top-0 h-full w-1.5 rounded-r-full ${
+                      isSubmenuActive
+                        ? "bg-white"
+                        : "group-hover:bg-[#0b7b7b]/50"
+                    }`}
+                  />
+                  {item.icon}
+                  <span className="flex-grow">{item.name}</span>
                   <span className="text-xs">{isExpanded ? "▲" : "▼"}</span>
-                )}
-              </button>
+                </button>
 
-              {submenu && isExpanded && (
-                <div className="ml-6 mt-1 border-l border-[#0b7b7b]/20 pl-3 space-y-1">
-                  {submenu.map((item) => (
-                    <Link
-                      key={item.label}
-                      to={`/admin/${item.path}`}
-                      onClick={() => setExpandedMenu(null)}
-                      className={`block px-3 py-1.5 rounded-md text-sm transition font-medium ${
-                        location.pathname.includes(item.path)
-                          ? "bg-[#0b7b7b] text-white"
-                          : "hover:bg-[#d7f3f3] text-[#0b7b7b]"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+                {isExpanded && (
+                  <div className="ml-6 mt-1 border-l border-[#0b7b7b]/20 pl-3 space-y-1">
+                    {item.submenu.map((sub) => (
+                      <button
+                        key={sub.label}
+                        onClick={() => {
+                          setExpandedMenu(null);
+                          navigate(`/admin/${sub.path}`);
+                        }}
+                        className={`block px-3 py-1.5 rounded-md text-sm transition font-medium w-full text-left ${
+                          location.pathname.includes(sub.path)
+                            ? "bg-[#0b7b7b] text-white"
+                            : "hover:bg-[#d7f3f3] text-[#0b7b7b]"
+                        }`}
+                      >
+                        {sub.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          // Flat items for non-admin or submenu items
+          return (
+            <button
+              key={item.label}
+              onClick={() => navigate(`/admin/${item.path}`)}
+              className={`flex text-left w-full gap-3 px-4 py-2 rounded-lg font-medium text-sm transition relative group ${
+                isActive
+                  ? "bg-[#0b7b7b] text-white shadow-inner"
+                  : "hover:bg-[#c2efef]"
+              }`}
+            >
+              <div
+                className={`absolute left-0 top-0 h-full w-1.5 rounded-r-full ${
+                  isActive ? "bg-white" : "group-hover:bg-[#0b7b7b]/50"
+                }`}
+              />
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
           );
         })}
       </nav>
