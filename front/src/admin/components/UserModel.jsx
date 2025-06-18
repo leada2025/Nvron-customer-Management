@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import Select from "react-select";
-import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 const POSITION_OPTIONS = [
   { label: "Doctor", value: "Doctor" },
@@ -11,7 +10,14 @@ const POSITION_OPTIONS = [
   { label: "Hospital", value: "Hospital" },
 ];
 
-const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], assignableUsers = [] }) => {
+const UserModal = ({
+  user,
+  onClose,
+  onSave,
+  allRoles = [],
+  allPermissions = [],
+  assignableUsers = [],
+}) => {
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [password, setPassword] = useState("");
@@ -92,53 +98,51 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-xl overflow-y-auto max-h-[90vh]">
-        <h2 className="text-xl font-semibold mb-4">{user ? "Edit User" : "Add New User"}</h2>
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl overflow-y-auto max-h-[90vh] border border-[#0b7b7b]">
+        <h2 className="text-2xl font-semibold text-[#0b7b7b] mb-6">
+          {user ? "Edit User" : "Add New User"}
+        </h2>
 
         <div className="space-y-4">
-          {/* Name */}
           <div>
-            <label className="block text-sm font-medium">Name</label>
+            <label className="block text-sm font-medium text-gray-700">Name</label>
             <input
               type="text"
-              className="w-full border px-3 py-2 rounded mt-1"
+              className="w-full border border-gray-300 px-3 py-2 rounded-lg mt-1 focus:ring-[#0b7b7b] focus:border-[#0b7b7b]"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
-          {/* Email */}
           <div>
-            <label className="block text-sm font-medium">Email</label>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
-              className="w-full border px-3 py-2 rounded mt-1"
+              className="w-full border border-gray-300 px-3 py-2 rounded-lg mt-1 focus:ring-[#0b7b7b] focus:border-[#0b7b7b]"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
-          {/* Password (Only on create) */}
           {!user && (
             <div>
-              <label className="block text-sm font-medium">Password</label>
+              <label className="block text-sm font-medium text-gray-700">Password</label>
               <input
                 type="password"
-                className="w-full border px-3 py-2 rounded mt-1"
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg mt-1 focus:ring-[#0b7b7b] focus:border-[#0b7b7b]"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           )}
 
-          {/* Role */}
           <div>
-            <label className="block text-sm font-medium">Role</label>
+            <label className="block text-sm font-medium text-gray-700">Role</label>
             <Select
               value={roleOptions.find((r) => r.value === role) || null}
               onChange={handleRoleChange}
               options={roleOptions}
-              placeholder="Type to search or select role..."
+              placeholder="Select role..."
               classNamePrefix="react-select"
               isClearable
             />
@@ -146,14 +150,16 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
 
           {roleName.toLowerCase() === "customer" && (
             <div>
-              <label className="block text-sm font-medium mb-1">Assign To</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Assign To
+              </label>
               <select
                 value={assignedTo}
                 onChange={(e) => setAssignedTo(e.target.value)}
-                className="w-full border px-3 py-2 rounded bg-white"
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg bg-white focus:ring-[#0b7b7b] focus:border-[#0b7b7b]"
               >
                 <option value="">— None —</option>
-                {(salesExecutives || []).map((exec) => (
+                {salesExecutives.map((exec) => (
                   <option key={exec._id} value={exec._id}>
                     {exec.name} ({exec.role?.name || "No Role"})
                   </option>
@@ -162,9 +168,8 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
             </div>
           )}
 
-          {/* Position */}
           <div>
-            <label className="block text-sm font-medium">Position</label>
+            <label className="block text-sm font-medium text-gray-700">Position</label>
             <Select
               isClearable
               options={POSITION_OPTIONS}
@@ -175,10 +180,9 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
             />
           </div>
 
-          {/* Permissions */}
           {roleName.toLowerCase() !== "customer" && (
             <div>
-              <label className="block text-sm font-medium">Permissions</label>
+              <label className="block text-sm font-medium text-gray-700">Permissions</label>
               <div className="grid grid-cols-2 gap-2 mt-1">
                 {(allPermissions || []).map((perm) => (
                   <label key={perm} className="inline-flex items-center space-x-2">
@@ -195,11 +199,10 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
           )}
         </div>
 
-        {/* Footer Buttons */}
-        <div className="mt-6 flex flex-wrap gap-2 justify-end">
+        <div className="mt-6 flex flex-wrap gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-sm rounded border border-[#0b7b7b] text-[#0b7b7b] bg-white hover:bg-[#c2efef]"
+            className="px-4 py-2 text-sm rounded-lg border border-[#0b7b7b] text-[#0b7b7b] bg-white hover:bg-[#e6f7f7]"
           >
             Cancel
           </button>
@@ -207,7 +210,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-3 py-1 text-sm bg-gray-800 text-white rounded hover:bg-gray-700"
+            className="px-4 py-2 text-sm bg-[#0b7b7b] text-white rounded-lg hover:bg-[#095f5f] disabled:opacity-50"
           >
             {loading ? "Saving..." : user ? "Update" : "Create"}
           </button>
@@ -228,7 +231,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
                       .catch(() => alert("Failed to delete."));
                   }
                 }}
-                className="px-4 py-1.5 text-sm rounded border border-red-500 text-red-600 bg-white hover:bg-red-50"
+                className="px-4 py-2 text-sm rounded-lg border border-red-500 text-red-600 bg-white hover:bg-red-50"
               >
                 Delete
               </button>
@@ -245,7 +248,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
                     })
                     .catch(() => alert("Failed to toggle."));
                 }}
-                className="px-4 py-1.5 text-sm rounded border bg-gray-100 text-gray-700 hover:bg-gray-200"
+                className="px-4 py-2 text-sm rounded-lg border bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
                 {user.isActive ? "Disable A/c" : "Enable A/c"}
               </button>
@@ -271,7 +274,7 @@ const UserModal = ({ user, onClose, onSave, allRoles = [], allPermissions = [], 
                     .then(() => alert("Password reset."))
                     .catch(() => alert("Failed to reset password."));
                 }}
-                className="px-4 py-1.5 text-sm rounded border border-[#0b7b7b] bg-white text-[#0b7b7b] hover:bg-[#c2efef]"
+                className="px-4 py-2 text-sm rounded-lg border border-[#0b7b7b] bg-white text-[#0b7b7b] hover:bg-[#e6f7f7]"
               >
                 Reset Password
               </button>
