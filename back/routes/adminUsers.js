@@ -34,6 +34,8 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
 
     const users = await User.find(filter)
       .populate("role", "name permissions")
+       .populate("assignedBy", "name email")   
+  .populate("assignedTo", "name email")
       .select("-passwordHash");
 
     let filteredUsers = users;
