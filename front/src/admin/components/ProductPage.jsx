@@ -23,10 +23,7 @@ export default function ProductsPage() {
       });
       setProducts(res.data);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to fetch products. Please try again."
-      );
+      setError(err.response?.data?.message || "Failed to fetch products.");
     } finally {
       setLoading(false);
     }
@@ -85,9 +82,7 @@ export default function ProductsPage() {
       await fetchProducts();
       setPage(1);
     } catch (err) {
-      alert(
-        err.response?.data?.message || "Failed to save product. Please try again."
-      );
+      alert(err.response?.data?.message || "Failed to save product.");
     }
   };
 
@@ -102,9 +97,7 @@ export default function ProductsPage() {
       });
       await fetchProducts();
     } catch (err) {
-      alert(
-        err.response?.data?.message || "Failed to delete product. Please try again."
-      );
+      alert(err.response?.data?.message || "Failed to delete product.");
     }
   };
 
@@ -114,135 +107,137 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Products</h2>
-        <button
-          onClick={openAddModal}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Add Product
-        </button>
-      </div>
+    <div className="min-h-screen bg-[#e6f7f7] p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-[#0b7b7b]">Products</h2>
+          <button
+            onClick={openAddModal}
+            className="bg-[#0b7b7b] text-white px-4 py-2 rounded hover:bg-[#0a6c6c]"
+          >
+            Add Product
+          </button>
+        </div>
 
-      <input
-        type="text"
-        placeholder="Search products..."
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setPage(1);
-        }}
-        className="w-full max-w-sm mb-4 border border-gray-300 rounded px-3 py-2"
-      />
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPage(1);
+          }}
+          className="w-full max-w-md border border-[#0b7b7b]/30 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b7b7b]"
+        />
 
-      {loading ? (
-        <p>Loading products...</p>
-      ) : error ? (
-        <p className="text-red-600">{error}</p>
-      ) : (
-        <>
-          <table className="w-full table-auto border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100 text-gray-600">
-                <th className="border border-gray-300 px-3 py-1">Name</th>
-                <th className="border border-gray-300 px-3 py-1">Packing</th>
-                <th className="border border-gray-300 px-3 py-1">Dosage Form</th>
-                <th className="border border-gray-300 px-3 py-1">Description</th>
-                <th className="border border-gray-300 px-3 py-1">Tax</th>
-                <th className="border border-gray-300 px-3 py-1">MRP</th>
-                <th className="border border-gray-300 px-3 py-1">Net Rate</th>
-                <th className="border border-gray-300 px-3 py-1">PTR</th>
-                <th className="border border-gray-300 px-3 py-1">PTS</th>
-                <th className="border border-gray-300 px-3 py-1">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagedProducts.length === 0 ? (
+        {loading ? (
+          <p className="text-[#0b7b7b]">Loading products...</p>
+        ) : error ? (
+          <p className="text-red-600">{error}</p>
+        ) : (
+          <div className="overflow-auto bg-white border border-[#0b7b7b]/20 rounded-xl shadow-md">
+            <table className="w-full table-auto text-sm text-left">
+              <thead className="bg-[#c2efef] text-[#0b7b7b]">
                 <tr>
-                  <td colSpan={10} className="text-center py-4">
-                    No products found.
-                  </td>
+                  <th className="px-4 py-2">Name</th>
+                  <th className="px-4 py-2">Packing</th>
+                  <th className="px-4 py-2">Dosage Form</th>
+                  <th className="px-4 py-2">Description</th>
+                  <th className="px-4 py-2">Tax</th>
+                  <th className="px-4 py-2">MRP</th>
+                  <th className="px-4 py-2">Net Rate</th>
+                  <th className="px-4 py-2">PTR</th>
+                  <th className="px-4 py-2">PTS</th>
+                  <th className="px-4 py-2 text-center">Actions</th>
                 </tr>
-              ) : (
-                pagedProducts.map((p) => (
-                  <tr key={p._id} className="hover:bg-gray-50">
-                    <td className="border text-sm border-gray-300 px-3 py-1">{p.name}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1">{p.packing}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1">{p.dosageForm}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1">{p.description}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1">{p.tax}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1">{p.mrp}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1">{p.netRate}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1">{p.ptr}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1">{p.pts}</td>
-                    <td className="border text-sm border-gray-300 px-3 py-1 text-center space-x-2">
-                      <button
-                        onClick={() => openEditModal(p)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p._id)}
-                        className="text-red-600 hover:underline"
-                      >
-                        Delete
-                      </button>
+              </thead>
+              <tbody>
+                {pagedProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="text-center py-4 text-[#0b7b7b]/80">
+                      No products found.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  pagedProducts.map((p) => (
+                    <tr key={p._id} className="hover:bg-[#f0fdfd]">
+                      <td className="px-4 py-2 border-t">{p.name}</td>
+                      <td className="px-4 py-2 border-t">{p.packing}</td>
+                      <td className="px-4 py-2 border-t">{p.dosageForm}</td>
+                      <td className="px-4 py-2 border-t">{p.description}</td>
+                      <td className="px-4 py-2 border-t">{p.tax}</td>
+                      <td className="px-4 py-2 border-t">{p.mrp}</td>
+                      <td className="px-4 py-2 border-t">{p.netRate}</td>
+                      <td className="px-4 py-2 border-t">{p.ptr}</td>
+                      <td className="px-4 py-2 border-t">{p.pts}</td>
+                      <td className="px-4 py-2 border-t text-center space-x-2">
+                        <button
+                          onClick={() => openEditModal(p)}
+                          className="text-[#0b7b7b] hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(p._id)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center space-x-2 mt-4">
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center space-x-2 mt-4">
+            <button
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 1}
+              className="px-3 py-1 border rounded bg-white text-[#0b7b7b] disabled:opacity-50"
+            >
+              Prev
+            </button>
+            {[...Array(totalPages)].map((_, i) => (
               <button
-                onClick={() => goToPage(page - 1)}
-                disabled={page === 1}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                key={i}
+                onClick={() => goToPage(i + 1)}
+                className={`px-3 py-1 border rounded ${
+                  page === i + 1
+                    ? "bg-[#0b7b7b] text-white"
+                    : "bg-white text-[#0b7b7b]"
+                }`}
               >
-                Prev
+                {i + 1}
               </button>
+            ))}
+            <button
+              onClick={() => goToPage(page + 1)}
+              disabled={page === totalPages}
+              className="px-3 py-1 border rounded bg-white text-[#0b7b7b] disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
 
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goToPage(i + 1)}
-                  className={`px-3 py-1 border rounded ${
-                    page === i + 1 ? "bg-blue-600 text-white" : ""
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-
-              <button
-                onClick={() => goToPage(page + 1)}
-                disabled={page === totalPages}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
+      {/* Modal */}
       {modalOpen && (
-       <ProductForm
-  isOpen={modalOpen}
-  onClose={closeModal}
-  onSubmit={async () => {
-    await fetchProducts();
-    closeModal();
-    setPage(1);
-  }}
-  initialData={editProduct}
-/>
-
+        <ProductForm
+          isOpen={modalOpen}
+          onClose={closeModal}
+          onSubmit={async () => {
+            await fetchProducts();
+            closeModal();
+            setPage(1);
+          }}
+          initialData={editProduct}
+        />
       )}
     </div>
   );

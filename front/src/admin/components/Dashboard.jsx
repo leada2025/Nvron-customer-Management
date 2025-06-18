@@ -16,7 +16,7 @@ import {
   CartesianGrid,
 } from "recharts";
 
-function Dashboard() {
+export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,15 +34,12 @@ function Dashboard() {
             : "/admin/users/dashboard-stats";
 
         const res = await axios.get(endpoint, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (role === "sales" || role === "sales executive" || role === "sale") {
           const { assignedCustomers, orders, totalSales } = res.data;
           setStats({ assignedCustomers, orders, totalSales });
-
           setChartData([
             { name: "Customers", value: assignedCustomers },
             { name: "Orders", value: orders },
@@ -51,7 +48,6 @@ function Dashboard() {
         } else {
           const { users, products, pendingOrders, approvedPricing } = res.data;
           setStats({ users, products, pendingOrders, approvedPricing });
-
           setChartData([
             { name: "Users", value: users },
             { name: "Products", value: products },
@@ -70,112 +66,65 @@ function Dashboard() {
     fetchStats();
   }, []);
 
-  if (loading) return <div className="p-6 text-center">Loading...</div>;
-  if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
-
   const role = localStorage.getItem("role")?.toLowerCase();
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-white p-4 sm:p-6 md:p-10">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-semibold mb-8 text-[#0b7b7b] text-center">
-          Welcome to Fishman Healthcare Dashboard
-        </h1>
+  if (loading) return <div className="p-6 text-center text-[#0b7b7b]">Loading...</div>;
+  if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+  return (
+    <div className="min-h-screen bg-[#e6f7f7] p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <header className="text-center">
+          <h1 className="text-3xl font-bold text-[#0b7b7b]">Dashboard</h1>
+          <p className="text-sm text-[#0b7b7b]/80">Fishman Healthcare Overview</p>
+        </header>
+
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {role === "sales" || role === "sales executive" || role === "sale" ? (
             <>
-              <StatCard
-                title="Assigned Customers"
-                value={stats.assignedCustomers}
-                color="blue"
-                icon={<User className="w-6 h-6" />}
-              />
-              <StatCard
-                title="Orders"
-                value={stats.orders}
-                color="yellow"
-                icon={<Hourglass className="w-6 h-6" />}
-              />
-              <StatCard
-                title="Total Sales ₹"
+              <DashboardCard label="Assigned Customers" value={stats.assignedCustomers} icon={<User size={20} />} />
+              <DashboardCard label="Orders" value={stats.orders} icon={<Hourglass size={20} />} />
+              <DashboardCard
+                label="Total Sales ₹"
                 value={`₹${stats.totalSales.toFixed(2)}`}
-                color="green"
-                icon={<BadgeDollarSign className="w-6 h-6" />}
+                icon={<BadgeDollarSign size={20} />}
               />
             </>
           ) : (
             <>
-              <StatCard
-                title="Total Users"
-                value={stats.users}
-                color="blue"
-                icon={<User className="w-6 h-6" />}
-              />
-              <StatCard
-                title="Products"
-                value={stats.products}
-                color="green"
-                icon={<PackageCheck className="w-6 h-6" />}
-              />
-              <StatCard
-                title="Pending Orders"
-                value={stats.pendingOrders}
-                color="yellow"
-                icon={<Hourglass className="w-6 h-6" />}
-              />
-              <StatCard
-                title="Approved Pricings"
-                value={stats.approvedPricing}
-                color="red"
-                icon={<BadgeDollarSign className="w-6 h-6" />}
-              />
+              <DashboardCard label="Total Users" value={stats.users} icon={<User size={20} />} />
+              <DashboardCard label="Products" value={stats.products} icon={<PackageCheck size={20} />} />
+              <DashboardCard label="Pending Orders" value={stats.pendingOrders} icon={<Hourglass size={20} />} />
+              <DashboardCard label="Approved Pricings" value={stats.approvedPricing} icon={<BadgeDollarSign size={20} />} />
             </>
           )}
-        </div>
+        </section>
 
-        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">
-            Summary Chart
-          </h2>
-
+        <section className="bg-white border border-[#0b7b7b]/20 rounded-xl p-4 shadow-md">
+          <h2 className="text-lg font-semibold text-[#0b7b7b] mb-4">Summary Chart</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={chartData}
-              margin={{ top: 10, right: 30, bottom: 10, left: 0 }}
-            >
+            <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="value" fill="#0b7b7b" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="value" fill="#0b7b7b" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </section>
       </div>
     </div>
   );
 }
 
-function StatCard({ title, value, color, icon }) {
-  const styles = {
-    blue: "bg-blue-50 text-blue-800 border-blue-200",
-    green: "bg-green-50 text-green-800 border-green-200",
-    yellow: "bg-yellow-50 text-yellow-800 border-yellow-200",
-    red: "bg-red-50 text-red-800 border-red-200",
-  };
-
+function DashboardCard({ label, value, icon }) {
   return (
-    <div
-      className={`rounded-2xl p-5 border shadow-sm flex items-center space-x-4 ${styles[color]}`}
-    >
-      <div className="p-3 rounded-full bg-white shadow-inner">{icon}</div>
+    <div className="flex items-center gap-4 p-4 bg-white border border-[#0b7b7b]/20 rounded-xl shadow-sm hover:shadow-md transition">
+      <div className="p-2 rounded-full bg-[#c2efef] text-[#0b7b7b]">{icon}</div>
       <div>
-        <p className="text-sm font-medium">{title}</p>
-        <p className="text-2xl font-bold">{value}</p>
+        <div className="text-sm text-[#0b7b7b]/80 font-medium">{label}</div>
+        <div className="text-xl font-bold text-[#0b7b7b]">{value}</div>
       </div>
     </div>
   );
 }
-
-export default Dashboard;
