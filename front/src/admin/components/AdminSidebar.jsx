@@ -50,6 +50,7 @@ const sidebarLinks = [
     name: "Price Approval",
     icon: <DollarSign size={18} />,
     submenu: [
+      { label: "Request Pricing", path: "request-pricing" },
       { label: "View All Price Requests", path: "priceconsole" },
       { label: "Approve / Reject / Comment", path: "PriceApproval" },
       // { label: "Set Role-Based Limits", path: "pricing/roles" },
@@ -148,7 +149,7 @@ export default function AdminSidebar({ user, navigate }) {
                     ? setExpandedMenu(isExpanded ? null : name)
                     : (setExpandedMenu(null), navigate(`/admin/${routePath}`));
                 }}
-                className={`flex items-center w-full gap-3 px-4 py-2 rounded-lg font-medium text-sm transition relative group ${
+                className={`flex text-left w-full gap-3 px-4 py-2 rounded-lg font-medium text-sm transition relative group ${
                   isActive
                     ? "bg-[#0b7b7b] text-white shadow-inner"
                     : "hover:bg-[#c2efef]"
