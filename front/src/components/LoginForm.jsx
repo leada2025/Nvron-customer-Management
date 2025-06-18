@@ -29,7 +29,7 @@ const LoginForm = () => {
         localStorage.removeItem("position");
       }
 
-      navigate(redirectTo || "/admin/dashboard");
+      navigate(redirectTo || "/admin/products");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed. Try again.");
     }

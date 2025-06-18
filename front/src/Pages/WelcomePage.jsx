@@ -12,14 +12,14 @@ const WelcomePage = () => {
     }
 
     const timer = setTimeout(() => {
-      navigate("/dashboard");
+      navigate("/products");
     }, 5000);
 
     return () => clearTimeout(timer);
   }, [navigate]);
 
   const handleStart = () => {
-    navigate("/dashboard");
+    navigate("/products");
   };
 
   return (

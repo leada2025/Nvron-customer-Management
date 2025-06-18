@@ -18,7 +18,7 @@ import OrdersPage from "./Pages/Orders";
 import ProfileSettings from "./Pages/ProfileSetting";
 import NegotiatePricePage from "./Pages/NegotiatePricePage";
 import NegotiationHistory from "./Pages/PriceDetails";
-import Dashboard from "./Pages/Dashboard";
+// import Dashboard from "./Pages/Dashboard";
 
 // Admin
 import AdminLayout from './admin/AdminLayout';
@@ -93,7 +93,7 @@ function App() {
         <Route element={<UserLayout />}>
         <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
 
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          {/* <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} /> */}
         
           <Route path="/products" element={<ProtectedRoute><ProductPage /></ProtectedRoute>} />
           <Route path="/order-summary" element={<ProtectedRoute><OrderSummaryPage /></ProtectedRoute>} />
