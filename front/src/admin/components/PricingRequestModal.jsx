@@ -7,14 +7,23 @@ import {
   Button,
   TextField,
   MenuItem,
+  useTheme,
 } from "@mui/material";
 
-export default function PricingRequestModal({ request, onClose, onSave, customers, products }) {
+export default function PricingRequestModal({
+  request,
+  onClose,
+  onSave,
+  customers,
+  products,
+}) {
   const [formData, setFormData] = useState({
     productId: "",
     proposedPrice: 0,
     customerId: "",
   });
+
+  const theme = useTheme();
 
   useEffect(() => {
     if (request) {
@@ -46,9 +55,32 @@ export default function PricingRequestModal({ request, onClose, onSave, customer
   };
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{request ? "Edit" : "New"} Pricing Request</DialogTitle>
-      <DialogContent>
+    <Dialog
+      open
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          backgroundColor: "#e6f7f7",
+          border: "1px solid #0b7b7b33",
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          backgroundColor: "#c2efef",
+          color: "#0b7b7b",
+          fontWeight: "bold",
+          fontSize: "1.2rem",
+          pb: 1.5,
+        }}
+      >
+        {request ? "Edit" : "New"} Pricing Request
+      </DialogTitle>
+
+      <DialogContent sx={{ pt: 2 }}>
         <TextField
           select
           name="productId"
@@ -57,6 +89,7 @@ export default function PricingRequestModal({ request, onClose, onSave, customer
           onChange={handleChange}
           fullWidth
           margin="normal"
+          sx={{ backgroundColor: "white", borderRadius: 2 }}
         >
           {products.map((p) => (
             <MenuItem key={p._id} value={p._id}>
@@ -73,6 +106,7 @@ export default function PricingRequestModal({ request, onClose, onSave, customer
           onChange={handleChange}
           fullWidth
           margin="normal"
+          sx={{ backgroundColor: "white", borderRadius: 2 }}
         >
           {customers.map((cust) => (
             <MenuItem key={cust._id} value={cust._id}>
@@ -89,11 +123,37 @@ export default function PricingRequestModal({ request, onClose, onSave, customer
           onChange={handleChange}
           fullWidth
           margin="normal"
+          sx={{ backgroundColor: "white", borderRadius: 2 }}
         />
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained">
+
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button
+          onClick={onClose}
+          sx={{
+            color: "#0b7b7b",
+            borderColor: "#0b7b7b",
+            border: "1px solid",
+            textTransform: "none",
+            borderRadius: 2,
+            px: 2.5,
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          sx={{
+            backgroundColor: "#0b7b7b",
+            textTransform: "none",
+            borderRadius: 2,
+            px: 3,
+            "&:hover": {
+              backgroundColor: "#095e5e",
+            },
+          }}
+        >
           {request ? "Update" : "Submit"}
         </Button>
       </DialogActions>
