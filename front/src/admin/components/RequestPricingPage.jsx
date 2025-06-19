@@ -165,10 +165,16 @@ export default function RequestPricingPage() {
                 <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
                   {(userRole === "sales" || userRole === "admin") && (
                     <button
-                      onClick={() => {
-                        setEditingRequest(r);
-                        setModalOpen(true);
-                      }}
+                     onClick={() => {
+  const enrichedRequest = {
+    ...r,
+    productId: typeof r.productId === "object" ? r.productId._id : r.productId,
+    customerId: typeof r.customerId === "object" ? r.customerId._id : r.customerId,
+  };
+  setEditingRequest(enrichedRequest);
+  setModalOpen(true);
+}}
+
                       className="px-3 py-1 text-sm bg-white border border-[#0b7b7b] text-[#0b7b7b] rounded hover:bg-[#c2efef] transition"
                     >
                       Edit

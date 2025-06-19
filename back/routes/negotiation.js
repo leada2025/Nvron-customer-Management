@@ -203,6 +203,37 @@ router.put("/:id/propose", requireAuth({ permission: "Manage Pricing" }), async 
   }
 });
 
+router.put("/:id", authenticate, async (req, res) => {
+  try {
+    const { productId, proposedPrice, customerId } = req.body;
+
+    const negotiation = await NegotiationRequest.findById(req.params.id);
+    if (!negotiation) {
+      return res.status(404).json({ message: "Negotiation not found" });
+    }
+
+    // Optional: Role-based ownership check (if needed)
+    if (
+      req.user.role === "sales" &&
+      negotiation.createdBy.toString() !== req.user.userId
+    ) {
+      return res.status(403).json({ message: "Unauthorized to edit this request" });
+    }
+
+    negotiation.productId = productId;
+    negotiation.proposedPrice = proposedPrice;
+    negotiation.customerId = customerId;
+
+    await negotiation.save();
+
+    res.json({ message: "Negotiation request updated", negotiation });
+  } catch (err) {
+    console.error("Negotiation update error:", err);
+    res.status(500).json({ message: "Failed to update negotiation" });
+  }
+});
+
+
 
 router.patch(
   "/approve/:id",
