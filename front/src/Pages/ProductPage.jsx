@@ -118,30 +118,34 @@ export default function ProductPage() {
                 )}
                 <p className="text-xs text-[#0b7b7b]/60 mt-1">Tax: {p.tax || 12}%</p>
 
-                <div className="flex items-center gap-2 mt-3">
-                  <button
-                    className="px-2 py-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded"
-                    onClick={() => handleQty(p._id, -1)}
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <input
-                    type="number"
-                    className="w-12 text-center bg-[#f1f5f5] rounded"
-                    value={qty}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value);
-                      if (!isNaN(v) && v > 0) setQuantities((q) => ({ ...q, [p._id]: v }));
-                    }}
-                    min="1"
-                  />
-                  <button
-                    className="px-2 py-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded"
-                    onClick={() => handleQty(p._id, 1)}
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
+             <div className="flex items-center gap-2 mt-3">
+  <button
+    className="px-2 py-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded disabled:opacity-50"
+    onClick={() => handleQty(p._id, -1)}
+    disabled={added}
+  >
+    <Minus size={14} />
+  </button>
+  <input
+    type="number"
+    className="w-12 text-center bg-[#f1f5f5] rounded disabled:opacity-50"
+    value={qty}
+    onChange={(e) => {
+      const v = parseInt(e.target.value);
+      if (!isNaN(v) && v > 0) setQuantities((q) => ({ ...q, [p._id]: v }));
+    }}
+    min="1"
+    disabled={added}
+  />
+  <button
+    className="px-2 py-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded disabled:opacity-50"
+    onClick={() => handleQty(p._id, 1)}
+    disabled={added}
+  >
+    <Plus size={14} />
+  </button>
+</div>
+
 
                 <button
                   onClick={() => handleAdd(p)}

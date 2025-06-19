@@ -30,8 +30,10 @@ export default function AdminNavbar({ onLogout, navigate }) {
       { path: "customer", label: "Customers" },
       { path: "orders", label: "Orders" },
       { path: "products", label: "Products" },
+      { path: "request-pricing", label: "Request Pricing" },
+      
       { path: "requests", label: "Requests" },
-      { path: "priceconsole", label: "Price Console" },
+      { path: "priceconsole", label: "Price Approval" },
       { path: "priceapproval", label: "Price Approval" },
       { path: "pricing/roles", label: "Role Pricing" },
       { path: "pricing/history", label: "Pricing History" },

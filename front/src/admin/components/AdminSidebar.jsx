@@ -69,7 +69,7 @@ const sidebarLinks = [
         roles: ["admin", "sales"],
       },
       { label: "View All Price Requests", path: "priceconsole", roles: ["admin"] },
-      { label: "Approve / Reject / Comment", path: "PriceApproval", roles: ["admin"] },
+      // { label: "Approve / Reject / Comment", path: "PriceApproval", roles: ["admin"] },
       { label: "Price History Log", path: "pricing/history", roles: ["admin"] },
     ],
   },
