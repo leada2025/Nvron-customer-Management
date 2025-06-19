@@ -72,15 +72,23 @@ router.get("/", requireAuth({ permission: "Manage Pricing" }), async (req, res) 
 
 router.get("/pending", requireAuth({ permission: "Approve Pricing" }), async (req, res) => {
   try {
-    const pending = await NegotiationRequest.find({ status: { $in: ["pending", "proposed"] } })
+    const pending = await NegotiationRequest.find({
+      status: { $in: ["pending", "proposed"] },
+    })
       .populate("productId customerId");
 
-    console.log("Pending/proposed negotiation requests:", pending);
-    res.json(pending);
+    // Filter only valid ones, in case of bad data
+    const filtered = pending.filter(n =>
+      n.status === "pending" || n.status === "proposed"
+    );
+
+    res.json(filtered);
   } catch (err) {
+    console.error("Failed to fetch pending negotiations:", err);
     res.status(500).json({ message: "Failed to fetch pending negotiations" });
   }
 });
+
 
 
 router.get("/special-prices", requireAuth(), async (req, res) => {

@@ -9,6 +9,7 @@ export default function RequestPricingPage() {
   const [customers, setCustomers] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRequest, setEditingRequest] = useState(null);
+  const [viewingRequest, setViewingRequest] = useState(null);
   const [userRole, setUserRole] = useState("");
 
   const token = localStorage.getItem("token");
@@ -145,7 +146,11 @@ export default function RequestPricingPage() {
           </thead>
           <tbody className="divide-y divide-[#bde8e8]">
             {requests.map((r) => (
-              <tr key={r._id} className="hover:bg-[#d7f3f3] transition">
+              <tr
+                key={r._id}
+                className="hover:bg-[#d7f3f3] transition cursor-pointer"
+                onClick={() => setViewingRequest(r)}
+              >
                 <td className="px-4 py-2">{getCustomerName(r.customerId)}</td>
                 <td className="px-4 py-2">{getProductName(r.productId)}</td>
                 <td className="px-4 py-2">
@@ -157,7 +162,7 @@ export default function RequestPricingPage() {
                     {getStatusLabel(r.status)}
                   </div>
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
                   {(userRole === "sales" || userRole === "admin") && (
                     <button
                       onClick={() => {
@@ -191,6 +196,35 @@ export default function RequestPricingPage() {
           customers={customers}
           products={products}
         />
+      )}
+
+      {/* 🔍 View-only Details Modal */}
+      {viewingRequest && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6">
+            <h3 className="text-xl font-bold mb-4 text-[#0b7b7b]">Negotiation Details</h3>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li><strong>Customer:</strong> {getCustomerName(viewingRequest.customerId)}</li>
+              <li><strong>Product:</strong> {getProductName(viewingRequest.productId)}</li>
+              <li><strong>Status:</strong> {getStatusLabel(viewingRequest.status)}</li>
+              <li><strong>Proposed Price:</strong> ₹{viewingRequest.proposedPrice}</li>
+              {viewingRequest.approvedPrice && (
+                <li><strong>Approved Price:</strong> ₹{viewingRequest.approvedPrice}</li>
+              )}
+              {viewingRequest.adminMessage && (
+                <li><strong>Admin Message:</strong> {viewingRequest.adminMessage}</li>
+              )}
+            </ul>
+            <div className="mt-6 text-right">
+              <button
+                onClick={() => setViewingRequest(null)}
+                className="px-4 py-2 bg-[#0b7b7b] text-white rounded hover:bg-[#095e5e]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
