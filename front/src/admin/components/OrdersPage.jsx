@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import base64Image from "../../../public/baseImage";
 
 
 export default function Orders() {
@@ -110,54 +111,182 @@ const downloadOrder = (order) => {
   document.body.removeChild(link);
 };
 
-const downloadPDF = (order) => {
+
+const downloadPDF = async (order) => {
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const logoWidth = 70;
+  const logoHeight = 25;
+  let y = 14;
 
-  doc.setFontSize(14);
-  doc.text("Order Details", 14, 20);
+  const position = order.customerId?.position?.toLowerCase();
+  const rateLabel =
+    position === "retailer"
+      ? "PTR"
+      : position === "distributor"
+      ? "PTS"
+      : "Net Rate";
+  const rateField =
+    position === "retailer"
+      ? "ptr"
+      : position === "distributor"
+      ? "pts"
+      : "netRate";
 
-  const rows = order.items.map((item) => [
-    new Date(order.createdAt).toLocaleDateString(),
-    order.customerId?.name || "Unknown",
-    item.productName || "",
-    (item.quantity || 0).toString(),
-    (item.netRate || 0).toFixed(2),
-    `${item.tax || 0}%`,
-    item.description || "",
-    (order.shippingCharge || 0).toFixed(2),
-    ((item.quantity || 0) * (item.netRate || 0) * (1 + (item.tax || 0) / 100)).toFixed(2),
-  ]);
+  // 🔄 1. Fetch latest MRP from server for each item
+  const updatedItems = await Promise.all(
+    order.items.map(async (item) => {
+      try {
+        const { data } = await axios.get(`/api/products/${item.productId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        return {
+          ...item,
+          latestMrp: data.mrp ?? 0, // fallback if undefined
+        };
+      } catch (err) {
+        console.error(`Failed to fetch product ${item.productId}:`, err);
+        return {
+          ...item,
+          latestMrp: 0,
+        };
+      }
+    })
+  );
 
-  const headers = [
-    [
-      "Date",
-      "Customer Name",
-      "Product Name",
-      "Qty",
-      "Rate",
-      "Tax (%)",
-      "Description",
-      "Shipping",
-      "Item Total",
-    ],
+  // Header with Logo and Title
+  doc.addImage(base64Image, "PNG", 14, y, logoWidth, logoHeight);
+  doc.setFontSize(26).setFont(undefined, "normal");
+  doc.text("SALES ORDER", pageWidth - 14, y + 10, { align: "right" });
+  doc.setFontSize(10);
+  doc.text(`Sales Order# ${order._id}`, pageWidth - 14, y + 18, { align: "right" });
+
+  // Company Info
+  y += logoHeight + 6;
+  doc.setFontSize(10).setFont(undefined, "bold").text("Fishman Healthcare", 14, y);
+  doc.setFontSize(9).setFont(undefined, "normal");
+  const address = [
+    "B2 VM TOWER SELVAKUMARASAMY GARDEN, DEIVANAYAGI NAGAR",
+    "DEIVANAYAGI NAGAR, GANAPATHY PO",
+    "COIMBATORE, Tamil Nadu - 641006, India",
+    "Phone: 7904389003",
+    "E-mail: fishmancbe@gmail.com",
+    "GSTIN: 33BYXPS5432E2Z0",
+    "TN-10-20-00684 / TN-10-20B-00386 / TN-10-21-00684 / TN-10-21B-00386",
+    "PAN: BYXPS5432E | FSSAI No: 22420558000267",
   ];
+  address.forEach((line) => doc.text(line, 14, (y += 6)));
 
-autoTable(doc, {
-  head: headers,
-  body: rows,
-  startY: 30,
+// Billing Info
+y += 10;
+doc.setFont(undefined, "bold").text("Bill To", 14, (y += 5));
+doc.setFont(undefined, "normal");
+const billTo = [
+  order.customerId?.name || "",
+  order.customerId?.address || "",
+  "India",
+  order.customerId?.gstin ? `GSTIN: ${order.customerId.gstin}` : "",
+];
+billTo.forEach((line) => doc.text(line, 14, (y += 5)));
+
+// ✅ Order Date and Delivery Method
+doc.setFont(undefined, "bold").text("Order Date:", 160, y-4, { align: "right" });
+doc.setFont(undefined, "normal").text(new Date(order.createdAt).toLocaleDateString(), 195, y-4, { align: "right" });
+
+doc.setFont(undefined, "bold").text("Delivery Method:", 160, y+=2, { align: "right" });
+doc.setFont(undefined, "normal").text("TRANSPORT TO PAY", 195, y, { align: "right" });
+
+  // Table Setup
+  y += 5;
+  const head = [["#", "Product", "MRP", rateLabel, "HSN", "Qty", "Rate", "Amount"]];
+  const itemRows = updatedItems.map((item, idx) => {
+    const rate = item[rateField] ?? 0;
+    const amount = item.quantity * rate;
+    return [
+      idx + 1,
+      item.productName || "-",
+      `₹${item.latestMrp.toFixed(2)}`,
+      `₹${rate.toFixed(2)}`,
+      item.hsn || "-",
+      item.quantity,
+      `₹${rate.toFixed(2)}`,
+      `₹${amount.toFixed(2)}`,
+    ];
+  });
+
+ autoTable(doc, {
+  startY: y,
+  head: [["#", "Product", "MRP", rateLabel, "HSN", "Qty", "Rate", "Amount"]],
+  body: itemRows,
+foot: [
+  [
+    { content: "", colSpan: 5 ,styles: { halign: "right", fontStyle: "bold",fillColor:255,textColor:0}}, // Skip columns 1-5
+    { content: "Sub Total", colSpan: 2, styles: { halign: "right", fontStyle: "bold",fillColor:255,textColor:0 } },
+    { content: `₹${order.subtotal.toFixed(2)}`, styles: { halign: "left",fillColor:255,textColor:0 } },
+  ],
+],
+  styles: {
+    fontSize: 9,
+    cellPadding: { top: 4, bottom: 4, left: 2, right: 2 },
+    lineWidth: 0.1,
+    lineColor: [200, 200, 200],
+  },
+  headStyles: {
+    fillColor: [49, 52, 51],
+    textColor: 255,
+  },
+  theme: "grid",
+  didParseCell: (data) => {
+    data.cell.styles.lineWidth = { top: 0, right: 0, bottom: 0.1, left: 0 };
+  },
 });
 
 
-  doc.text(
-    `Order Total: ₹${(order.totalAmount || 0).toFixed(2)}`,
-    14,
-    doc.lastAutoTable.finalY + 10
-  );
+  // Summary Section (same as before)
+  let summaryY = doc.lastAutoTable.finalY + 10;
+  if (summaryY + 40 > pageHeight) {
+    doc.addPage();
+    summaryY = 20;
+  }
 
-  console.log("Saving PDF...");
-  doc.save(`order-${order._id}.pdf`);
+  order.taxBreakup?.forEach((tax) => {
+    doc.text(tax.label, pageWidth - 60, summaryY);
+    doc.text(`&#8377;${tax.amount.toFixed(2)}`, pageWidth - 20, summaryY, { align: "right" });
+    summaryY += 6;
+  });
+
+  doc.text("Shipping charge", pageWidth - 70, summaryY+5);
+  doc.text(`₹${order.shippingCharge.toFixed(2)}`, pageWidth - 30, summaryY+6, { align: "right" });
+  summaryY += 6;
+
+  if (order.roundOff) {
+    doc.text("ROUND OFF", pageWidth - 70, summaryY+5);
+    doc.text(`₹${order.roundOff.toFixed(2)}`, pageWidth - 30, summaryY+6, { align: "right" });
+    summaryY += 6;
+  }
+
+  doc.text("Total", pageWidth - 70, summaryY+5);
+  doc.text('\u20B9'+`${order.totalAmount.toFixed(2)}`, pageWidth - 30, summaryY+6, { align: "right" });
+
+  summaryY += 15;
+  if (summaryY + 40 > pageHeight) {
+    doc.addPage();
+    summaryY = 20;
+  }
+
+  doc.setFontSize(9).setFont(undefined, "normal");
+  doc.text("Notes:", 14, summaryY);
+  doc.text("STOCKS DISPATCH VIA TRANSPORT. TO PAY BASIS", 14, summaryY + 5);
+  doc.text("Terms & Conditions:", 14, summaryY + 15);
+  doc.text("100% ADVANCE PAYMENT", 14, summaryY + 20);
+  doc.text("Authorized Signature ____________________________", 14, summaryY + 30);
+
+  doc.save(`sales-order-${order._id}.pdf`);
 };
+
 
 useEffect(() => {
   const handleClickOutside = () => setDownloadMenuOpenOrderId(null);
