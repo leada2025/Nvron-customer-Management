@@ -7,7 +7,7 @@ const NegotiationApprovalPage = () => {
 
   const fetchNegotiations = async () => {
     try {
-      const res = await axios.get("/api/negotiations/pending", {
+      const res = await axios.get("/api/negotiations/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -41,14 +41,19 @@ const NegotiationApprovalPage = () => {
     fetchNegotiations();
   }, []);
 
+  // ✅ Filter only pending/proposed negotiations on frontend
+  const filteredNegotiations = negotiations.filter(
+    (item) => item.status === "pending" || item.status === "proposed"
+  );
+
   return (
     <div className="min-h-screen bg-[#e1f4f6] p-6">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-semibold text-[#0b7b7b] mb-6">Pending Price Approvals</h2>
 
-        {Array.isArray(negotiations) && negotiations.length > 0 ? (
+        {filteredNegotiations.length > 0 ? (
           <div className="grid gap-6">
-            {negotiations.map((item) => (
+            {filteredNegotiations.map((item) => (
               <div
                 key={item._id}
                 className="bg-white border border-gray-200 rounded-xl p-6 shadow-md"
@@ -78,7 +83,7 @@ const NegotiationApprovalPage = () => {
                   <div>
                     <p className="text-sm text-gray-500">Sales Proposed Rate</p>
                     <p className="text-base font-medium text-[#0284c7]">
-                      ₹{item.salesProposedRate}
+                      ₹{item.salesProposedRate || "-"}
                     </p>
                   </div>
                 </div>

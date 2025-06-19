@@ -204,7 +204,6 @@ router.put("/:id/propose", requireAuth({ permission: "Manage Pricing" }), async 
 });
 
 
-// PATCH /api/negotiations/:id/approve
 router.patch(
   "/approve/:id",
   requireAuth({ permission: "Approve Pricing" }),
@@ -217,17 +216,15 @@ router.patch(
         return res.status(404).json({ message: "Negotiation not found" });
       }
 
-      // 🔒 Ensure salesProposedRate exists
       if (!negotiation.salesProposedRate) {
         return res.status(400).json({ message: "Sales proposed rate missing" });
       }
 
       negotiation.status = "approved";
       negotiation.approvedPrice = negotiation.salesProposedRate;
-
+      negotiation.comment = req.body.comment || ""; // ✅ store approval comment
       await negotiation.save();
 
-      // ✅ Save special price per customer
       const product = await Product.findById(negotiation.productId);
       if (!product.specialPricing) product.specialPricing = new Map();
 
@@ -246,6 +243,28 @@ router.patch(
   }
 );
 
+
+router.patch(
+  "/reject/:id",
+  requireAuth({ permission: "Approve Pricing" }),
+  async (req, res) => {
+    try {
+      const negotiation = await NegotiationRequest.findById(req.params.id);
+      if (!negotiation) {
+        return res.status(404).json({ message: "Negotiation not found" });
+      }
+
+      negotiation.status = "rejected";
+      negotiation.comment = req.body.comment || ""; // ✅ store rejection comment
+      await negotiation.save();
+
+      res.json({ message: "Negotiation rejected", negotiation });
+    } catch (err) {
+      console.error("Rejection error:", err);
+      res.status(500).json({ message: "Failed to reject negotiation" });
+    }
+  }
+);
 
 
 

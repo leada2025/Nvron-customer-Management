@@ -17,25 +17,27 @@ import {
 export default function PriceRequest() {
   const [pending, setPending] = useState([]);
   const [approved, setApproved] = useState([]);
-  const [history, setHistory] = useState([]);
+  const [allRequests, setAllRequests] = useState([]);
   const [rates, setRates] = useState({});
+  const [comments, setComments] = useState({});
   const [loading, setLoading] = useState(true);
+
+  const token = localStorage.getItem("token");
+  const headers = { Authorization: `Bearer ${token}` };
 
   const fetchAll = async () => {
     setLoading(true);
-    const token = localStorage.getItem("token");
-    const headers = { Authorization: `Bearer ${token}` };
-
     try {
-      const [pendRes, apprRes] = await Promise.all([
-        axios.get("/api/negotiations", { headers }),
+      const [pendingRes, approvedRes, allRes] = await Promise.all([
+        axios.get("/api/negotiations/pending", { headers }),
         axios.get("/api/negotiations/approved", { headers }),
+        axios.get("/api/negotiations", { headers }),
       ]);
-      setPending(pendRes.data);
-      setApproved(apprRes.data);
-      setHistory([...apprRes.data, ...pendRes.data]);
+      setPending(pendingRes.data);
+      setApproved(approvedRes.data);
+      setAllRequests(allRes.data);
     } catch (err) {
-      console.error(err);
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -45,16 +47,19 @@ export default function PriceRequest() {
     fetchAll();
   }, []);
 
-  const handleRateChange = (id, v) => {
-    setRates((prev) => ({ ...prev, [id]: v }));
+  const handleRateChange = (id, value) => {
+    setRates((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleCommentChange = (id, value) => {
+    setComments((prev) => ({ ...prev, [id]: value }));
   };
 
   const doApprove = async (id) => {
     const rate = rates[id];
-    if (!rate || isNaN(rate)) return alert("Enter a valid price");
+    const comment = comments[id] || "";
 
-    const token = localStorage.getItem("token");
-    const headers = { Authorization: `Bearer ${token}` };
+    if (!rate || isNaN(rate)) return alert("Enter a valid proposed rate");
 
     try {
       await axios.put(
@@ -62,26 +67,41 @@ export default function PriceRequest() {
         { proposedRate: rate },
         { headers }
       );
-      await axios.patch(`/api/negotiations/approve/${id}`, {}, { headers });
+      await axios.patch(`/api/negotiations/approve/${id}`, { comment }, { headers });
+      alert("Approved successfully");
       fetchAll();
     } catch (err) {
-      console.error(err);
+      console.error("Approve error:", err);
       alert("Failed to approve");
     }
   };
 
-  const doDeny = async (id) => {
-    const token = localStorage.getItem("token");
-    const headers = { Authorization: `Bearer ${token}` };
+  const doReject = async (id) => {
+    const comment = comments[id];
+  
 
     try {
-      await axios.patch(`/api/negotiations/reopen/${id}`, {}, { headers });
+      await axios.patch(
+        `/api/negotiations/reopen/${id}`,
+        { comment },
+        { headers }
+      );
+      alert("Rejected successfully");
       fetchAll();
     } catch (err) {
-      console.error(err);
-      alert("Failed to deny");
+      console.error("Reject error:", err);
+      alert("Failed to reject");
     }
   };
+
+  const historyMap = new Map();
+  [...approved, ...allRequests].forEach((item) => {
+    historyMap.set(item._id, item);
+  });
+
+  const history = Array.from(historyMap.values())
+    .filter((r) => !["pending", "proposed"].includes(r.status))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   if (loading)
     return (
@@ -107,15 +127,16 @@ export default function PriceRequest() {
                   <TableCell>MRP</TableCell>
                   <TableCell>Requested</TableCell>
                   <TableCell>Proposed Rate</TableCell>
+                  <TableCell>Comment</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {pending.map((req) => (
                   <TableRow key={req._id}>
-                    <TableCell>{req.customerId.name}</TableCell>
-                    <TableCell>{req.productId.name}</TableCell>
-                    <TableCell>₹{req.productId.mrp}</TableCell>
+                    <TableCell>{req.customerId?.name}</TableCell>
+                    <TableCell>{req.productId?.name}</TableCell>
+                    <TableCell>₹{req.productId?.mrp}</TableCell>
                     <TableCell>₹{req.proposedPrice}</TableCell>
                     <TableCell>
                       <TextField
@@ -126,6 +147,17 @@ export default function PriceRequest() {
                           handleRateChange(req._id, e.target.value)
                         }
                         sx={{ width: 90 }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        size="small"
+                        placeholder="Comment"
+                        value={comments[req._id] || ""}
+                        onChange={(e) =>
+                          handleCommentChange(req._id, e.target.value)
+                        }
+                        sx={{ width: 150 }}
                       />
                     </TableCell>
                     <TableCell>
@@ -142,7 +174,7 @@ export default function PriceRequest() {
                         variant="outlined"
                         color="error"
                         size="small"
-                        onClick={() => doDeny(req._id)}
+                        onClick={() => doReject(req._id)}
                       >
                         Reject
                       </Button>
@@ -151,7 +183,7 @@ export default function PriceRequest() {
                 ))}
                 {pending.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={7} align="center">
                       No pending requests
                     </TableCell>
                   </TableRow>
@@ -177,14 +209,14 @@ export default function PriceRequest() {
                   <TableCell>Proposed</TableCell>
                   <TableCell>Approved</TableCell>
                   <TableCell>Date</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell>Actions</TableCell> {/* 🔥 Add Actions Column */}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {history.map((item) => (
                   <TableRow key={item._id}>
-                    <TableCell>{item.customerId?.name || "N/A"}</TableCell>
-                    <TableCell>{item.productId?.name || "N/A"}</TableCell>
+                    <TableCell>{item.customerId?.name || "-"}</TableCell>
+                    <TableCell>{item.productId?.name || "-"}</TableCell>
                     <TableCell className="capitalize">{item.status}</TableCell>
                     <TableCell>₹{item.proposedPrice}</TableCell>
                     <TableCell>
@@ -198,24 +230,23 @@ export default function PriceRequest() {
                     <TableCell>
                       {new Date(item.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
-                      {["approved", "rejected", "denied", "proposed"].includes(
-                        item.status
-                      ) && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => doDeny(item._id)}
-                        >
-                          Reopen
-                        </Button>
-                      )}
-                    </TableCell>
+                     <TableCell>
+        {["approved", "rejected"].includes(item.status) && (
+          <Button
+            size="small"
+            variant="outlined"
+            color="primary"
+            onClick={() => doReject(item._id)}
+          >
+            Reopen
+          </Button>
+        )}
+      </TableCell>
                   </TableRow>
                 ))}
                 {history.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={7} align="center">
                       No history available
                     </TableCell>
                   </TableRow>
