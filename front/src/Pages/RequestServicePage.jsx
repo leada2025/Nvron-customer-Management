@@ -62,75 +62,76 @@ const RequestServicePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white p-8">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">Support Form</h1>
+    <div className="min-h-screen bg-[#e6f7f7] flex items-center justify-center p-6">
       <form
         onSubmit={handleSubmit}
-        className="max-w-xl bg-white p-6 rounded-xl shadow border"
+        className="w-full max-w-2xl bg-white border border-gray-200 shadow-lg rounded-2xl p-8 space-y-6"
       >
-        <div className="mb-4">
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Name
+        <h1 className="text-3xl font-bold text-[#0b7b7b]">Support Request</h1>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             name="name"
             value={form.name}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-md p-2"
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#0b7b7b] focus:outline-none"
             required
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Email
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email <span className="text-red-500">*</span>
           </label>
           <input
             type="email"
             name="email"
             value={form.email}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-md p-2"
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#0b7b7b] focus:outline-none"
             required
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Order No (If relevant)
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Order No (Optional)
           </label>
           <input
             type="text"
             name="orderNo"
             value={form.orderNo}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-md p-2"
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#0b7b7b] focus:outline-none"
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Description
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description <span className="text-red-500">*</span>
           </label>
           <textarea
             name="description"
             value={form.description}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-md p-2"
             rows={4}
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#0b7b7b] focus:outline-none"
             required
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Attach File
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Attach File (Optional)
           </label>
           <input
             type="file"
             onChange={handleFileChange}
-            className="block w-full text-sm text-gray-700"
+            className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#e6f7f7] file:text-[#0b7b7b] hover:file:bg-[#d0efef]"
           />
         </div>
 
@@ -138,9 +139,13 @@ const RequestServicePage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-teal-700 text-white px-6 py-2 rounded-md hover:bg-teal-800 transition"
+            className={`px-6 py-2 rounded-md text-white font-semibold transition ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#0b7b7b] hover:bg-[#095e5e]"
+            }`}
           >
-            {loading ? "Submitting..." : "Submit"}
+            {loading ? "Submitting..." : "Submit Request"}
           </button>
         </div>
       </form>
