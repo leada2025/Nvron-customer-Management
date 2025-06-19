@@ -258,18 +258,18 @@ foot: [
     summaryY += 6;
   });
 
-  doc.text("Shipping charge", pageWidth - 70, summaryY+5);
-  doc.text(`₹${order.shippingCharge.toFixed(2)}`, pageWidth - 30, summaryY+6, { align: "right" });
+  doc.text("Shipping charge", pageWidth - 70, summaryY+=5);
+  doc.text(`₹${order.shippingCharge.toFixed(2)}`, pageWidth - 30, summaryY, { align: "right" });
   summaryY += 6;
 
   if (order.roundOff) {
-    doc.text("ROUND OFF", pageWidth - 70, summaryY+5);
-    doc.text(`₹${order.roundOff.toFixed(2)}`, pageWidth - 30, summaryY+6, { align: "right" });
+    doc.text("ROUND OFF", pageWidth - 70, summaryY+=5);
+    doc.text(`₹${order.roundOff.toFixed(2)}`, pageWidth - 30, summaryY, { align: "right" });
     summaryY += 6;
   }
 
-  doc.text("Total", pageWidth - 70, summaryY+5);
-  doc.text('\u20B9'+`${order.totalAmount.toFixed(2)}`, pageWidth - 30, summaryY+6, { align: "right" });
+  doc.text("Total", pageWidth - 70, summaryY+=5);
+  doc.text('\u20B9'+`${order.totalAmount.toFixed(2)}`, pageWidth - 30, summaryY, { align: "right" });
 
   summaryY += 15;
   if (summaryY + 40 > pageHeight) {
