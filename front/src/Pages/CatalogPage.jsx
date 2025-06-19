@@ -1,7 +1,16 @@
 import React, { useState } from "react";
 import { Star } from "lucide-react";
 
-const categories = ["All", "Cardiology", "Blood Pressure", "Cholesterol"];
+const categories = [
+  "All",
+  "Gyneron",
+  "Diabetic care",
+  "Limatcardio",
+  "Pulmo care",
+  "Care well",
+  "Gastro care",
+  "Neuro care",
+];
 
 const CatalogPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -13,7 +22,7 @@ const CatalogPage = () => {
       name: "Amloron",
       dosage: "Amlodipine 2.5 / 5 mg",
       price: 22.0,
-      category: "Blood Pressure",
+      category: "Limatcardio",
       rating: 4.5,
       badge: "Best Seller",
       description: "Used for treating high blood pressure and chest pain.",
@@ -24,7 +33,7 @@ const CatalogPage = () => {
       name: "Bisoron",
       dosage: "Bisoprolol Fumarate 2.5 / 5 mg",
       price: 18.0,
-      category: "Cardiology",
+      category: "Limatcardio",
       rating: 4.0,
       badge: "Doctor Recommended",
       description: "Commonly used for heart-related conditions and BP.",
@@ -35,7 +44,7 @@ const CatalogPage = () => {
       name: "Lipiviron",
       dosage: "Atorvastatin 10 / 20 / 40 mg",
       price: 28.5,
-      category: "Cholesterol",
+      category: "Care well",
       rating: 3.8,
       badge: "New",
       description: "Used to lower cholesterol and triglyceride levels.",
@@ -46,7 +55,7 @@ const CatalogPage = () => {
       name: "Cliniron",
       dosage: "Cilnidipine 5 / 10 mg",
       price: 19.99,
-      category: "Blood Pressure",
+      category: "Limatcardio",
       rating: 4.2,
       badge: "",
       description: "Treats high blood pressure, reducing heart attack risk.",
