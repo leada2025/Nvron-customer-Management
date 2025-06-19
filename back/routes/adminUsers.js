@@ -91,7 +91,10 @@ router.get(
       const userId = new mongoose.Types.ObjectId(req.user.userId);
 
       // 🔍 Fetch the "customer" role dynamically
-      const customerRole = await Role.findOne({ name: "customer" });
+      const customerRole = await Role.findOne({
+  name: { $regex: new RegExp("^customer$", "i") } // case-insensitive match
+});
+
       if (!customerRole) {
         return res.status(400).json({ message: "Customer role not found" });
       }
