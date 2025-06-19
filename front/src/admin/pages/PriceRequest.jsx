@@ -67,7 +67,11 @@ export default function PriceRequest() {
         { proposedRate: rate },
         { headers }
       );
-      await axios.patch(`/api/negotiations/approve/${id}`, { comment }, { headers });
+      await axios.patch(
+        `/api/negotiations/approve/${id}`,
+        { comment },
+        { headers }
+      );
       alert("Approved successfully");
       fetchAll();
     } catch (err) {
@@ -78,11 +82,9 @@ export default function PriceRequest() {
 
   const doReject = async (id) => {
     const comment = comments[id];
-  
-
     try {
       await axios.patch(
-        `/api/negotiations/reopen/${id}`,
+        `/api/negotiations/reject/${id}`, // 🔥 endpoint must set status to "rejected"
         { comment },
         { headers }
       );
@@ -91,6 +93,17 @@ export default function PriceRequest() {
     } catch (err) {
       console.error("Reject error:", err);
       alert("Failed to reject");
+    }
+  };
+
+  const doReopen = async (id) => {
+    try {
+      await axios.patch(`/api/negotiations/reopen/${id}`, {}, { headers });
+      alert("Reopened successfully");
+      fetchAll();
+    } catch (err) {
+      console.error("Reopen error:", err);
+      alert("Failed to reopen");
     }
   };
 
@@ -208,8 +221,9 @@ export default function PriceRequest() {
                   <TableCell>Requested</TableCell>
                   <TableCell>Proposed</TableCell>
                   <TableCell>Approved</TableCell>
+                  <TableCell>Comment</TableCell>
                   <TableCell>Date</TableCell>
-                  <TableCell>Actions</TableCell> {/* 🔥 Add Actions Column */}
+                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -227,26 +241,27 @@ export default function PriceRequest() {
                     <TableCell>
                       {item.approvedPrice ? `₹${item.approvedPrice}` : "-"}
                     </TableCell>
+                    <TableCell>{item.comment || "-"}</TableCell>
                     <TableCell>
                       {new Date(item.createdAt).toLocaleDateString()}
                     </TableCell>
-                     <TableCell>
-        {["approved", "rejected"].includes(item.status) && (
-          <Button
-            size="small"
-            variant="outlined"
-            color="primary"
-            onClick={() => doReject(item._id)}
-          >
-            Reopen
-          </Button>
-        )}
-      </TableCell>
+                    <TableCell>
+                      {["approved", "rejected"].includes(item.status) && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="primary"
+                          onClick={() => doReopen(item._id)}
+                        >
+                          Reopen
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {history.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">
+                    <TableCell colSpan={9} align="center">
                       No history available
                     </TableCell>
                   </TableRow>
