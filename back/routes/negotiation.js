@@ -45,7 +45,7 @@ router.get("/", requireAuth({ permission: "Manage Pricing" }), async (req, res) 
     const isAdmin = req.user.role?.toLowerCase() === "admin";
     const hasFullAccess = req.user.permissions?.includes("View Orders"); // Optional override permission
 
-    let filter = { status: "pending" };
+    let filter = {};
 
     if (!isAdmin && !hasFullAccess) {
       const assignedCustomers = await User.find({
