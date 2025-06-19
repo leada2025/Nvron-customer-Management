@@ -142,17 +142,32 @@ export default function ProductPage() {
     >
       <Minus size={14} />
     </button>
-    <input
-      type="number"
-      className="w-12 text-center bg-[#f1f5f5] rounded disabled:opacity-50"
-      value={qty}
-      onChange={(e) => {
-        const v = parseInt(e.target.value);
-        if (!isNaN(v) && v > 0) setQuantities((q) => ({ ...q, [p._id]: v }));
-      }}
-      min="1"
-      disabled={added}
-    />
+ <input
+  type="text"
+  inputMode="numeric"
+  pattern="[0-9]*"
+  className="w-12 text-center bg-[#f1f5f5] rounded disabled:opacity-50"
+  value={quantities[p._id] ?? "1"}
+  onChange={(e) => {
+    const val = e.target.value;
+
+    // Allow only digits and empty string
+    if (/^\d*$/.test(val)) {
+      setQuantities((q) => ({ ...q, [p._id]: val }));
+    }
+  }}
+  onBlur={() => {
+    const val = quantities[p._id];
+    const num = parseInt(val);
+    if (!num || num < 1) {
+      setQuantities((q) => ({ ...q, [p._id]: "1" }));
+    } else {
+      setQuantities((q) => ({ ...q, [p._id]: String(num) }));
+    }
+  }}
+  disabled={added}
+/>
+
     <button
       className="px-2 py-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded disabled:opacity-50"
       onClick={() => handleQty(p._id, 1)}
