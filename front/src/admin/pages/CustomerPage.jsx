@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import UserModal from "../components/UserModel";
-import { FaEllipsisV } from "react-icons/fa";
+import { FaPencilAlt } from "react-icons/fa";
 
 const CustomerPage = () => {
   const [customers, setCustomers] = useState([]);
@@ -10,11 +10,9 @@ const CustomerPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showOrderPanel, setShowOrderPanel] = useState(false);
-  const [selectedCustomerOrders, setSelectedCustomerOrders] = useState([]);
-  const [selectedCustomerName, setSelectedCustomerName] = useState("");
-
-  const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -24,7 +22,9 @@ const CustomerPage = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get("/admin/users?onlyRole=Customer", { headers });
+      const response = await axios.get("/admin/users?onlyRole=Customer", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setCustomers(response.data);
     } catch (err) {
       console.error("Error fetching customers:", err);
@@ -33,8 +33,12 @@ const CustomerPage = () => {
 
   const fetchRoles = async () => {
     try {
-      const { data } = await axios.get("/admin/roles", { headers });
-      const customerRoles = data.filter(role => role.name.toLowerCase() === "customer");
+      const { data } = await axios.get("/admin/roles", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      const customerRoles = data.filter(
+        (role) => role.name.toLowerCase() === "customer"
+      );
       setAllRoles(customerRoles);
     } catch (err) {
       console.error(err);
@@ -43,7 +47,9 @@ const CustomerPage = () => {
 
   const fetchAssignableUsers = async () => {
     try {
-      const { data } = await axios.get("/admin/users/assignable", { headers });
+      const { data } = await axios.get("/admin/users/assignable", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setAssignableUsers(data);
     } catch (err) {
       console.error("Failed to fetch assignable users", err);
@@ -53,9 +59,17 @@ const CustomerPage = () => {
   const handleSaveCustomer = async (userData) => {
     try {
       if (editingCustomer) {
-        await axios.put(`/admin/users/${editingCustomer._id}`, userData, { headers });
+        await axios.put(`/admin/users/${editingCustomer._id}`, userData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
       } else {
-        await axios.post("/admin/users", userData, { headers });
+        await axios.post("/admin/users", userData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
       }
       await fetchCustomers();
       setModalOpen(false);
@@ -66,15 +80,20 @@ const CustomerPage = () => {
     }
   };
 
-  const handleRowClick = async (customer) => {
+  const fetchCustomerOrders = async (customerId) => {
+    setLoadingOrders(true);
+    setSelectedCustomer(null);
     try {
-      const { data: allOrders } = await axios.get("/api/orders", { headers });
-      const filtered = allOrders.filter(order => order.customerId === customer._id);
-      setSelectedCustomerOrders(filtered);
-      setSelectedCustomerName(customer.name);
-      setShowOrderPanel(true);
+      const res = await axios.get(`/api/orders?customerId=${customerId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setOrders(res.data);
+      const customer = customers.find((c) => c._id === customerId);
+      setSelectedCustomer(customer);
     } catch (err) {
-      console.error("Error fetching customer orders:", err);
+      console.error("Error fetching orders:", err);
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
@@ -91,7 +110,7 @@ const CustomerPage = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto bg-[#e6f7f7] min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-[#0b7b7b]">Customer</h2>
+        <h2 className="text-2xl font-bold text-[#0b7b7b]">Customers</h2>
         <button
           onClick={() => {
             setEditingCustomer(null);
@@ -128,7 +147,7 @@ const CustomerPage = () => {
               <tr
                 key={u._id}
                 className="border-t border-[#0b7b7b]/10 hover:bg-[#f8ffff] cursor-pointer"
-                onClick={() => handleRowClick(u)}
+                onClick={() => fetchCustomerOrders(u._id)}
               >
                 <td className="p-3 font-medium text-[#0b7b7b]">
                   {u.name}
@@ -152,12 +171,28 @@ const CustomerPage = () => {
                 </td>
                 <td className="p-3">{u.position || "N/A"}</td>
                 <td className="p-3">
-                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${u.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                  <span
+                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                      u.isActive
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
                     {u.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>
                 <td className="p-3 text-center">
-                  <FaEllipsisV className="inline text-[#0b7b7b]/60" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingCustomer(u);
+                      setModalOpen(true);
+                    }}
+                    className="text-[#0b7b7b] hover:text-[#095e5e]"
+                    title="Edit"
+                  >
+                    <FaPencilAlt />
+                  </button>
                 </td>
               </tr>
             ))}
@@ -172,6 +207,7 @@ const CustomerPage = () => {
         </table>
       </div>
 
+      {/* Edit Modal */}
       {modalOpen && (
         <UserModal
           user={editingCustomer}
@@ -186,20 +222,46 @@ const CustomerPage = () => {
         />
       )}
 
-      {showOrderPanel && (
-        <div className="mt-10 bg-white p-4 rounded shadow border border-gray-300">
-          <h3 className="text-lg font-semibold mb-3 text-[#0b7b7b]">Orders for {selectedCustomerName}</h3>
-          {selectedCustomerOrders.length > 0 ? (
-            <ul className="list-disc pl-5 text-sm">
-              {selectedCustomerOrders.map((order) => (
-                <li key={order._id}>
-                  {order.productName} — ₹{order.price} — {new Date(order.createdAt).toLocaleDateString()}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-gray-500">No orders found for this customer.</p>
-          )}
+      {/* Orders Modal */}
+      {selectedCustomer && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full shadow-lg overflow-y-auto max-h-[90vh]">
+            <h3 className="text-lg font-semibold mb-4 text-[#0b7b7b]">
+              Orders for {selectedCustomer.name}
+            </h3>
+            {loadingOrders ? (
+              <p>Loading orders...</p>
+            ) : orders.length === 0 ? (
+              <p className="text-gray-500">No orders found.</p>
+            ) : (
+              <ul className="divide-y divide-gray-200">
+                {orders.map((order) => (
+                  <li key={order._id} className="py-2">
+                    <div className="text-sm text-gray-700">
+                      <strong>Order ID:</strong> {order._id}
+                    </div>
+                    <div className="text-sm text-gray-700">
+                      <strong>Total:</strong> ₹{order.totalAmount}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {new Date(order.createdAt).toLocaleString()}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-4 text-right">
+              <button
+                className="px-4 py-2 bg-[#0b7b7b] text-white rounded hover:bg-[#095e5e]"
+                onClick={() => {
+                  setSelectedCustomer(null);
+                  setOrders([]);
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
