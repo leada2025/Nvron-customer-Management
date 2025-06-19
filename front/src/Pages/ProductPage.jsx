@@ -56,9 +56,13 @@ export default function ProductPage() {
 }, []);
 
 
-  const handleQty = (id, d) => {
-    setQuantities((q) => ({ ...q, [id]: Math.max((q[id] || 1) + d, 1) }));
-  };
+const handleQty = (id, d) => {
+  setQuantities((q) => {
+    const current = parseInt(q[id] ?? "1");
+    const updated = isNaN(current) ? 1 : Math.max(current + d, 1);
+    return { ...q, [id]: String(updated) };
+  });
+};
 
   const handleAdd = (p) => {
     const qty = quantities[p._id] || 1;

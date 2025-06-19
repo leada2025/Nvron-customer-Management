@@ -165,19 +165,19 @@ const UserModal = ({
     </select>
   </div>
 )}
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Position</label>
-            <Select
-              isClearable
-              options={POSITION_OPTIONS}
-              value={position}
-              onChange={setPosition}
-              placeholder="Select position..."
-              classNamePrefix="react-select"
-            />
-          </div>
+{roleName.toLowerCase() === "customer" && (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">Position</label>
+    <Select
+      isClearable
+      options={POSITION_OPTIONS}
+      value={position}
+      onChange={setPosition}
+      placeholder="Select position..."
+      classNamePrefix="react-select"
+    />
+  </div>
+)}
 
           {roleName.toLowerCase() !== "customer" && (
             <div>
