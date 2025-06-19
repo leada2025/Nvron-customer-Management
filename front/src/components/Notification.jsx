@@ -1,10 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Bell,
-  Gift,
-  Truck,
-  Wrench,
-} from "lucide-react"; // Add more icons here if needed
+import { Bell, Gift, Truck, Wrench } from "lucide-react";
 
 export default function NotificationsDropdown() {
   const [open, setOpen] = useState(false);
@@ -19,17 +14,16 @@ export default function NotificationsDropdown() {
   }, []);
 
   return (
-    <div className="relative inline-block text-left ml-[500px] z-[60]" ref={dropdownRef}>
+    <div className="relative inline-block text-left z-50" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-[#0b7b7b] hover:text-[#096969] font-semibold transition"
+        className="flex items-center gap-2 text-white hover:text-gray-200 transition"
       >
-       <Bell className="w-5 h-5 text-white" />
-
+        <Bell className="w-5 h-5" />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border border-teal-200 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute left-[-100px] mt-2 w-60 bg-white border border-teal-200 rounded-xl shadow-2xl z-50 overflow-hidden">
           <div className="px-4 py-3 bg-[#0b7b7b] text-white font-semibold text-sm">
             Notifications
           </div>

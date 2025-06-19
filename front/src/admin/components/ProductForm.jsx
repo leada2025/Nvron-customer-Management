@@ -48,7 +48,6 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
     setSuccessMsg("");
   }, [initialData, isOpen]);
 
-
   if (!isOpen) return null;
 
   const handleChange = (e) => {
@@ -57,123 +56,99 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    if (loading) return;
 
-  // ✅ Prevent duplicate submissions
-  if (loading) return;
+    setLoading(true);
+    setError("");
+    setSuccessMsg("");
 
-  setLoading(true);
-  setError("");
-  setSuccessMsg("");
+    const token = localStorage.getItem("token");
 
-  const token = localStorage.getItem("token");
+    const cleanedForm = {
+      ...form,
+      tax: Number(form.tax),
+      mrp: parseFloat(form.mrp),
+      netRate: parseFloat(form.netRate),
+      ptr: parseFloat(form.ptr),
+      pts: parseFloat(form.pts),
+    };
 
-  const cleanedForm = {
-    ...form,
-    tax: Number(form.tax),
-    mrp: parseFloat(form.mrp),
-    netRate: parseFloat(form.netRate),
-    ptr: parseFloat(form.ptr),
-    pts: parseFloat(form.pts),
-  };
-
-  if (initialData?.approved) {
-    delete cleanedForm.mrp;
-    delete cleanedForm.netRate;
-  }
-
-  try {
-    if (initialData && initialData._id) {
-      await axios.put(`/api/products/${initialData._id}`, cleanedForm, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      setSuccessMsg("Product updated successfully!");
-    } else {
-      await axios.post("/api/products", cleanedForm, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      setSuccessMsg("Product added successfully!");
-      setForm({
-        name: "",
-        packing: "",
-        dosageForm: "",
-        description: "",
-        tax: 12,
-        mrp: "",
-        netRate: "",
-        ptr: "",
-        pts: "",
-      });
+    if (initialData?.approved) {
+      delete cleanedForm.mrp;
+      delete cleanedForm.netRate;
     }
 
-   onSubmit && onSubmit(); 
+    try {
+      if (initialData && initialData._id) {
+        await axios.put(`/api/products/${initialData._id}`, cleanedForm, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        setSuccessMsg("Product updated successfully!");
+      } else {
+        await axios.post("/api/products", cleanedForm, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        setSuccessMsg("Product added successfully!");
+        setForm({
+          name: "",
+          packing: "",
+          dosageForm: "",
+          description: "",
+          tax: 12,
+          mrp: "",
+          netRate: "",
+          ptr: "",
+          pts: "",
+        });
+      }
 
-  } catch (err) {
-    console.error("API error:", err);
-    setError(err.response?.data?.message || "Failed to save product. Please try again.");
-    setSuccessMsg("");
-  } finally {
-    setLoading(false);
-  }
-};
-
+      onSubmit && onSubmit();
+    } catch (err) {
+      console.error("API error:", err);
+      setError(err.response?.data?.message || "Failed to save product. Please try again.");
+      setSuccessMsg("");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
-
-        <h3 className="text-lg font-semibold mb-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 border border-[#0b7b7b]/20">
+        <h3 className="text-xl font-bold text-[#0b7b7b] mb-4">
           {initialData ? "Edit Product" : "Add Product"}
         </h3>
 
-        {error && <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{error}</div>}
-        {successMsg && <div className="bg-green-100 text-green-700 p-2 mb-4 rounded">{successMsg}</div>}
+        {error && <div className="bg-red-100 text-red-700 p-2 mb-4 rounded-md">{error}</div>}
+        {successMsg && <div className="bg-green-100 text-green-700 p-2 mb-4 rounded-md">{successMsg}</div>}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="block font-medium mb-1">Product Name</label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="Enter product name"
-              disabled={loading}
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium mb-1">Packing</label>
-            <input
-              name="packing"
-              value={form.packing}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="Packing details"
-              disabled={loading}
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium mb-1">Dosage Form</label>
-            <input
-              name="dosageForm"
-              value={form.dosageForm}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="e.g. TABLET, CAPSULE"
-              disabled={loading}
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {[
+            { name: "name", label: "Product Name", type: "text", placeholder: "Enter product name" },
+            { name: "packing", label: "Packing", type: "text", placeholder: "Packing details" },
+            { name: "dosageForm", label: "Dosage Form", type: "text", placeholder: "e.g. TABLET, CAPSULE" },
+          ].map(({ name, label, type, placeholder }) => (
+            <div key={name}>
+              <label className="block font-medium mb-1">{label}</label>
+              <input
+                name={name}
+                type={type}
+                value={form[name]}
+                onChange={handleChange}
+                required
+                placeholder={placeholder}
+                disabled={loading}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0b7b7b]/30"
+              />
+            </div>
+          ))}
 
           <div>
             <label className="block font-medium mb-1">Description</label>
@@ -182,9 +157,9 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
               value={form.description}
               onChange={handleChange}
               rows={3}
-              className="w-full border border-gray-300 rounded px-3 py-2"
               placeholder="Description"
               disabled={loading}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0b7b7b]/30"
             />
           </div>
 
@@ -194,94 +169,54 @@ export default function ProductForm({ isOpen, onClose, onSubmit, initialData }) 
               name="tax"
               value={form.tax}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0b7b7b]/30"
               disabled={loading}
             >
-              <option value={5}>5%</option>
-              <option value={12}>12%</option>
-              <option value={18}>18%</option>
-              <option value={28}>28%</option>
+              {[5, 12, 18, 28].map((rate) => (
+                <option key={rate} value={rate}>{rate}%</option>
+              ))}
             </select>
           </div>
 
-          <div>
-            <label className="block font-medium mb-1">MRP</label>
-            <input
-              name="mrp"
-              type="number"
-              value={form.mrp}
-              onChange={handleChange}
-              required
-              min="0"
-              step="0.01"
-              className={`w-full border border-gray-300 rounded px-3 py-2 ${
-                initialData?.approved ? "bg-gray-100 cursor-not-allowed" : ""
-              }`}
-              placeholder="₹"
-              disabled={loading || initialData?.approved}
-            />
-          </div>
+          {[
+            { name: "mrp", label: "MRP" },
+            { name: "netRate", label: "Net Rate" },
+            { name: "ptr", label: "PTR" },
+            { name: "pts", label: "PTS" },
+          ].map(({ name, label }) => (
+            <div key={name}>
+              <label className="block font-medium mb-1">{label}</label>
+              <input
+                name={name}
+                type="number"
+                value={form[name]}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                required={name === "mrp" || name === "netRate"}
+                placeholder="₹"
+                disabled={loading || (initialData?.approved && (name === "mrp" || name === "netRate"))}
+                className={`w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0b7b7b]/30 ${
+                  initialData?.approved && (name === "mrp" || name === "netRate")
+                    ? "bg-gray-100 cursor-not-allowed"
+                    : ""
+                }`}
+              />
+            </div>
+          ))}
 
-          <div>
-            <label className="block font-medium mb-1">Net Rate</label>
-            <input
-              name="netRate"
-              type="number"
-              value={form.netRate}
-              onChange={handleChange}
-              required
-              min="0"
-              step="0.01"
-              className={`w-full border border-gray-300 rounded px-3 py-2 ${
-                initialData?.approved ? "bg-gray-100 cursor-not-allowed" : ""
-              }`}
-              placeholder="₹"
-              disabled={loading || initialData?.approved}
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium mb-1">PTR</label>
-            <input
-              name="ptr"
-              type="number"
-              value={form.ptr}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="₹"
-              disabled={loading}
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium mb-1">PTS</label>
-            <input
-              name="pts"
-              type="number"
-              value={form.pts}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="₹"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4 border-t">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+              className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 rounded-md bg-[#0b7b7b] text-white hover:bg-[#095d5d]"
               disabled={loading}
             >
               {loading

@@ -9,6 +9,8 @@ const OrderSummaryPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [successPopup, setSuccessPopup] = useState(false);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,51 +105,50 @@ const OrderSummaryPage = () => {
   const shippingCharge = subtotal > 10000 ? 0 : 250;
   const totalAmount = subtotal + totalTax + shippingCharge;
 
-  const handlePlaceOrder = async () => {
-    setError("");
-    setLoading(true);
-    const token = localStorage.getItem("token");
+const handlePlaceOrder = async () => {
+  setError("");
+  setLoading(true);
+  const token = localStorage.getItem("token");
 
-    if (!token) {
-      setError("You must be logged in to place an order.");
-      setLoading(false);
-      return;
-    }
+  if (!token) {
+    setError("You must be logged in to place an order.");
+    setLoading(false);
+    return;
+  }
 
-    const orderPayload = {
-      items: orderItems.map(
-        ({ productId, productName, quantity, unitPrice, tax, description }) => ({
-          productId,
-          productName,
-          quantity,
-          netRate: unitPrice,
-          tax,
-          description,
-        })
-      ),
-      note,
-      shippingCharge,
-      subtotal,
-      taxAmount: totalTax,
-      totalAmount,
-    };
-
-    try {
-      await axios.post("/api/orders", orderPayload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      alert("Order placed successfully!");
-      localStorage.removeItem("orderItems");
-      navigate("/thank-you");
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Failed to place order.");
-    } finally {
-      setLoading(false);
-    }
+  const orderPayload = {
+    items: orderItems.map(
+      ({ productId, productName, quantity, unitPrice, tax, description }) => ({
+        productId,
+        productName,
+        quantity,
+        netRate: unitPrice,
+        tax,
+        description,
+      })
+    ),
+    note,
+    shippingCharge,
+    subtotal,
+    taxAmount: totalTax,
+    totalAmount,
   };
+
+  try {
+    await axios.post("/api/orders", orderPayload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setSuccessPopup(true); // Show custom box
+  } catch (err) {
+    console.error(err);
+    setError(err.response?.data?.message || "Failed to place order.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (orderItems.length === 0) {
     return (
@@ -206,13 +207,32 @@ const OrderSummaryPage = () => {
         <button
           disabled={loading}
           onClick={handlePlaceOrder}
-          className={`bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 ${
+          className={`bg-[#0b7b7b] text-white px-6 py-2 rounded-xl hover:bg-[#095e5e] ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
           {loading ? "Placing Order..." : "Place Order"}
         </button>
       </div>
+      {successPopup && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg p-6 shadow-lg w-full max-w-sm text-center border border-[#095e5e]">
+      <h2 className="text-lg font-semibold text-green-700">Success</h2>
+      <p className="text-sm text-gray-600 mt-2">Your order has been placed successfully!</p>
+      <button
+        onClick={() => {
+          localStorage.removeItem("orderItems");
+          setSuccessPopup(false);
+          navigate("/thank-you");
+        }}
+        className="mt-4 bg-[#0b7b7b] text-white px-4 py-2 rounded hover:bg-[#095e5e]"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

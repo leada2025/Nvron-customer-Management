@@ -56,21 +56,22 @@ export default function PricingRequestModal({
 
   return (
     <Dialog
-      open
-      onClose={onClose}
-      fullWidth
-      maxWidth="sm"
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-          backgroundColor: "#e6f7f7",
-          border: "1px solid #0b7b7b33",
-        },
-      }}
-    >
+  open
+  onClose={onClose}
+  fullWidth
+  maxWidth="sm"
+  PaperProps={{
+    sx: {
+      borderRadius: 3,
+      backgroundColor: "white", 
+      border: "1px solid #0b7b7b33",
+    },
+  }}
+>
+
       <DialogTitle
         sx={{
-          backgroundColor: "#c2efef",
+          backgroundColor: "white",
           color: "#0b7b7b",
           fontWeight: "bold",
           fontSize: "1.2rem",

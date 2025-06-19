@@ -88,10 +88,10 @@ const handleQty = (id, d) => {
   return (
     <div className="min-h-screen bg-[#e6f7f7] p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="text-sm text-[#0b7b7b]">
+        {/* <div className="text-sm text-[#0b7b7b]">
           Role: {userRole}
           {userRole === "Customer" && userPosition ? ` (${userPosition})` : ""}
-        </div>
+        </div> */}
 
         <div className="flex items-center bg-white rounded-lg shadow-sm border border-[#0b7b7b]/20 px-4 py-2 w-full max-w-md">
           <Search size={18} className="text-[#0b7b7b]/60 mr-2" />
