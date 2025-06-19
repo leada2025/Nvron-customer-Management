@@ -17,29 +17,44 @@ export default function ProductPage() {
   const userRole = localStorage.getItem("role");
   const userPosition = localStorage.getItem("position");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const [prods, specials] = await Promise.all([
-          axios.get("/api/products", { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get("/api/negotiations/special-prices", { headers: { Authorization: `Bearer ${token}` } }),
-        ]);
-        const sp = specials.data;
-        const enriched = prods.data.map((p) => {
-          const match = sp.filter((s) => s.productId === p._id)
-                          .sort((a, b) => (a._id < b._id ? 1 : -1))[0];
-          return match ? { ...p, specialPrice: match.approvedPrice } : p;
-        });
-        setProducts(enriched);
-      } catch (e) {
-        console.error("Fetch failed", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const [prods, specials] = await Promise.all([
+        axios.get("/api/products", { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get("/api/negotiations/special-prices", { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+
+      const sp = specials.data;
+      const enriched = prods.data.map((p) => {
+        const match = sp.filter((s) => s.productId === p._id)
+                        .sort((a, b) => (a._id < b._id ? 1 : -1))[0];
+        return match ? { ...p, specialPrice: match.approvedPrice } : p;
+      });
+
+      // 🟩 Restore orderItems from localStorage if present
+      const savedItems = JSON.parse(localStorage.getItem("orderItems")) || [];
+
+      setProducts(enriched);
+      setOrderItems(savedItems);
+
+      // 🟩 Optionally restore quantities too
+      const initialQuantities = {};
+      savedItems.forEach(item => {
+        initialQuantities[item._id] = item.quantity || 1;
+      });
+      setQuantities(initialQuantities);
+    } catch (e) {
+      console.error("Fetch failed", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+
 
   const handleQty = (id, d) => {
     setQuantities((q) => ({ ...q, [id]: Math.max((q[id] || 1) + d, 1) }));
@@ -102,49 +117,52 @@ export default function ProductPage() {
             return (
               <div
                 key={p._id}
-                className="bg-white rounded-xl shadow hover:shadow-lg transition p-4 relative"
+                 className="bg-white rounded-xl shadow hover:shadow-lg transition p-4 flex flex-col justify-between h-full relative"
               >
-                <h3 className="text-[#0b7b7b] font-semibold mb-1">{p.name}</h3>
-                <p className="text-xs text-[#0b7b7b]/70 mb-1">{p.description}</p>
-                <p className="text-xs text-[#0b7b7b]/60">Dosage: {p.dosageForm || "TABLET"}</p>
-                <p className="text-xs text-[#0b7b7b]/60">Packing: {p.packing || "10X10 PVC BLISTER"}</p>
-                <p className="text-sm font-bold text-[#0b7b7b] mt-1">MRP: ₹{p.mrp}</p>
-                {userRole === "Customer" && (
-                  <p className="text-sm font-semibold mt-1">
-                    {userPosition === "Doctor" && <span className="text-green-600">Net ₹{priceLabel}</span>}
-                    {userPosition === "Retailer" && <span className="text-blue-600">PTR ₹{priceLabel}</span>}
-                    {userPosition === "Distributor" && <span className="text-purple-600">PTS ₹{priceLabel}</span>}
-                  </p>
-                )}
-                <p className="text-xs text-[#0b7b7b]/60 mt-1">Tax: {p.tax || 12}%</p>
+               <div className="flex-1">
+  <h3 className="text-[#0b7b7b] font-semibold mb-1">{p.name}</h3>
+  <p className="text-xs text-[#0b7b7b]/70 mb-1">{p.description}</p>
+  <p className="text-xs text-[#0b7b7b]/60">Dosage: {p.dosageForm || "TABLET"}</p>
+  <p className="text-xs text-[#0b7b7b]/60">Packing: {p.packing || "10X10 PVC BLISTER"}</p>
+  <p className="text-sm font-bold text-[#0b7b7b] mt-1">MRP: ₹{p.mrp}</p>
+  {userRole === "Customer" && (
+    <p className="text-sm font-semibold mt-1">
+      {userPosition === "Doctor" && <span className="text-green-600">Net ₹{priceLabel}</span>}
+      {userPosition === "Retailer" && <span className="text-blue-600">PTR ₹{priceLabel}</span>}
+      {userPosition === "Distributor" && <span className="text-purple-600">PTS ₹{priceLabel}</span>}
+    </p>
+  )}
+  <p className="text-xs text-[#0b7b7b]/60 mt-1">Tax: {p.tax || 12}%</p>
 
-             <div className="flex items-center gap-2 mt-3">
-  <button
-    className="px-2 py-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded disabled:opacity-50"
-    onClick={() => handleQty(p._id, -1)}
-    disabled={added}
-  >
-    <Minus size={14} />
-  </button>
-  <input
-    type="number"
-    className="w-12 text-center bg-[#f1f5f5] rounded disabled:opacity-50"
-    value={qty}
-    onChange={(e) => {
-      const v = parseInt(e.target.value);
-      if (!isNaN(v) && v > 0) setQuantities((q) => ({ ...q, [p._id]: v }));
-    }}
-    min="1"
-    disabled={added}
-  />
-  <button
-    className="px-2 py-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded disabled:opacity-50"
-    onClick={() => handleQty(p._id, 1)}
-    disabled={added}
-  >
-    <Plus size={14} />
-  </button>
+  <div className="flex items-center gap-2 mt-3">
+    <button
+      className="px-2 py-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded disabled:opacity-50"
+      onClick={() => handleQty(p._id, -1)}
+      disabled={added}
+    >
+      <Minus size={14} />
+    </button>
+    <input
+      type="number"
+      className="w-12 text-center bg-[#f1f5f5] rounded disabled:opacity-50"
+      value={qty}
+      onChange={(e) => {
+        const v = parseInt(e.target.value);
+        if (!isNaN(v) && v > 0) setQuantities((q) => ({ ...q, [p._id]: v }));
+      }}
+      min="1"
+      disabled={added}
+    />
+    <button
+      className="px-2 py-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded disabled:opacity-50"
+      onClick={() => handleQty(p._id, 1)}
+      disabled={added}
+    >
+      <Plus size={14} />
+    </button>
+  </div>
 </div>
+
 
 
                 <button
