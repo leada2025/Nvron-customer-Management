@@ -83,64 +83,82 @@ const approvedPricing = await Pricing.distinct("productId", { status: "approved"
   }
 });
 
-router.get("/sales-dashboard-stats", requireAuth({ role: ["sales", "sale", "sales executive"] }), async (req, res) => {
-  try {
-    const customerRoleId = "6836fade2aa75e74345b8f1f"; // replace with actual role ObjectId
+router.get(
+  "/sales-dashboard-stats",
+  requireAuth({ role: ["sales", "sale", "sales executive"] }),
+  async (req, res) => {
+    try {
+      const userId = new mongoose.Types.ObjectId(req.user.userId);
 
-    // Find customers assignedBy or assignedTo this sales user
-    const assignedCustomers = await User.find(
-      {
-        role: customerRoleId,
-        $or: [
-          { assignedBy: req.user.userId },
-          { assignedTo: req.user.userId },
-        ],
-      },
-      "_id"
-    );
-
-    const customerIds = assignedCustomers.map(c => c._id);
-
-    // Count orders placed by these customers
-    const ordersCount = await Order.countDocuments({ customerId: { $in: customerIds } });
-
-    // Calculate total sales value for these orders
-    const totalSalesValue = await Order.aggregate([
-      { $match: { customerId: { $in: customerIds } } },
-      { $unwind: "$items" },
-      {
-        $group: {
-          _id: null,
-          total: {
-            $sum: {
-              $add: [
-                { $multiply: ["$items.quantity", "$items.netRate"] },
-                {
-                  $multiply: [
-                    "$items.quantity",
-                    "$items.netRate",
-                    { $divide: ["$items.tax", 100] }
-                  ]
-                }
-              ]
-            }
-          }
-        }
+      // 🔍 Fetch the "customer" role dynamically
+      const customerRole = await Role.findOne({ name: "customer" });
+      if (!customerRole) {
+        return res.status(400).json({ message: "Customer role not found" });
       }
-    ]);
+      const customerRoleId = customerRole._id;
 
-    res.json({
-      assignedCustomers: customerIds.length,
-      orders: ordersCount,
-      totalSales: totalSalesValue[0]?.total || 0,
-    });
+      // 🔍 Find customers assigned to this sales executive
+      const assignedCustomers = await User.find(
+        {
+          role: customerRoleId,
+          $or: [{ assignedBy: userId }, { assignedTo: userId }],
+        },
+        "_id"
+      );
 
-  } catch (err) {
-    console.error("Sales Dashboard Error:", err);
-    res.status(500).json({ message: "Internal server error" });
+      const customerIds = assignedCustomers.map((c) => c._id);
+
+      if (customerIds.length === 0) {
+        return res.json({
+          assignedCustomers: 0,
+          orders: 0,
+          totalSales: 0,
+        });
+      }
+
+      // 📦 Count orders for those customers
+      const ordersCount = await Order.countDocuments({
+        customerId: { $in: customerIds },
+      });
+
+      // 💰 Calculate total sales value (incl. tax)
+      const salesAgg = await Order.aggregate([
+        { $match: { customerId: { $in: customerIds } } },
+        { $unwind: "$items" },
+        {
+          $group: {
+            _id: null,
+            total: {
+              $sum: {
+                $add: [
+                  { $multiply: ["$items.quantity", "$items.netRate"] },
+                  {
+                    $multiply: [
+                      "$items.quantity",
+                      "$items.netRate",
+                      { $divide: ["$items.tax", 100] },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      ]);
+
+      const totalSales = salesAgg[0]?.total || 0;
+
+      res.json({
+        assignedCustomers: customerIds.length,
+        orders: ordersCount,
+        totalSales,
+      });
+    } catch (err) {
+      console.error("❌ Sales Dashboard Error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
   }
-});
-
+);
 
 router.get("/assignable", requireAuth({ permission: "Manage Users" }), async (req, res) => {
   try {
