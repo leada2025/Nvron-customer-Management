@@ -140,14 +140,24 @@ export default function AdminSidebar() {
             return (
               <button
                 key={index}
-                onClick={() => {
-                  if (!item.submenu) {
-                    navigate(`/admin/${item.path}`);
-                    setSelectedMainItem(null); // clear subheading if none
-                  } else {
-                    setSelectedMainItem(item.name);
-                  }
-                }}
+               onClick={() => {
+  if (!item.submenu) {
+    navigate(`/admin/${item.path}`);
+    setSelectedMainItem(null);
+  } else {
+    setSelectedMainItem(item.name);
+    
+    // Automatically navigate to the first visible submenu
+    const firstVisibleSub = item.submenu.find((sub) =>
+      sub.roles.includes(role)
+    );
+    if (firstVisibleSub) {
+      navigate(`/admin/${firstVisibleSub.path}`);
+    }
+  }
+}}
+
+                
                 className={`group w-full flex items-center gap-3 px-3 py-2 rounded-md transition ${
                   isActive
                     ? "bg-[#e0f7f7] text-[#074f4f] font-semibold"
