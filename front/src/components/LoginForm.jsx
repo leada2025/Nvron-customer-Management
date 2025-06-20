@@ -22,6 +22,7 @@ const LoginForm = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("name", user.name);
       localStorage.setItem("role", user.role);
+      localStorage.setItem("userId", user._id);
 
       if (user.role === "Customer" && user.position) {
         localStorage.setItem("position", user.position);

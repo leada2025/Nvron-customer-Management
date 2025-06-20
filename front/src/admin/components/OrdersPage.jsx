@@ -5,6 +5,7 @@ import autoTable from "jspdf-autotable";
 import base64Image from "../../../public/baseImage";
 
 
+
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -379,39 +380,45 @@ useEffect(() => {
 
 
 
+const userRole = localStorage.getItem("role")?.toLowerCase();
+const userId = localStorage.getItem("userId")?.toString();
 
+const filteredOrders = Array.isArray(orders)
+  ? orders
+      .filter((order) => {
+        if (userRole === "admin" || userRole === "billing") return true;
 
-  const userRole = localStorage.getItem("role")?.toLowerCase();
-  const userId = localStorage.getItem("userId");
+        if (userRole === "sales") {
+          const assignedTo = order.customerId?.assignedTo?._id?.toString();
+          const assignedBy = order.customerId?.assignedBy?._id?.toString();
 
-  const filteredOrders = Array.isArray(orders)
-    ? orders
-        .filter((order) => {
-          if (userRole === "admin" || userRole === "billing") return true;
-          if (userRole === "sales") {
-            const assignedTo = order.customerId?.assignedTo?._id;
-            const assignedBy = order.customerId?.assignedBy?._id;
-            return assignedTo === userId || (!assignedTo && assignedBy === userId);
-          }
-          return false;
-        })
-        .filter((order) => {
-          const matchSearch =
-            order.customerId?.name
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            order._id.toLowerCase().includes(searchTerm.toLowerCase());
-          const matchStatus =
-            statusFilter === "All" || order.status === statusFilter.toLowerCase();
-          return matchSearch && matchStatus;
-        })
-    : [];
+          return (
+            assignedTo === userId ||
+            (!assignedTo && assignedBy === userId)
+          );
+        }
 
-  const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE);
-  const paginatedOrders = filteredOrders.slice(
-    (currentPage - 1) * ORDERS_PER_PAGE,
-    currentPage * ORDERS_PER_PAGE
-  );
+        return false;
+      })
+      .filter((order) => {
+        const matchSearch =
+          order.customerId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order._id?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchStatus =
+          statusFilter === "All" ||
+          order.status?.toLowerCase() === statusFilter.toLowerCase();
+
+        return matchSearch && matchStatus;
+      })
+  : [];
+
+const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE);
+
+const paginatedOrders = filteredOrders.slice(
+  (currentPage - 1) * ORDERS_PER_PAGE,
+  currentPage * ORDERS_PER_PAGE
+);
   return (
  <div className="p-6 bg-[#e6f7f7] rounded-lg shadow-sm border border-gray-200 max-w-7xl mx-auto">
   <h2 className="text-3xl font-medium text-gray-800 mb-6">Sales Orders</h2>
