@@ -53,6 +53,8 @@ export default function Dashboard() {
             { name: "Products", value: products },
             { name: "Pending", value: pendingOrders },
             { name: "Pricings", value: approvedPricing },
+            { name: "Target Left", value: stats.remainingTarget ?? 0 },
+
           ]);
         }
       } catch (err) {
@@ -89,6 +91,16 @@ export default function Dashboard() {
                 value={`₹${stats.totalSales.toFixed(2)}`}
                 icon={<BadgeDollarSign size={20} />}
               />
+              <DashboardCard
+  label="Remaining Target"
+  value={
+    stats.remainingTarget !== null
+      ? stats.remainingTarget
+      : "Not Assigned"
+  }
+  icon={<Target size={20} />}
+/>
+
             </>
           ) : (
             <>

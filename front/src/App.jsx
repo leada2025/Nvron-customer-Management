@@ -38,6 +38,7 @@ import PricingProposalsPage from "./admin/pages/PricingProposalsPage";
 import SalesNegotiationPanel from "./admin/pages/PriceRequest";
 import NegotiationApprovalPage from "./admin/pages/PriceApproval";
 import RequestPricingPage from "./admin/components/RequestPricingPage";
+import SalesTargetPage from "./admin/pages/salesTarget";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -86,6 +87,8 @@ function App() {
           <Route path="priceconsole" element={<SalesNegotiationPanel />} />
           <Route path="priceapproval" element={<NegotiationApprovalPage />} />
           <Route path="request-pricing" element={<RequestPricingPage />} />
+          <Route path="salestarget" element={<SalesTargetPage />} />
+
         </Route>
 
   <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />

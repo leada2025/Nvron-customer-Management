@@ -9,6 +9,9 @@ const adminAuth = require("../middleware/adminAuth"); // Middleware to verify ad
 const mongoose = require("mongoose");
 const requireAuth = require("../middleware/requireAuth");
 const enrichUserRole = require("../middleware/enrichUserRole");
+const SalesTarget = require("../models/SalesTarget");
+const moment = require("moment");
+
 
 const router = express.Router();
 
@@ -149,13 +152,28 @@ router.get(
         },
       ]);
 
+      
+
       const totalSales = salesAgg[0]?.total || 0;
 
-      res.json({
-        assignedCustomers: customerIds.length,
-        orders: ordersCount,
-        totalSales,
-      });
+      const currentMonth = moment().format("YYYY-MM");
+
+const target = await SalesTarget.findOne({
+  salesUserId: userId,
+  month: currentMonth,
+});
+
+const remainingTarget = target ? Math.max(target.targetOrders - ordersCount, 0) : null;
+
+res.json({
+  assignedCustomers: customerIds.length,
+  orders: ordersCount,
+  totalSales,
+  remainingTarget,
+});
+
+
+
     } catch (err) {
       console.error("❌ Sales Dashboard Error:", err);
       res.status(500).json({ message: "Internal server error" });
@@ -331,6 +349,28 @@ router.patch("/reset-password/:id", requireAuth({ permission: "Manage Users" }),
     res.status(500).json({ message: err.message });
   }
 });
+
+router.post("/sales-target", requireAuth({ role: "admin" }), async (req, res) => {
+  try {
+    const { salesUserId, targetOrders, month } = req.body;
+
+    if (!salesUserId || !targetOrders || !month) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    const target = await SalesTarget.findOneAndUpdate(
+      { salesUserId, month },
+      { targetOrders },
+      { new: true, upsert: true }
+    );
+
+    res.json({ message: "Target saved successfully", target });
+  } catch (err) {
+    console.error("Sales target error:", err);
+    res.status(500).json({ message: "Failed to set sales target" });
+  }
+});
+
 
 
 
