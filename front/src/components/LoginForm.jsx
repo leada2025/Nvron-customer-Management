@@ -45,8 +45,13 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e6f7f7] via-[#d0f0f0] to-[#b2eaea] px-4 py-6">
-      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl">
+    <div
+      className="min-h-screen flex items-center justify-center bg-cover bg-center px-4 py-6"
+      style={{
+        backgroundImage: `url('/path-to-your-image.jpg')`, // 🔁 Replace with your image path
+      }}
+    >
+      <div className="w-full max-w-md bg-white bg-opacity-90 p-8 rounded-3xl shadow-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
           <h2 className="text-3xl font-extrabold text-center text-[#0b7b7b]">
             Login to Your Account
@@ -124,23 +129,6 @@ const LoginForm = () => {
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : <LogIn size={18} />}
             {loading ? "Signing in..." : "Login"}
-          </button>
-
-          {/* Divider */}
-          <div className="text-center text-gray-400 text-sm">or</div>
-
-          {/* Google Button (Visual only) */}
-          <button
-            type="button"
-            className="w-full border border-gray-300 text-gray-700 bg-white py-3 rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2"
-            onClick={() => alert("Google OAuth not integrated yet.")}
-          >
-            <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt="Google"
-              className="h-5 w-5"
-            />
-            <span>Login with Google</span>
           </button>
         </form>
       </div>
