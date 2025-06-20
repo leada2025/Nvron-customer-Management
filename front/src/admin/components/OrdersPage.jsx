@@ -414,8 +414,10 @@ useEffect(() => {
   );
   return (
  <div className="p-6 bg-[#e6f7f7] rounded-lg shadow-sm border border-gray-200 max-w-7xl mx-auto">
-      <h2 className="text-3xl font-medium text-gray-800 mb-6">Sales Orders</h2>
+  <h2 className="text-3xl font-medium text-gray-800 mb-6">Sales Orders</h2>
 
+
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
         <input
           type="text"
@@ -439,21 +441,22 @@ useEffect(() => {
           <option value="All">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="Processed">Processed</option>
-          <option value="Cancelled">Cancelled</option>
+           <option value="Cancelled">Cancelled</option>
         </select>
       </div>
 
+      {/* Orders Table */}
       <div className="overflow-x-auto">
-        <table className="w-full border border-gray-300 text-sm bg-white rounded-md overflow-hidden">
-          <thead className="bg-[#e6f7f7] text-gray-600">
+      <table className="w-full border border-gray-300 text-sm  bg-white rounded-md overflow-hidden">
+  <thead className="bg-[#e6f7f7] text-gray-600">
             <tr>
               <th className="p-3 border-b border-gray-300 text-left">Order ID</th>
               <th className="p-3 border-b border-gray-300 text-left">Customer</th>
-              <th className="p-3 border-b border-gray-300 text-left">Assigned To / By</th>
               <th className="p-3 border-b border-gray-300 text-left">Date</th>
               <th className="p-3 border-b border-gray-300 text-right">Total (₹)</th>
               <th className="p-3 border-b border-gray-300 text-center">Shipping</th>
               <th className="p-3 border-b border-gray-300 text-center">Status</th>
+              <th className="p-3 border-b border-gray-300 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -471,35 +474,163 @@ useEffect(() => {
               </tr>
             ) : (
               paginatedOrders.map((order) => (
-                <tr key={order._id}>
-                  <td className="p-3 border-b border-gray-300">{order._id}</td>
-                  <td className="p-3 border-b border-gray-300">{order.customerId?.name}</td>
-                  <td className="p-3 border-b border-gray-300">
-                    {
-                      order.customerId?.assignedTo?.name ||
-                      order.customerId?.assignedBy?.name ||
-                      "Unassigned"
-                    }
-                  </td>
-                  <td className="p-3 border-b border-gray-300">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="p-3 border-b border-gray-300 text-right">
-                    ₹{order.totalAmount.toFixed(2)}
-                  </td>
-                  <td className="p-3 border-b border-gray-300 text-center">
-                    {order.shippingCharge > 0 ? "Yes" : "No"}
-                  </td>
-                  <td className="p-3 border-b border-gray-300 text-center">
-                    <span className="capitalize text-xs px-2 py-1 rounded bg-gray-200">
-                      {order.status}
-                    </span>
-                  </td>
-                </tr>
+                <React.Fragment key={order._id}>
+                  <tr
+                    className=" hover:bg-gray-50"
+                    
+                  >
+                    <td className="p-3 border-b border-gray-300">{order._id}</td>
+                    <td className="p-3 border-b border-gray-300">
+                      {order.customerId?.name || "Unknown"}
+                    </td>
+                    <td className="p-3 border-b border-gray-300">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td className="p-3 border-b border-gray-300 text-right">
+                      {order.totalAmount.toFixed(2)}
+                    </td>
+                    <td className="p-3 border-b border-gray-300 text-center">
+                      {order.shippingCharge > 0 ? "Yes" : "No"}
+                    </td>
+                    <td className="p-3 border-b border-gray-300 text-center">
+                 <div className="flex flex-col items-center gap-1">
+  <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize
+    ${
+      order.status === "processing"
+        ? "bg-blue-100 text-blue-700"
+        : order.status === "delivered"
+        ? "bg-green-100 text-green-700"
+        : order.status === "cancelled"
+        ? "bg-red-100 text-red-700"
+        : "bg-yellow-100 text-yellow-700"
+    }`}>
+    {order.status}
+  </span>
+  <select
+    value={order.status}
+    onChange={(e) => updateStatus(order._id, e.target.value)}
+    className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500"
+  >
+    <option value="pending">Pending</option>
+    <option value="processing">Processing</option>
+    <option value="delivered">Delivered</option>
+    <option value="cancelled">Cancelled</option>
+  </select>
+</div>
+
+                    </td>
+                   <td className="p-3 border-b border-gray-300 text-center space-x-2">
+  <div className="relative inline-block text-left">
+   <button
+  onClick={(e) => {
+    e.stopPropagation();
+    setDownloadMenuOpenOrderId(
+      downloadMenuOpenOrderId === order._id ? null : order._id
+    );
+  }}
+  className="px-4 py-1.5 bg-gray-600 text-white rounded-md text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300"
+>
+  Download ▼
+</button>
+
+{downloadMenuOpenOrderId === order._id && (
+  <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-md z-30">
+<button
+  onClick={() => {
+    downloadZohoCompatibleOrder(order);
+    setDownloadMenuOpenOrderId(null);
+  }}
+  className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+>
+  Download Zoho CSV
+</button>
+
+    <button
+      onClick={() => {
+        downloadPDF(order);
+        setDownloadMenuOpenOrderId(null);
+      }}
+      className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+    >
+      Download PDF
+    </button>
+  </div>
+)}
+
+  </div>
+</td>
+
+                  </tr>
+
+                  {/* Expanded row */}
+                  {expandedOrderId === order._id && (
+                    <tr className="bg-gray-50">
+                      <td colSpan="7" className="p-4 text-sm text-gray-700">
+                        <strong>Products Ordered:</strong>
+                        <ul className="list-disc list-inside mt-1 mb-2">
+                          {order.items.map((item, idx) => (
+                            <li key={idx}>
+                              {item.productName} — Qty: {item.quantity}, ₹
+                              {item.unitPrice.toFixed(2)} each
+                            </li>
+                          ))}
+                        </ul>
+                        {order.note && (
+                          <>
+                            <strong>Note:</strong>
+                            <p className="ml-2">{order.note}</p>
+                          </>
+                        )}
+                        {order.feedback && (
+                          <p className="text-red-600">
+                            Cancellation Feedback: {order.feedback}
+                          </p>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                       {order.status.toLowerCase() === "cancelled" && order.feedback && (
+  <tr>
+    <td colSpan="7" className="px-4 py-2 bg-red-50 text-red-600 text-sm border-b">
+      <strong>Feedback:</strong> {order.feedback}
+    </td>
+  </tr>
+)}
+
+                </React.Fragment>
               ))
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-4">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+          className={`px-3 py-1 rounded ${
+            currentPage === 1
+              ? "bg-gray-200 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
+          Prev
+        </button>
+
+        <p>
+          Page {currentPage} of {totalPages || 1}
+        </p>
+
+        <button
+          disabled={currentPage === totalPages || totalPages === 0}
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          className={`px-3 py-1 rounded ${
+            currentPage === totalPages || totalPages === 0
+              ? "bg-gray-200 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

@@ -64,36 +64,52 @@ router.get("/:id", authenticate, async (req, res) => {
 
 
 
-
-
 // ✅ Get orders of a specific customer (for admin/sales)
 router.get("/", requireAuth({ permission: "Manage Orders" }), async (req, res) => {
   try {
     const { customerId } = req.query;
-    const user = req.user;
+    const user = req.user; // from auth middleware
 
     let filter = {};
-
     if (customerId) {
       filter.customerId = customerId;
     }
 
-    // ✅ If sales executive, only fetch orders of their customers
+    // 🌟 Special filter for sales role
     if (user.role === "sales") {
-      // Find customers where assignedTo == current user
-      const customers = await User.model("Customer").find({ assignedTo: user._id }).select("_id");
-      const customerIds = customers.map((c) => c._id);
-      filter.customerId = { $in: customerIds };
+      // Fetch only customers assigned to this sales person
+      const userId = user.userId;
+
+      // Instead of filtering in Mongo, fetch all then filter in JS
+      const allOrders = await Order.find(filter)
+        .populate({
+          path: "customerId",
+          select: "name email assignedTo assignedBy",
+          populate: [
+            { path: "assignedTo", select: "name" },
+            { path: "assignedBy", select: "name" },
+          ],
+        })
+        .sort({ createdAt: -1 });
+
+      const filtered = allOrders.filter((order) => {
+        const assignedTo = order.customerId?.assignedTo?._id?.toString();
+        const assignedBy = order.customerId?.assignedBy?._id?.toString();
+        return assignedTo === userId || (!assignedTo && assignedBy === userId);
+      });
+
+      return res.json(filtered);
     }
 
+    // ✅ Admin/Billing — get all
     const orders = await Order.find(filter)
       .populate({
         path: "customerId",
         select: "name email assignedTo assignedBy",
         populate: [
-          { path: "assignedTo", select: "name email role" },
-          { path: "assignedBy", select: "name email role" }
-        ]
+          { path: "assignedTo", select: "name" },
+          { path: "assignedBy", select: "name" },
+        ],
       })
       .sort({ createdAt: -1 });
 
@@ -103,7 +119,6 @@ router.get("/", requireAuth({ permission: "Manage Orders" }), async (req, res) =
     res.status(500).json({ message: err.message });
   }
 });
-
 
 
 // Update order status
