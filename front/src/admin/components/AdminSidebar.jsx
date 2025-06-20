@@ -129,66 +129,75 @@ export default function AdminSidebar() {
   return (
     <div className="flex h-screen bg-white text-gray-800">
       {/* Primary Sidebar */}
-<aside className="group w-20 hover:w-64 transition-all duration-300 bg-[#074f4f] text-white flex flex-col">
-  <div className="h-16 flex items-center justify-center group-hover:justify-start px-4">
-    <span className="font-bold text-xl hidden group-hover:inline text-white">Fishman</span>
-  </div>
-  <nav className="flex-1 overflow-y-auto mt-4 space-y-1 px-2">
-    {sidebarItems.map((item, index) => {
-      const isActive = selectedMainItem === item.name;
-      return (
-        <button
-          key={index}
-          onClick={() => {
-            if (!item.submenu) {
-              navigate(`/admin/${item.path}`);
-            } else {
-              setSelectedMainItem(item.name);
-            }
-          }}
-          className={`group w-full flex items-center gap-3 px-3 py-2 rounded-md transition ${
-            isActive
-              ? "bg-[#e0f7f7] text-[#074f4f] font-semibold"
-              : "hover:bg-[#0ea5a5] text-white"
-          }`}
-        >
-          <div className="text-white">{item.icon}</div>
-          <span className="hidden group-hover:inline text-sm">{item.name}</span>
-        </button>
-      );
-    })}
-  </nav>
-</aside>
-
-
+      <aside className="group w-20 hover:w-64 transition-all duration-300 bg-[#074f4f] text-white flex flex-col">
+        <div className="h-16 flex items-center justify-center group-hover:justify-start px-4">
+          <span className="font-bold text-xl hidden group-hover:inline text-white">
+            Fishman
+          </span>
+        </div>
+        <nav className="flex-1 overflow-y-auto mt-4 space-y-1 px-2">
+          {sidebarItems.map((item, index) => {
+            const isActive = selectedMainItem === item.name;
+            return (
+              <button
+                key={index}
+                onClick={() => {
+                  if (!item.submenu) {
+                    navigate(`/admin/${item.path}`);
+                    setSelectedMainItem(null); // clear subheading if none
+                  } else {
+                    setSelectedMainItem(item.name);
+                  }
+                }}
+                className={`group w-full flex items-center gap-3 px-3 py-2 rounded-md transition ${
+                  isActive
+                    ? "bg-[#e0f7f7] text-[#074f4f] font-semibold"
+                    : "hover:bg-[#0ea5a5] text-white"
+                }`}
+              >
+                <div className="text-white">{item.icon}</div>
+                <span className="hidden group-hover:inline text-sm">
+                  {item.name}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
 
       {/* Secondary Sidebar */}
-      {selectedMainItem && getVisibleSubmenu().length > 0 && (
-        <aside className="w-64 bg-[#e6f7f7] border-r border-[#0b7b7b]/20 py-6 px-4">
-          <h2 className="text-md font-semibold mb-4 text-[#0b7b7b]">{selectedMainItem}</h2>
-          <div className="space-y-2">
-            {getVisibleSubmenu().map((sub, i) => {
-              const isActive = location.pathname.startsWith(`/admin/${sub.path}`);
-              return (
-                <button
-                  key={i}
-                  onClick={() => navigate(`/admin/${sub.path}`)}
-                  className={`block w-full text-left px-4 py-2 rounded-md font-medium text-sm ${
-                    isActive
-                      ? "bg-[#0b7b7b] text-white"
-                      : "hover:bg-[#c2efef] text-[#0b7b7b]"
-                  }`}
-                >
-                  {sub.label}
-                </button>
-              );
-            })}
-          </div>
-        </aside>
-      )}
+      {selectedMainItem &&
+        sidebarItems.find((item) => item.name === selectedMainItem)?.submenu &&
+        getVisibleSubmenu().length > 0 && (
+          <aside className="w-64 bg-[#e6f7f7] border-r border-[#0b7b7b]/20 py-6 px-4">
+            <h2 className="text-md font-semibold mb-4 text-[#0b7b7b]">
+              {selectedMainItem}
+            </h2>
+            <div className="space-y-2">
+              {getVisibleSubmenu().map((sub, i) => {
+                const isActive = location.pathname.startsWith(
+                  `/admin/${sub.path}`
+                );
+                return (
+                  <button
+                    key={i}
+                    onClick={() => navigate(`/admin/${sub.path}`)}
+                    className={`block w-full text-left px-4 py-2 rounded-md font-medium text-sm ${
+                      isActive
+                        ? "bg-[#0b7b7b] text-white"
+                        : "hover:bg-[#c2efef] text-[#0b7b7b]"
+                    }`}
+                  >
+                    {sub.label}
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+        )}
 
-      {/* Main Content (handled elsewhere in layout) */}
-      <div className="flex-1">{/* your page content here */}</div>
+      {/* Main Content Placeholder */}
+      <div className="flex-1">{/* Page content goes here */}</div>
     </div>
   );
 }
