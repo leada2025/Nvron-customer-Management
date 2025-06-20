@@ -21,8 +21,21 @@ const Sidebar = ({ collapsed, setCollapsed, onNavigate }) => {
     { label: "Settings", path: "/profile/settings", icon: <Settings size={18} /> },
   ];
 
+  // Track if user is interacting manually (via collapse button)
+  const handleMouseEnter = () => {
+    if (collapsed) setCollapsed(false);
+  };
+
+  const handleMouseLeave = () => {
+    if (!collapsed) setCollapsed(true);
+  };
+
   return (
-    <aside className="h-full min-h-screen flex flex-col text-[#0b7b7b] bg-[#e6f7f7] border-r border-[#0b7b7b] transition-all duration-300">
+    <aside
+      className="h-full min-h-screen flex flex-col text-[#0b7b7b] bg-[#e6f7f7] border-r border-[#0b7b7b] transition-all duration-300"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-5">
         {!collapsed && (
@@ -68,7 +81,8 @@ const Sidebar = ({ collapsed, setCollapsed, onNavigate }) => {
               `relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive
                   ? "bg-[#0b7b7b] text-white font-semibold shadow-inner before:content-[''] before:absolute before:left-0 before:top-1 before:bottom-1 before:w-1 before:rounded before:bg-white"
-                  : "hover:bg-[#d1f3f3] text-[#0b7b7b]"}`
+                  : "hover:bg-[#d1f3f3] text-[#0b7b7b]"
+              }`
             }
           >
             {icon}
