@@ -5,6 +5,7 @@ import {
   PackageCheck,
   Hourglass,
   BadgeDollarSign,
+   Target,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -53,7 +54,7 @@ export default function Dashboard() {
             { name: "Products", value: products },
             { name: "Pending", value: pendingOrders },
             { name: "Pricings", value: approvedPricing },
-            { name: "Target Left", value: stats.remainingTarget ?? 0 },
+          
 
           ]);
         }

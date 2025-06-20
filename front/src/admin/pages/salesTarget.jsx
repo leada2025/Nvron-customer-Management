@@ -1,5 +1,5 @@
 import SalesTargetModal from "../components/SalesTargetModal";
-
+import React from "react"
 ; // or SalesTargetForm
 
 export default function SalesTargetPage() {

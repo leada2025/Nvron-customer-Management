@@ -32,7 +32,7 @@ const sidebarLinks = [
     submenu: [
       
       { label: "Track Activity", path: "customers/add", roles: ["admin"] },
-      { label: "Sales Target", path: "customers/reports", roles: ["admin"] },
+      { label: "Sales Target", path: "salestarget", roles: ["admin"] },
     ],
   },
   {
