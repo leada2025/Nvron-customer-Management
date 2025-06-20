@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import { Dialog, TextField, Button } from "@mui/material";
+import { Table, LayoutGrid } from "lucide-react";
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
@@ -9,6 +10,22 @@ const OrderHistory = () => {
   const [open, setOpen] = useState(false);
   const [cancelFeedback, setCancelFeedback] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  const [viewMode, setViewMode] = useState(() =>
+    window.innerWidth < 640 ? "card" : localStorage.getItem("orderViewMode") || "table"
+  );
+
+  // Detect window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 640;
+      setIsMobile(mobile);
+      if (mobile) setViewMode("card");
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchOrders = async () => {
     try {
@@ -28,10 +45,21 @@ const OrderHistory = () => {
     fetchOrders();
   }, []);
 
+  const toggleView = () => {
+    const newMode = viewMode === "card" ? "table" : "card";
+    setViewMode(newMode);
+    localStorage.setItem("orderViewMode", newMode);
+  };
+
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     setCancelFeedback("");
     setOpen(true);
+  };
+
+  const closeModal = () => {
+    setOpen(false);
+    setSelectedOrder(null);
   };
 
   const handleCancelOrder = async () => {
@@ -54,11 +82,6 @@ const OrderHistory = () => {
     }
   };
 
-  const closeModal = () => {
-    setOpen(false);
-    setSelectedOrder(null);
-  };
-
   if (loading) return <p className="text-center mt-10 text-[#0b7b7b]">Loading order history...</p>;
 
   return (
@@ -66,9 +89,23 @@ const OrderHistory = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         <h2 className="text-2xl font-bold text-[#0b7b7b]">Order History</h2>
 
+        <div className="flex justify-end sm:flex hidden">
+          <button
+            onClick={toggleView}
+            className="mb-4 p-2 bg-white border border-[#0b7b7b] rounded-full shadow hover:bg-[#d9f0f0] transition"
+            title={viewMode === "card" ? "Switch to Table View" : "Switch to Card View"}
+          >
+            {viewMode === "card" ? (
+              <Table size={18} className="text-[#0b7b7b]" />
+            ) : (
+              <LayoutGrid size={18} className="text-[#0b7b7b]" />
+            )}
+          </button>
+        </div>
+
         {orders.length === 0 ? (
           <p className="text-[#0b7b7b]">No past orders found.</p>
-        ) : (
+        ) : viewMode === "table" ? (
           <div className="overflow-auto rounded-xl shadow border border-[#0b7b7b]/20 bg-white">
             <table className="w-full text-sm text-left">
               <thead className="bg-[#c2efef] text-[#0b7b7b]">
@@ -102,6 +139,30 @@ const OrderHistory = () => {
               </tbody>
             </table>
           </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {orders.map((order) => (
+              <div key={order._id} className="bg-white rounded-xl shadow p-4 space-y-2 border border-[#0b7b7b]/10">
+                <div className="flex justify-between text-sm text-[#0b7b7b]">
+                  <span><strong>ID:</strong> {order._id.slice(-6).toUpperCase()}</span>
+                  <span className="capitalize font-semibold">{order.status}</span>
+                </div>
+                <div className="text-xs text-gray-600">
+                  <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleString()}</p>
+                  <p><strong>Total:</strong> ₹{order.totalAmount.toFixed(2)}</p>
+                  <p><strong>Feedback:</strong> {order.feedback || "N/A"}</p>
+                </div>
+                <div className="text-right mt-2">
+                  <button
+                    onClick={() => handleViewDetails(order)}
+                    className="bg-[#0b7b7b] text-white px-4 py-1.5 rounded-lg hover:bg-[#095f5f] transition text-sm"
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
         {/* Modal */}
@@ -123,30 +184,45 @@ const OrderHistory = () => {
                   )}
                 </div>
 
-                <table className="w-full text-sm rounded border">
-                  <thead className="bg-[#e9fafa] text-[#0b7b7b]">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Product</th>
-                      <th className="px-3 py-2 text-center">Qty</th>
-                      <th className="px-3 py-2 text-right">Rate</th>
-                      <th className="px-3 py-2 text-right">Tax (%)</th>
-                      <th className="px-3 py-2 text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                {/* Mobile view */}
+                {isMobile ? (
+                  <div className="space-y-3">
                     {selectedOrder.items.map((item, idx) => (
-                      <tr key={idx} className="border-t">
-                        <td className="px-3 py-2">{item.productName}</td>
-                        <td className="px-3 py-2 text-center">{item.quantity}</td>
-                        <td className="px-3 py-2 text-right">₹{item.netRate.toFixed(2)}</td>
-                        <td className="px-3 py-2 text-right">{item.tax}</td>
-                        <td className="px-3 py-2 text-right">
-                          ₹{(item.netRate * item.quantity * (1 + item.tax / 100)).toFixed(2)}
-                        </td>
-                      </tr>
+                      <div key={idx} className="border rounded p-3 text-sm space-y-1 bg-[#f9fefe]">
+                        <p><strong>Product:</strong> {item.productName}</p>
+                        <p><strong>Quantity:</strong> {item.quantity}</p>
+                        <p><strong>Rate:</strong> ₹{item.netRate.toFixed(2)}</p>
+                        <p><strong>Tax:</strong> {item.tax}%</p>
+                        <p><strong>Total:</strong> ₹{(item.netRate * item.quantity * (1 + item.tax / 100)).toFixed(2)}</p>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                ) : (
+                  <table className="w-full text-sm rounded border mt-4">
+                    <thead className="bg-[#e9fafa] text-[#0b7b7b]">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Product</th>
+                        <th className="px-3 py-2 text-center">Qty</th>
+                        <th className="px-3 py-2 text-right">Rate</th>
+                        <th className="px-3 py-2 text-right">Tax (%)</th>
+                        <th className="px-3 py-2 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedOrder.items.map((item, idx) => (
+                        <tr key={idx} className="border-t">
+                          <td className="px-3 py-2">{item.productName}</td>
+                          <td className="px-3 py-2 text-center">{item.quantity}</td>
+                          <td className="px-3 py-2 text-right">₹{item.netRate.toFixed(2)}</td>
+                          <td className="px-3 py-2 text-right">{item.tax}</td>
+                          <td className="px-3 py-2 text-right">
+                            ₹{(item.netRate * item.quantity * (1 + item.tax / 100)).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
 
                 <div className="text-right mt-6 space-y-1 text-sm font-medium text-[#0b7b7b]">
                   <p>Subtotal: ₹{selectedOrder.subtotal.toFixed(2)}</p>

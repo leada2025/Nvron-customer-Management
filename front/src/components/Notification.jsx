@@ -6,6 +6,8 @@ export default function NotificationsDropdown() {
   const dropdownRef = useRef();
 
   useEffect(() => {
+
+
     const handler = (e) => {
       if (!dropdownRef.current?.contains(e.target)) setOpen(false);
     };
@@ -14,7 +16,7 @@ export default function NotificationsDropdown() {
   }, []);
 
   return (
-    <div className="relative inline-block text-left z-50" ref={dropdownRef}>
+    <div className="relative ml-2 inline-block text-left z-50" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 text-white hover:text-gray-200 transition"

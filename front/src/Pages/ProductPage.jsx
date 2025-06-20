@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/Axios";
 import { Search, Minus, Plus } from "lucide-react";
+import { LayoutGrid, Table } from "lucide-react"; // 👈 Add at top
+
 
 const ITEMS_PER_PAGE = 16;
 
@@ -13,12 +15,22 @@ export default function ProductPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
+  const isMobile = window.innerWidth < 640; // Tailwind 'sm' breakpoint
+const [viewMode, setViewMode] = useState(() => {
+  if (isMobile) return "card";
+  return localStorage.getItem("viewMode") || "card";
+});
+
+
+
 
   const userRole = localStorage.getItem("role");
   const userPosition = localStorage.getItem("position");
 
  useEffect(() => {
+ window.scroll(0, 0);
   const fetchData = async () => {
+     
     try {
       const token = localStorage.getItem("token");
       const [prods, specials] = await Promise.all([
@@ -85,6 +97,13 @@ const handleQty = (id, d) => {
   if (loading)
     return <div className="p-6 text-center text-[#0b7b7b]">Loading products...</div>;
 
+  const toggleView = () => {
+  const newMode = viewMode === "card" ? "table" : "card";
+  setViewMode(newMode);
+  localStorage.setItem("viewMode", newMode);
+};
+
+
   return (
     <div className="min-h-screen bg-[#e6f7f7] p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -106,7 +125,23 @@ const handleQty = (id, d) => {
             className="w-full outline-none bg-transparent text-[#0b7b7b]"
           />
         </div>
+      <div className="flex justify-end sm:flex hidden">
+  <button
+    onClick={toggleView}
+    className="mb-4 p-2 bg-white border border-[#0b7b7b] rounded-full shadow hover:bg-[#d9f0f0] transition"
+    title={viewMode === "card" ? "Switch to Table View" : "Switch to Card View"}
+  >
+    {viewMode === "card" ? (
+      <Table size={18} className="text-[#0b7b7b]" />
+    ) : (
+      <LayoutGrid size={18} className="text-[#0b7b7b]" />
+    )}
+  </button>
+</div>
 
+
+
+{viewMode === "card" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {shown.map((p) => {
             const qty = quantities[p._id] || 1;
@@ -198,6 +233,99 @@ const handleQty = (id, d) => {
             );
           })}
         </div>
+        ) :(  <div className="overflow-auto rounded shadow border border-[#0b7b7b]/30">
+    <table className="w-full text-sm text-left">
+      <thead className="bg-[#0b7b7b] text-white">
+        <tr>
+          <th className="p-2">Name</th>
+          <th className="p-2">Description</th>
+          <th className="p-2">Packing</th>
+          <th className="p-2">MRP</th>
+          <th className="p-2">Rate</th>
+          <th className="p-2">Qty</th>
+          <th className="p-2">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {shown.map((p) => {
+          const qty = quantities[p._id] || 1;
+          const added = orderItems.some((i) => i._id === p._id);
+          let priceLabel = "-";
+          if (userRole === "Customer") {
+            if (userPosition === "Doctor") priceLabel = p.specialPrice || p.netRate || "-";
+            if (userPosition === "Retailer") priceLabel = p.specialPrice || p.ptr || "-";
+            if (userPosition === "Distributor") priceLabel = p.specialPrice || p.pts || "-";
+          }
+
+          return (
+            <tr key={p._id} className="border-b hover:bg-[#f1f5f5]">
+              <td className="p-2">{p.name}</td>
+              <td className="p-2 text-xs text-gray-700">{p.description}</td>
+              <td className="p-2">{p.packing || "10X10 PVC BLISTER"}</td>
+              <td className="p-2">₹{p.mrp}</td>
+              <td className="p-2">
+                {userPosition === "Doctor" && <span className="text-green-600">₹{priceLabel}</span>}
+                {userPosition === "Retailer" && <span className="text-blue-600">₹{priceLabel}</span>}
+                {userPosition === "Distributor" && <span className="text-purple-600">₹{priceLabel}</span>}
+              </td>
+              <td className="p-2">
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleQty(p._id, -1)}
+                    className="px-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded disabled:opacity-50"
+                    disabled={added}
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={quantities[p._id] ?? "1"}
+                    disabled={added}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (/^\d*$/.test(val)) {
+                        setQuantities((q) => ({ ...q, [p._id]: val }));
+                      }
+                    }}
+                    onBlur={() => {
+                      const val = quantities[p._id];
+                      const num = parseInt(val);
+                      if (!num || num < 1) {
+                        setQuantities((q) => ({ ...q, [p._id]: "1" }));
+                      } else {
+                        setQuantities((q) => ({ ...q, [p._id]: String(num) }));
+                      }
+                    }}
+                    className="w-10 text-center border rounded"
+                  />
+                  <button
+                    onClick={() => handleQty(p._id, 1)}
+                    className="px-1 bg-[#d9f0f0] hover:bg-[#bef0f0] rounded disabled:opacity-50"
+                    disabled={added}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </td>
+              <td className="p-2">
+                <button
+                  onClick={() => handleAdd(p)}
+                  className={`px-3 py-1 rounded text-white text-xs ${
+                    added ? "bg-red-600 hover:bg-red-700" : "bg-[#0b7b7b] hover:bg-[#095e5e]"
+                  }`}
+                >
+                  {added ? "Remove" : "Add"}
+                </button>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+)}
 
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-6">
