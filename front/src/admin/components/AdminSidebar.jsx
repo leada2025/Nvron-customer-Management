@@ -30,9 +30,9 @@ const sidebarLinks = [
     name: "Sales Executive",
     icon: <Users size={20} />,
     submenu: [
-      
+       { label: "Sales Target", path: "salestarget", roles: ["admin"] },
       { label: "Track Activity", path: "customers/add", roles: ["admin"] },
-      { label: "Sales Target", path: "salestarget", roles: ["admin"] },
+                            
     ],
   },
   {
