@@ -14,6 +14,11 @@ import {
   CircularProgress,
 } from "@mui/material";
 
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  MenuItem, Select, InputLabel, FormControl
+} from "@mui/material";
+
 export default function PriceRequest() {
   const [pending, setPending] = useState([]);
   const [approved, setApproved] = useState([]);
@@ -25,27 +30,45 @@ export default function PriceRequest() {
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const [pendingRes, approvedRes, allRes] = await Promise.all([
-        axios.get("/api/negotiations/pending", { headers }),
-        axios.get("/api/negotiations/approved", { headers }),
-        axios.get("/api/negotiations", { headers }),
-      ]);
-      setPending(pendingRes.data);
-      setApproved(approvedRes.data);
-      setAllRequests(allRes.data);
-    } catch (err) {
-      console.error("Fetch error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [newRequestOpen, setNewRequestOpen] = useState(false);
+const [customers, setCustomers] = useState([]);
+const [products, setProducts] = useState([]);
+const [newRequestData, setNewRequestData] = useState({
+  customerId: "",
+  productId: "",
+  approvedPrice: "",
+  comment: ""
+});
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+
+const fetchAll = async () => {
+  setLoading(true);
+  try {
+    const [pendingRes, approvedRes, allRes, customersRes, productsRes] = await Promise.all([
+      axios.get("/api/negotiations/pending", { headers }),
+      axios.get("/api/negotiations/approved", { headers }),
+      axios.get("/api/negotiations", { headers }),
+      axios.get("/admin/users?onlyRole=Customer", { headers }),
+      axios.get("/api/products", { headers })
+    ]);
+    setPending(pendingRes.data);
+    setApproved(approvedRes.data);
+    setAllRequests(allRes.data);
+    setCustomers(customersRes.data);
+    setProducts(productsRes.data);
+  } catch (err) {
+    console.error("Fetch error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchAll();
+}, []);
+
+
+
 
   const handleRateChange = (id, value) => {
     setRates((prev) => ({ ...prev, [id]: value }));
@@ -128,6 +151,14 @@ export default function PriceRequest() {
       <Box className="max-w-6xl mx-auto space-y-10">
         {/* Pending Section */}
         <Box>
+          <Button
+  variant="contained"
+  color="primary"
+  onClick={() => setNewRequestOpen(true)}
+>
+  + New Request
+</Button>
+
           <Typography variant="h5" className="text-[#0b7b7b] font-semibold">
             Pending Negotiations
           </Typography>
@@ -271,6 +302,97 @@ export default function PriceRequest() {
           </Paper>
         </Box>
       </Box>
+      <Dialog open={newRequestOpen} onClose={() => setNewRequestOpen(false)} maxWidth="sm" fullWidth>
+  <DialogTitle>Create & Approve New Request</DialogTitle>
+  <DialogContent dividers className="space-y-4">
+    <FormControl fullWidth size="small">
+      <InputLabel>Customer</InputLabel>
+      <Select
+        value={newRequestData.customerId}
+        onChange={(e) => setNewRequestData({ ...newRequestData, customerId: e.target.value })}
+        label="Customer"
+      >
+        {customers.map((c) => (
+          <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+
+    <FormControl fullWidth size="small">
+      <InputLabel>Product</InputLabel>
+      <Select
+        value={newRequestData.productId}
+        onChange={(e) => setNewRequestData({ ...newRequestData, productId: e.target.value })}
+        label="Product"
+      >
+        {products.map((p) => (
+          <MenuItem key={p._id} value={p._id}>{p.name}</MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+
+    <TextField
+      label="Approved Price"
+      fullWidth
+      size="small"
+      type="number"
+      value={newRequestData.approvedPrice}
+      onChange={(e) => setNewRequestData({ ...newRequestData, approvedPrice: e.target.value })}
+    />
+
+    <TextField
+      label="Comment"
+      fullWidth
+      size="small"
+      multiline
+      rows={2}
+      value={newRequestData.comment}
+      onChange={(e) => setNewRequestData({ ...newRequestData, comment: e.target.value })}
+    />
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setNewRequestOpen(false)}>Cancel</Button>
+    <Button
+  variant="contained"
+  disabled={
+    !newRequestData.customerId ||
+    !newRequestData.productId ||
+    !newRequestData.approvedPrice
+  }
+  onClick={async () => {
+    try {
+      const res = await axios.post("/api/negotiations", {
+        customerId: newRequestData.customerId,
+        productId: newRequestData.productId,
+        proposedPrice: newRequestData.approvedPrice
+      }, { headers });
+
+      await axios.put(`/api/negotiations/${res.data._id}/propose`, {
+        proposedRate: newRequestData.approvedPrice
+      }, { headers });
+
+      await axios.patch(`/api/negotiations/approve/${res.data._id}`, {
+        comment: newRequestData.comment
+      }, { headers });
+
+      alert("Request created and approved!");
+      setNewRequestOpen(false);
+      setNewRequestData({
+        customerId: "", productId: "", approvedPrice: "", comment: ""
+      });
+      fetchAll();
+    } catch (err) {
+      console.error("Failed to create/approve:", err);
+      alert("Failed to process request.");
+    }
+  }}
+>
+  Save & Approve
+</Button>
+
+  </DialogActions>
+</Dialog>
     </Box>
+    
   );
 }

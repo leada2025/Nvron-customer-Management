@@ -297,6 +297,41 @@ router.patch(
   }
 );
 
+router.post("/direct-approve", requireAuth({ permission: "Approve Pricing" }), async (req, res) => {
+  try {
+    const { customerId, productId, approvedPrice, comment } = req.body;
+
+    if (!customerId || !productId || !approvedPrice) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const negotiation = await NegotiationRequest.create({
+      customerId,
+      productId,
+      proposedPrice: approvedPrice,
+      salesProposedRate: approvedPrice,
+      approvedPrice,
+      comment: comment || "",
+      status: "approved",
+    });
+
+    // Update product's specialPricing map
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    if (!product.specialPricing) product.specialPricing = new Map();
+
+    product.specialPricing.set(customerId.toString(), approvedPrice);
+    await product.save();
+
+    res.status(201).json({ message: "Negotiation approved directly", negotiation });
+  } catch (err) {
+    console.error("Direct approve error:", err);
+    res.status(500).json({ message: "Failed to directly approve negotiation" });
+  }
+});
+
+
 
 
 module.exports = router;

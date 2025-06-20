@@ -141,6 +141,7 @@ export default function RequestPricingPage() {
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Product</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Comment</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
@@ -162,6 +163,9 @@ export default function RequestPricingPage() {
                     {getStatusLabel(r.status)}
                   </div>
                 </td>
+                <td className="px-4 py-2">
+        {r.comment || r.adminMessage || <span className="text-gray-400 italic">No comment</span>}
+      </td>
                 <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
                   {(userRole === "sales" || userRole === "admin") && (
                     <button
