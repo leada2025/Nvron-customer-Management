@@ -8,6 +8,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
+  const [showSupportForm, setShowSupportForm] = useState(false); // NEW
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -37,7 +38,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e6f7f7] via-[#d0f0f0] to-[#b2eaea] px-4">
+    <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#e6f7f7] via-[#d0f0f0] to-[#b2eaea] px-4 py-10 space-y-10">
       <div className="w-full max-w-md md:max-w-lg lg:max-w-xl bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
         <form onSubmit={handleSubmit}>
           <h2 className="text-3xl font-bold mb-6 text-center text-[#0b7b7b]">
@@ -94,7 +95,38 @@ const LoginForm = () => {
             Login
           </button>
         </form>
+
+        {/* Forgot Password Link */}
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => setShowSupportForm(true)}
+            className="text-sm text-[#0b7b7b] underline hover:text-[#095f5f]"
+          >
+            Forgot your password? Click here to raise a support ticket
+          </button>
+        </div>
       </div>
+
+      {/* Zoho Support Form - Shown only when user clicks the link */}
+      {showSupportForm && (
+        <div className="w-full max-w-2xl bg-white p-4 rounded-2xl shadow-md">
+          <h3 className="text-xl font-semibold text-[#0b7b7b] mb-3">
+            Submit a Support Ticket
+          </h3>
+          <iframe
+            id="zsfeedbackFrame"
+            width="100%"
+            height="600"
+            name="zsfeedbackFrame"
+            scrolling="no"
+            frameBorder="0"
+            style={{ border: 0 }}
+            src="https://desk.zoho.in/support/fbw?formType=AdvancedWebForm&fbwId=edbsnfd683d940e08de6d3d6fcd82b7d2d1cffccd0703247a251850960183969be48f&xnQsjsdp=edbsn86faf6f9c4ce0f9a3e47a9f7f4011f09&mode=showNewWidget&displayType=iframe"
+            title="Zoho Desk Support Form"
+          />
+        </div>
+      )}
     </div>
   );
 };
