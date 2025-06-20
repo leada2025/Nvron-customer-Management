@@ -33,6 +33,11 @@ const userSchema = new mongoose.Schema({
     enum: ["Doctor", "Retailer","Distributor"],
     default: null,
   },
+  placeOfSupply: {
+    type: String,
+    default: null,
+  },
+
 });
 
 module.exports = mongoose.model("User", userSchema);

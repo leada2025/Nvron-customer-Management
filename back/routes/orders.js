@@ -105,7 +105,7 @@ router.get("/", requireAuth({ permission: "Manage Orders" }), async (req, res) =
     const orders = await Order.find(filter)
       .populate({
         path: "customerId",
-        select: "name email assignedTo assignedBy",
+        select: "name email assignedTo assignedBy placeOfSupply",
         populate: [
           { path: "assignedTo", select: "name" },
           { path: "assignedBy", select: "name" },

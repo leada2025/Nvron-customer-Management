@@ -8,6 +8,41 @@ const POSITION_OPTIONS = [
   { label: "Distributor", value: "Distributor" },
 ];
 
+const STATE_OPTIONS = [
+  { label: "Andhra Pradesh", value: "AP" },
+  { label: "Arunachal Pradesh", value: "AR" },
+  { label: "Assam", value: "AS" },
+  { label: "Bihar", value: "BR" },
+  { label: "Chhattisgarh", value: "CG" },
+  { label: "Goa", value: "GA" },
+  { label: "Gujarat", value: "GJ" },
+  { label: "Haryana", value: "HR" },
+  { label: "Himachal Pradesh", value: "HP" },
+  { label: "Jharkhand", value: "JH" },
+  { label: "Karnataka", value: "KA" },
+  { label: "Kerala", value: "KL" },
+  { label: "Madhya Pradesh", value: "MP" },
+  { label: "Maharashtra", value: "MH" },
+  { label: "Manipur", value: "MN" },
+  { label: "Meghalaya", value: "ML" },
+  { label: "Mizoram", value: "MZ" },
+  { label: "Nagaland", value: "NL" },
+  { label: "Odisha", value: "OD" },
+  { label: "Punjab", value: "PB" },
+  { label: "Rajasthan", value: "RJ" },
+  { label: "Sikkim", value: "SK" },
+  { label: "Tamil Nadu", value: "TN" },
+  { label: "Telangana", value: "TS" },
+  { label: "Tripura", value: "TR" },
+  { label: "Uttar Pradesh", value: "UP" },
+  { label: "Uttarakhand", value: "UK" },
+  { label: "West Bengal", value: "WB" },
+  { label: "Delhi", value: "DL" },
+  { label: "Puducherry", value: "PY" },
+  { label: "Jammu and Kashmir", value: "JK" },
+  { label: "Ladakh", value: "LA" },
+];
+
 const UserModal = ({
   user,
   onClose,
@@ -25,6 +60,11 @@ const UserModal = ({
   const [assignedTo, setAssignedTo] = useState(user?.assignedTo || "");
   const [position, setPosition] = useState(
     user?.position ? { label: user.position, value: user.position } : null
+  );
+  const [state, setState] = useState(
+    user?.placeOfSupply
+      ? STATE_OPTIONS.find((s) => s.value === user.placeOfSupply)
+      : null
   );
   const [loading, setLoading] = useState(false);
 
@@ -59,6 +99,7 @@ const UserModal = ({
       assignedTo: roleName.toLowerCase() === "customer" ? assignedTo || null : null,
       permissions: roleName.toLowerCase() === "customer" ? [] : permissions,
       position: position?.value || null,
+      placeOfSupply: roleName.toLowerCase() === "customer" ? state?.value || null : null,
     };
 
     if (password) userData.password = password;
@@ -147,37 +188,50 @@ const UserModal = ({
           </div>
 
           {roleName.toLowerCase() === "customer" && !["sales", "sale", "sales executive"].includes(localStorage.getItem("role")?.toLowerCase()) && (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      Assign To
-    </label>
-    <select
-      value={assignedTo}
-      onChange={(e) => setAssignedTo(e.target.value)}
-      className="w-full border border-gray-300 px-3 py-2 rounded-lg bg-white focus:ring-[#0b7b7b] focus:border-[#0b7b7b]"
-    >
-      <option value="">— None —</option>
-      {salesExecutives.map((exec) => (
-        <option key={exec._id} value={exec._id}>
-          {exec.name} ({exec.role?.name || "No Role"})
-        </option>
-      ))}
-    </select>
-  </div>
-)}
-{roleName.toLowerCase() === "customer" && (
-  <div>
-    <label className="block text-sm font-medium text-gray-700">Position</label>
-    <Select
-      isClearable
-      options={POSITION_OPTIONS}
-      value={position}
-      onChange={setPosition}
-      placeholder="Select position..."
-      classNamePrefix="react-select"
-    />
-  </div>
-)}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg bg-white focus:ring-[#0b7b7b] focus:border-[#0b7b7b]"
+              >
+                <option value="">— None —</option>
+                {salesExecutives.map((exec) => (
+                  <option key={exec._id} value={exec._id}>
+                    {exec.name} ({exec.role?.name || "No Role"})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {roleName.toLowerCase() === "customer" && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Position</label>
+                <Select
+                  isClearable
+                  options={POSITION_OPTIONS}
+                  value={position}
+                  onChange={setPosition}
+                  placeholder="Select position..."
+                  classNamePrefix="react-select"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">State (Place of Supply)</label>
+                <Select
+                  isClearable
+                  options={STATE_OPTIONS}
+                  value={state}
+                  onChange={setState}
+                  placeholder="Select state..."
+                  classNamePrefix="react-select"
+                />
+              </div>
+            </>
+          )}
 
           {roleName.toLowerCase() !== "customer" && (
             <div>

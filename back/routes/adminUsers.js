@@ -217,6 +217,7 @@ router.post(
         permissions,
         assignedTo,
         position, // 👈 updated from tags
+        placeOfSupply, 
       } = req.body;
 
       if (!password)
@@ -247,6 +248,8 @@ router.post(
         assignedBy: req.user?.userId || null,
         assignedTo: assignedTo || null,
         position: position || null, // 👈 store position if provided
+        placeOfSupply: placeOfSupply || null,
+
       });
 
       await user.save();
