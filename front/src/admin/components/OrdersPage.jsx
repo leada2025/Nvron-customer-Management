@@ -58,63 +58,34 @@ const fetchOrders = async () => {
       console.error("Error updating status:", err);
     }
   };
-
-
-const downloadZohoCompatibleOrder = (order) => {
+const downloadZohoCompatibleOrder = async (order) => {
   const headers = [
-    "Expected Shipment Date",
-    "SalesOrder Number",
-    "Order Date", // ✅ Added missing Order Date
-    "Status",
-    "Customer Name",
-    "PurchaseOrder",
-    "Template Name",
-    "Currency Code",
-    "Place of Supply",
-    "GST Treatment",
-    "GST Identification Number (GSTIN)",
-    "Exchange Rate",
-    "Discount Type",
-    "Is Discount Before Tax",
-    "Entity Discount Percent",
-    "Item Name",
-    "HSN/SAC",
-    "SKU",
-    "Item Desc",
-    "Quantity",
-    "Usage unit",
-    "Warehouse Name",
-    "Item Price",
-    "Is Inclusive Tax",
-    "Discount",
-    "Item Tax",
-    "Item Tax %",
-    "Item Tax Type",
-    "Item Tax Exemption Reason",
-    "Item Type",
-    "Project Name",
-    "Shipping Charge Tax Name",
-    "Shipping Charge Tax Type",
-    "Shipping Charge Tax %",
-    "Shipping Charge",
-    "Shipping Charge Tax Exemption Code",
-    "Shipping Charge SAC Code",
-    "Adjustment",
-    "Adjustment Description",
-    "Reverse Charge Tax Name",
-    "Reverse Charge Tax Rate",
-    "Reverse Charge Tax Type",
-    "Supply Type",
-    "Sales person",
-    "Notes",
-    "Terms & Conditions",
-    "Delivery Method"
+    "SalesOrder Number", "Order Date", "Expected Shipment Date", "Status", "Notes",
+    "Terms & Conditions", "GST Treatment", "GST Identification Number (GSTIN)",
+    "Currency Code", "Exchange Rate", "Reference#", "Template Name", "Sales person",
+    "Adjustment", "Adjustment Description", "Delivery Method", "Discount Type",
+    "Is Discount Before Tax", "Entity Discount Percent", "Attachment IDs",
+    "Entity Discount Amount", "Total", "Payment Terms", "Payment Terms Label",
+    "Place of Supply", "Customer Name", "Is Inclusive Tax",
+    "Reverse Charge Tax Name", "Reverse Charge Tax Rate", "Reverse Charge Tax Type",
+    "TDS Name", "TDS Percentage", "TDS Section Code", "TDS Amount",
+    "Item TDS Name", "Item TDS Percentage", "Item TDS Section Code",
+    "TCS Tax Name", "TCS Percentage", "Nature Of Collection", "TCS Amount",
+    "Shipping Charge", "Shipping Charge Tax Name", "Shipping Charge Tax Type",
+    "Shipping Charge Tax %", "Shipping Charge Tax Exemption Code", "Shipping Charge SAC Code",
+    "MRP", "PTR", "PTS", "Net Rate", "Item Price",
+    "Usage unit", "Item Desc", "Item Name", "HSN/SAC", "Quantity",
+    "Kit Combo Item Name", "Discount", "Discount Amount",
+    "Item Tax", "Item Tax Type", "Item Tax %",
+    "Item Tax Exemption Reason", "Item Type", "Supply Type", "Project Name"
   ];
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
+
+  const safe = (val) => typeof val === "number" ? val.toFixed(2) : "0";
 
   const taxNameMap = (tax) => {
     if (tax === 18) return "IGST18";
@@ -123,65 +94,76 @@ const downloadZohoCompatibleOrder = (order) => {
     return "";
   };
 
-  const expectedShipmentDate = formatDate(new Date(order.createdAt).getTime() + 2 * 24 * 60 * 60 * 1000);
+  // 🧠 Fetch latest product prices from backend
+  let latestProducts = [];
+  try {
+    const res = await axios.get("/api/products", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    latestProducts = res.data;
+  } catch (err) {
+    console.error("❌ Error fetching products:", err);
+    return alert("Failed to fetch latest product pricing.");
+  }
+
+  const productMap = {};
+  latestProducts.forEach(p => {
+    productMap[p._id] = p;
+  });
+
   const orderDate = formatDate(order.createdAt);
-  const customerName = order.customerId?.name || "Unnamed";
-  const gstin = order.customerId?.gstin || "";
-  const placeOfSupply = order.customerId?.placeOfSupply || "TN";
+  const expectedShipmentDate = formatDate(new Date(order.createdAt).getTime() + 2 * 24 * 60 * 60 * 1000);
+  const customer = order.customerId || {};
+  const customerName = customer.name || "Unnamed";
+  const gstin = customer.gstin || "";
+  const placeOfSupply = customer.placeOfSupply || "TN";
+  const position = customer.position?.toLowerCase();
+  const currencyCode = "INR";
+
+  const getItemPrice = (p) =>
+    position === "retailer" ? safe(p.ptr) :
+    position === "distributor" ? safe(p.pts) :
+    safe(p.netRate);
 
   const rows = order.items.map((item, index) => {
+    const latest = productMap[item.productId] || {};
     const taxName = taxNameMap(item.tax);
+
     return [
-      expectedShipmentDate,                      // Expected Shipment Date
-      order._id,                                 // SalesOrder Number
-      orderDate,                                 // ✅ Order Date
-      order.status || "draft",                   // Status
-      customerName,                              // Customer Name
-      "",                                        // PurchaseOrder
-      "Standard Template",                       // Template Name
-      "INR",                                     // Currency Code
-      placeOfSupply,                             // Place of Supply
-      gstin ? "business_gst" : "consumer",       // GST Treatment
-      gstin,                                     // GSTIN
-      "1",                                       // Exchange Rate
-      "item_level",                              // Discount Type
-      "TRUE",                                    // Is Discount Before Tax
-      "0",                                       // Entity Discount Percent
-      item.productName || "Unnamed Product",     // Item Name
-      item.hsn || "",                            // HSN/SAC
-      "",                                        // SKU
-      item.description || "",                    // Item Desc
-      item.quantity || 1,                        // Quantity
-      item.unit || "St",                         // Usage unit (default St)
-      "Main",                                    // Warehouse Name
-      item.netRate?.toFixed(2) || "0",           // Item Price
-      "FALSE",                                   // Is Inclusive Tax
-      "0",                                       // Discount
-      taxName,                                   // Item Tax Name
-      item.tax || "",                            // Item Tax %
-      "ItemAmount",                              // Item Tax Type
-      "",                                        // Item Tax Exemption Reason
-      "goods",                                   // Item Type
-      "",                                        // Project Name
-      taxName,                                   // Shipping Charge Tax Name
-      "IGST",                                    // Shipping Charge Tax Type
-      item.tax || "",                            // Shipping Charge Tax %
-      index === 0 ? (order.shippingCharge?.toFixed(2) || "0") : "", // Shipping Charge (only on 1st row)
-      "",                                        // Shipping Tax Exemption
-      "996812",                                  // Shipping SAC
-      "0",                                       // Adjustment
-      "",                                        // Adjustment Description
-      "", "", "",                                // Reverse Charge Tax Details
-      "Taxable",                                 // Supply Type
-      order.salesPerson || "",                   // Sales Person
-      order.note || "Looking forward to your business.", // Notes
-      "100% ADVANCE PAYMENT",                    // Terms & Conditions
-      "TRANSPORT TO PAY"                         // Delivery Method
+      order._id, orderDate, expectedShipmentDate, order.status || "draft",
+      order.note || "Looking forward to your business.",
+      "100% ADVANCE PAYMENT",
+      gstin ? "business_gst" : "consumer", gstin, currencyCode,
+      "1", "", "Standard Template", order.salesPerson || "", "0", "",
+      "TRANSPORT TO PAY", "item_level", "TRUE", "0", "", "0",
+      safe(order.totalAmount), "0", "Standard Terms", placeOfSupply,
+      customerName, "FALSE", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+
+      index === 0 ? safe(order.shippingCharge) : "",
+      index === 0 ? taxName : "",
+      index === 0 ? "IGST" : "",
+      index === 0 ? item.tax || "" : "",
+      "", index === 0 ? "996812" : "",
+
+      safe(latest.mrp), safe(latest.ptr), safe(latest.pts), safe(latest.netRate),
+      getItemPrice(latest),
+
+      item.unit || "St", item.description || "", item.productName || "Unnamed Product",
+      "30049066", item.quantity || 1,
+      "", "0", "0",
+      taxName, "ItemAmount", item.tax || "",
+      "", "goods", "Taxable", ""
     ];
   });
 
   const csv = [headers, ...rows]
-    .map((row) => row.map((val) => `"${val}"`).join(","))
+    .map(row =>
+      row
+        .map(val => `"${(val || "").toString().replace(/"/g, '""')}"`)
+        .join(",")
+    )
     .join("\n");
 
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
