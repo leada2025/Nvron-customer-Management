@@ -151,13 +151,17 @@ useEffect(() => {
       <Box className="max-w-6xl mx-auto space-y-10">
         {/* Pending Section */}
         <Box>
-          <Button
-  variant="contained"
-  color="primary"
-  onClick={() => setNewRequestOpen(true)}
->
-  + New Request
-</Button>
+      <div className="flex justify-end mb-4">
+  <button
+    onClick={() => setNewRequestOpen(true)}
+    className="bg-[#0b7b7b] text-white px-4 py-2 rounded-lg text-sm font-medium shadow hover:bg-[#095e5e] transition"
+  >
+    + Special rate
+  </button>
+</div>
+
+
+
 
           <Typography variant="h5" className="text-[#0b7b7b] font-semibold">
             Pending Negotiations
@@ -302,10 +306,33 @@ useEffect(() => {
           </Paper>
         </Box>
       </Box>
-      <Dialog open={newRequestOpen} onClose={() => setNewRequestOpen(false)} maxWidth="sm" fullWidth>
-  <DialogTitle>Create & Approve New Request</DialogTitle>
-  <DialogContent dividers className="space-y-4">
-    <FormControl fullWidth size="small">
+      <Dialog
+  open={newRequestOpen}
+  onClose={() => setNewRequestOpen(false)}
+  maxWidth="sm"
+  fullWidth
+  PaperProps={{
+    sx: {
+      borderRadius: 3,
+      backgroundColor: "white",
+      border: "1px solid #0b7b7b33",
+    },
+  }}
+>
+  <DialogTitle
+    sx={{
+      backgroundColor: "white",
+      color: "#0b7b7b",
+      fontWeight: "bold",
+      fontSize: "1.2rem",
+      pb: 1.5,
+    }}
+  >
+    Create & Approve New Request
+  </DialogTitle>
+
+  <DialogContent sx={{ pt: 2 }}>
+    <FormControl fullWidth size="small" margin="normal" sx={{ backgroundColor: "white", borderRadius: 2 }}>
       <InputLabel>Customer</InputLabel>
       <Select
         value={newRequestData.customerId}
@@ -313,12 +340,14 @@ useEffect(() => {
         label="Customer"
       >
         {customers.map((c) => (
-          <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
+          <MenuItem key={c._id} value={c._id}>
+            {c.name} ({c.email})
+          </MenuItem>
         ))}
       </Select>
     </FormControl>
 
-    <FormControl fullWidth size="small">
+    <FormControl fullWidth size="small" margin="normal" sx={{ backgroundColor: "white", borderRadius: 2 }}>
       <InputLabel>Product</InputLabel>
       <Select
         value={newRequestData.productId}
@@ -326,72 +355,83 @@ useEffect(() => {
         label="Product"
       >
         {products.map((p) => (
-          <MenuItem key={p._id} value={p._id}>{p.name}</MenuItem>
+          <MenuItem key={p._id} value={p._id}>
+            {p.name}
+          </MenuItem>
         ))}
       </Select>
     </FormControl>
 
     <TextField
-      label="Approved Price"
+      label="Approved Price (₹)"
       fullWidth
       size="small"
       type="number"
       value={newRequestData.approvedPrice}
       onChange={(e) => setNewRequestData({ ...newRequestData, approvedPrice: e.target.value })}
+      margin="normal"
+      sx={{ backgroundColor: "white", borderRadius: 2 }}
     />
 
-    <TextField
-      label="Comment"
-      fullWidth
-      size="small"
-      multiline
-      rows={2}
-      value={newRequestData.comment}
-      onChange={(e) => setNewRequestData({ ...newRequestData, comment: e.target.value })}
-    />
+   
   </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setNewRequestOpen(false)}>Cancel</Button>
+
+  <DialogActions sx={{ px: 3, pb: 2 }}>
     <Button
-  variant="contained"
-  disabled={
-    !newRequestData.customerId ||
-    !newRequestData.productId ||
-    !newRequestData.approvedPrice
-  }
-  onClick={async () => {
-    try {
-      const res = await axios.post("/api/negotiations", {
-        customerId: newRequestData.customerId,
-        productId: newRequestData.productId,
-        proposedPrice: newRequestData.approvedPrice
-      }, { headers });
+      onClick={() => setNewRequestOpen(false)}
+      sx={{
+        color: "#0b7b7b",
+        borderColor: "#0b7b7b",
+        border: "1px solid",
+        textTransform: "none",
+        borderRadius: 2,
+        px: 2.5,
+      }}
+    >
+      Cancel
+    </Button>
+    <Button
+      variant="contained"
+      onClick={async () => {
+        try {
+          await axios.post("/api/negotiations/direct-approve", {
+            customerId: newRequestData.customerId,
+            productId: newRequestData.productId,
+            approvedPrice: newRequestData.approvedPrice,
+            comment: newRequestData.comment,
+          }, { headers });
 
-      await axios.put(`/api/negotiations/${res.data._id}/propose`, {
-        proposedRate: newRequestData.approvedPrice
-      }, { headers });
-
-      await axios.patch(`/api/negotiations/approve/${res.data._id}`, {
-        comment: newRequestData.comment
-      }, { headers });
-
-      alert("Request created and approved!");
-      setNewRequestOpen(false);
-      setNewRequestData({
-        customerId: "", productId: "", approvedPrice: "", comment: ""
-      });
-      fetchAll();
-    } catch (err) {
-      console.error("Failed to create/approve:", err);
-      alert("Failed to process request.");
-    }
-  }}
->
-  Save & Approve
-</Button>
-
+          alert("Request approved directly!");
+          setNewRequestOpen(false);
+          setNewRequestData({
+            customerId: "", productId: "", approvedPrice: "", comment: ""
+          });
+          fetchAll();
+        } catch (err) {
+          console.error("Failed to approve directly:", err);
+          alert("Failed to process request.");
+        }
+      }}
+      disabled={
+        !newRequestData.customerId ||
+        !newRequestData.productId ||
+        !newRequestData.approvedPrice
+      }
+      sx={{
+        backgroundColor: "#0b7b7b",
+        textTransform: "none",
+        borderRadius: 2,
+        px: 3,
+        "&:hover": {
+          backgroundColor: "#095e5e",
+        },
+      }}
+    >
+      Save & Approve
+    </Button>
   </DialogActions>
 </Dialog>
+
     </Box>
     
   );
