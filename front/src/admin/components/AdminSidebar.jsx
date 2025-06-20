@@ -130,7 +130,7 @@ export default function AdminSidebar() {
     <div className="flex h-screen bg-white text-gray-800">
       {/* Primary Sidebar */}
       <aside className="group w-20 hover:w-64 transition-all duration-300 bg-[#074f4f] text-white flex flex-col">
-        <div className="h-16 flex items-center justify-center group-hover:justify-start px-4">
+        <div className="h-25 flex items-center justify-center group-hover:justify-start px-4">
           <span className="font-bold text-xl hidden group-hover:inline text-white">
             Fishman
           </span>
