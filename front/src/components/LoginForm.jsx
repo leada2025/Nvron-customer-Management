@@ -45,7 +45,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#e6f7f7] via-[#d0f0f0] to-[#b2eaea] px-4 py-10 space-y-10">
+<div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#e6f7f7] via-[#d0f0f0] to-[#b2eaea] px-4 py-10 space-y-10">
 
     <div
       className="min-h-screen flex items-center justify-center bg-cover bg-center px-4 py-6"
@@ -107,13 +107,8 @@ const LoginForm = () => {
           {/* Remember Me & Forgot */}
           <div className="flex items-center justify-between">
             <label className="flex items-center space-x-2 text-sm text-gray-600">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={() => setRemember(!remember)}
-                className="accent-[#0b7b7b] h-4 w-4"
-              />
-              <span>Remember Me</span>
+             
+              
             </label>
             <Link
               to="/forgot-password"
