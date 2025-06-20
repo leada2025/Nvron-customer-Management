@@ -30,7 +30,7 @@ const sidebarLinks = [
     name: "Sales Executive",
     icon: <Users size={20} />,
     submenu: [
-      { label: "Assign Customers", path: "salesexecutive", roles: ["admin"] },
+      
       { label: "Track Activity", path: "customers/add", roles: ["admin"] },
       { label: "Sales Target", path: "customers/reports", roles: ["admin"] },
     ],
@@ -57,16 +57,16 @@ const sidebarLinks = [
     ],
   },
   {
-    name: "Price Approval",
+    name: "Rate Approval",
     icon: <DollarSign size={20} />,
     submenu: [
       {
-        label: "Request Pricing",
+        label: "Request Rate",
         path: "request-pricing",
-        roles: ["admin", "sales"],
+        roles: ["sales"],
       },
-      { label: "View All Price Requests", path: "priceconsole", roles: ["admin"] },
-      { label: "Price History Log", path: "pricing/history", roles: ["admin"] },
+      { label: "View All Rate Requests", path: "priceconsole", roles: ["admin"] },
+      
     ],
   },
   {
@@ -117,14 +117,13 @@ export default function AdminSidebar() {
 
   const sidebarItems = getSidebarItems();
 
-  const getVisibleSubmenu = () => {
-    const selected = sidebarItems.find((item) => item.name === selectedMainItem);
-    if (!selected || !selected.submenu) return [];
+ const getVisibleSubmenu = () => {
+  const selected = sidebarItems.find((item) => item.name === selectedMainItem);
+  if (!selected || !selected.submenu) return [];
 
-    return isAdmin
-      ? selected.submenu
-      : selected.submenu.filter((sub) => sub.roles.includes(role));
-  };
+  return selected.submenu.filter((sub) => sub.roles.includes(role));
+};
+
 
   return (
     <div className="flex h-screen bg-white text-gray-800">
