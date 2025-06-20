@@ -70,20 +70,36 @@ router.get("/:id", authenticate, async (req, res) => {
 router.get("/", requireAuth({ permission: "Manage Orders" }), async (req, res) => {
   try {
     const { customerId } = req.query;
+    const user = req.user;
 
     let filter = {};
+
     if (customerId) {
       filter.customerId = customerId;
     }
 
-    // Additional access checks for non-admin roles here...
+    // ✅ If sales executive, only fetch orders of their customers
+    if (user.role === "sales") {
+      // Find customers where assignedTo == current user
+      const customers = await User.model("Customer").find({ assignedTo: user._id }).select("_id");
+      const customerIds = customers.map((c) => c._id);
+      filter.customerId = { $in: customerIds };
+    }
 
     const orders = await Order.find(filter)
-      .populate("customerId", "name email")
+      .populate({
+        path: "customerId",
+        select: "name email assignedTo assignedBy",
+        populate: [
+          { path: "assignedTo", select: "name email role" },
+          { path: "assignedBy", select: "name email role" }
+        ]
+      })
       .sort({ createdAt: -1 });
 
     res.json(orders);
   } catch (err) {
+    console.error("Error fetching orders:", err);
     res.status(500).json({ message: err.message });
   }
 });

@@ -16,100 +16,183 @@ export default function Orders() {
 
 
   const ORDERS_PER_PAGE = 10;
-
- const fetchOrders = async () => {
-  try {
-    setLoading(true);
-    const res = await axios.get("/api/orders", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
-    console.log("Raw orders response:", res.data); // should be an array
-    setOrders(Array.isArray(res.data) ? res.data : []);
-  } catch (err) {
-    console.error("Failed to fetch orders:", err);
-    setOrders([]); // fallback to empty array on error
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get("/api/orders", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setOrders(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
+ const updateStatus = async (orderId, newStatus) => {
+    try {
+      await axios.patch(
+        `/api/orders/${orderId}/status`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setOrders((prev) =>
+        prev.map((order) =>
+          order._id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+    } catch (err) {
+      console.error("Error updating status:", err);
+    }
+  };
 
 
-  const updateStatus = async (orderId, newStatus) => {
-  try {
-    await axios.patch(
-      `/api/orders/${orderId}/status`,
-      { status: newStatus },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    setOrders((prev) =>
-      prev.map((order) =>
-        order._id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
-  } catch (err) {
-    console.error("Error updating status:", err);
-  }
-};
-
-const downloadOrder = (order) => {
-  const header = [
-    "Date",
+const downloadZohoCompatibleOrder = (order) => {
+  const headers = [
+    "Expected Shipment Date",
+    "SalesOrder Number",
+    "Order Date", // ✅ Added missing Order Date
+    "Status",
     "Customer Name",
-    "Product Name",
+    "PurchaseOrder",
+    "Template Name",
+    "Currency Code",
+    "Place of Supply",
+    "GST Treatment",
+    "GST Identification Number (GSTIN)",
+    "Exchange Rate",
+    "Discount Type",
+    "Is Discount Before Tax",
+    "Entity Discount Percent",
+    "Item Name",
+    "HSN/SAC",
+    "SKU",
+    "Item Desc",
     "Quantity",
-    "Rate",
-    "Tax (%)",
-    "description",
-    "shippingCharge",
-    "Item Total",
-    "Order Total"
+    "Usage unit",
+    "Warehouse Name",
+    "Item Price",
+    "Is Inclusive Tax",
+    "Discount",
+    "Item Tax",
+    "Item Tax %",
+    "Item Tax Type",
+    "Item Tax Exemption Reason",
+    "Item Type",
+    "Project Name",
+    "Shipping Charge Tax Name",
+    "Shipping Charge Tax Type",
+    "Shipping Charge Tax %",
+    "Shipping Charge",
+    "Shipping Charge Tax Exemption Code",
+    "Shipping Charge SAC Code",
+    "Adjustment",
+    "Adjustment Description",
+    "Reverse Charge Tax Name",
+    "Reverse Charge Tax Rate",
+    "Reverse Charge Tax Type",
+    "Supply Type",
+    "Sales person",
+    "Notes",
+    "Terms & Conditions",
+    "Delivery Method"
   ];
 
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  };
+
+  const taxNameMap = (tax) => {
+    if (tax === 18) return "IGST18";
+    if (tax === 12) return "IGST12";
+    if (tax === 5) return "IGST5";
+    return "";
+  };
+
+  const expectedShipmentDate = formatDate(new Date(order.createdAt).getTime() + 2 * 24 * 60 * 60 * 1000);
+  const orderDate = formatDate(order.createdAt);
+  const customerName = order.customerId?.name || "Unnamed";
+  const gstin = order.customerId?.gstin || "";
+  const placeOfSupply = order.customerId?.placeOfSupply || "TN";
+
   const rows = order.items.map((item, index) => {
-    const itemTotal = item.quantity * item.netRate * (1 + item.tax / 100);
-    const isLast = index === order.items.length - 1;
+    const taxName = taxNameMap(item.tax);
     return [
-      new Date(order.createdAt).toLocaleDateString(),
-      order.customerId?.name || "Unknown",
-      item.productName,
-      item.quantity,
-      item.netRate.toFixed(2),
-      item.tax + "%",
-      item.description,
-      order.shippingCharge,
-      itemTotal.toFixed(2),
-      isLast ? order.totalAmount.toFixed(2) : ""
+      expectedShipmentDate,                      // Expected Shipment Date
+      order._id,                                 // SalesOrder Number
+      orderDate,                                 // ✅ Order Date
+      order.status || "draft",                   // Status
+      customerName,                              // Customer Name
+      "",                                        // PurchaseOrder
+      "Standard Template",                       // Template Name
+      "INR",                                     // Currency Code
+      placeOfSupply,                             // Place of Supply
+      gstin ? "business_gst" : "consumer",       // GST Treatment
+      gstin,                                     // GSTIN
+      "1",                                       // Exchange Rate
+      "item_level",                              // Discount Type
+      "TRUE",                                    // Is Discount Before Tax
+      "0",                                       // Entity Discount Percent
+      item.productName || "Unnamed Product",     // Item Name
+      item.hsn || "",                            // HSN/SAC
+      "",                                        // SKU
+      item.description || "",                    // Item Desc
+      item.quantity || 1,                        // Quantity
+      item.unit || "St",                         // Usage unit (default St)
+      "Main",                                    // Warehouse Name
+      item.netRate?.toFixed(2) || "0",           // Item Price
+      "FALSE",                                   // Is Inclusive Tax
+      "0",                                       // Discount
+      taxName,                                   // Item Tax Name
+      item.tax || "",                            // Item Tax %
+      "ItemAmount",                              // Item Tax Type
+      "",                                        // Item Tax Exemption Reason
+      "goods",                                   // Item Type
+      "",                                        // Project Name
+      taxName,                                   // Shipping Charge Tax Name
+      "IGST",                                    // Shipping Charge Tax Type
+      item.tax || "",                            // Shipping Charge Tax %
+      index === 0 ? (order.shippingCharge?.toFixed(2) || "0") : "", // Shipping Charge (only on 1st row)
+      "",                                        // Shipping Tax Exemption
+      "996812",                                  // Shipping SAC
+      "0",                                       // Adjustment
+      "",                                        // Adjustment Description
+      "", "", "",                                // Reverse Charge Tax Details
+      "Taxable",                                 // Supply Type
+      order.salesPerson || "",                   // Sales Person
+      order.note || "Looking forward to your business.", // Notes
+      "100% ADVANCE PAYMENT",                    // Terms & Conditions
+      "TRANSPORT TO PAY"                         // Delivery Method
     ];
   });
 
-  const csvContent = [header, ...rows]
-    .map((row) => row.join(","))
+  const csv = [headers, ...rows]
+    .map((row) => row.map((val) => `"${val}"`).join(","))
     .join("\n");
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-
   const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", `order-${order._id}.csv`);
+  link.href = url;
+  link.setAttribute("download", `zoho-sales-order-${order._id}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 };
+
 
 
 const downloadPDF = async (order) => {
@@ -297,36 +380,42 @@ useEffect(() => {
 
 
 
-const userRole = localStorage.getItem("role")?.toLowerCase(); // assuming 'role' is stored in localStorage
 
-const filteredOrders = Array.isArray(orders)
-  ? orders.filter((order) => {
-      if (userRole === "billing") return true; // 👈 show all for billing role
+  const userRole = localStorage.getItem("role")?.toLowerCase();
+  const userId = localStorage.getItem("userId");
 
-      const matchSearch =
-        order.customerId?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order._id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchStatus =
-        statusFilter === "All" || order.status === statusFilter.toLowerCase();
-
-      return matchSearch && matchStatus;
-    })
-  : [];
-
+  const filteredOrders = Array.isArray(orders)
+    ? orders
+        .filter((order) => {
+          if (userRole === "admin" || userRole === "billing") return true;
+          if (userRole === "sales") {
+            const assignedTo = order.customerId?.assignedTo?._id;
+            const assignedBy = order.customerId?.assignedBy?._id;
+            return assignedTo === userId || (!assignedTo && assignedBy === userId);
+          }
+          return false;
+        })
+        .filter((order) => {
+          const matchSearch =
+            order.customerId?.name
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            order._id.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchStatus =
+            statusFilter === "All" || order.status === statusFilter.toLowerCase();
+          return matchSearch && matchStatus;
+        })
+    : [];
 
   const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE);
-
   const paginatedOrders = filteredOrders.slice(
     (currentPage - 1) * ORDERS_PER_PAGE,
     currentPage * ORDERS_PER_PAGE
   );
-
   return (
  <div className="p-6 bg-[#e6f7f7] rounded-lg shadow-sm border border-gray-200 max-w-7xl mx-auto">
-  <h2 className="text-3xl font-medium text-gray-800 mb-6">Sales Orders</h2>
+      <h2 className="text-3xl font-medium text-gray-800 mb-6">Sales Orders</h2>
 
-
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
         <input
           type="text"
@@ -350,22 +439,21 @@ const filteredOrders = Array.isArray(orders)
           <option value="All">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="Processed">Processed</option>
-           <option value="Cancelled">Cancelled</option>
+          <option value="Cancelled">Cancelled</option>
         </select>
       </div>
 
-      {/* Orders Table */}
       <div className="overflow-x-auto">
-      <table className="w-full border border-gray-300 text-sm  bg-white rounded-md overflow-hidden">
-  <thead className="bg-[#e6f7f7] text-gray-600">
+        <table className="w-full border border-gray-300 text-sm bg-white rounded-md overflow-hidden">
+          <thead className="bg-[#e6f7f7] text-gray-600">
             <tr>
               <th className="p-3 border-b border-gray-300 text-left">Order ID</th>
               <th className="p-3 border-b border-gray-300 text-left">Customer</th>
+              <th className="p-3 border-b border-gray-300 text-left">Assigned To / By</th>
               <th className="p-3 border-b border-gray-300 text-left">Date</th>
               <th className="p-3 border-b border-gray-300 text-right">Total (₹)</th>
               <th className="p-3 border-b border-gray-300 text-center">Shipping</th>
               <th className="p-3 border-b border-gray-300 text-center">Status</th>
-              <th className="p-3 border-b border-gray-300 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -383,162 +471,35 @@ const filteredOrders = Array.isArray(orders)
               </tr>
             ) : (
               paginatedOrders.map((order) => (
-                <React.Fragment key={order._id}>
-                  <tr
-                    className=" hover:bg-gray-50"
-                    
-                  >
-                    <td className="p-3 border-b border-gray-300">{order._id}</td>
-                    <td className="p-3 border-b border-gray-300">
-                      {order.customerId?.name || "Unknown"}
-                    </td>
-                    <td className="p-3 border-b border-gray-300">{new Date(order.createdAt).toLocaleDateString()}</td>
-                    <td className="p-3 border-b border-gray-300 text-right">
-                      {order.totalAmount.toFixed(2)}
-                    </td>
-                    <td className="p-3 border-b border-gray-300 text-center">
-                      {order.shippingCharge > 0 ? "Yes" : "No"}
-                    </td>
-                    <td className="p-3 border-b border-gray-300 text-center">
-                 <div className="flex flex-col items-center gap-1">
-  <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize
-    ${
-      order.status === "processing"
-        ? "bg-blue-100 text-blue-700"
-        : order.status === "delivered"
-        ? "bg-green-100 text-green-700"
-        : order.status === "cancelled"
-        ? "bg-red-100 text-red-700"
-        : "bg-yellow-100 text-yellow-700"
-    }`}>
-    {order.status}
-  </span>
-  <select
-    value={order.status}
-    onChange={(e) => updateStatus(order._id, e.target.value)}
-    className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500"
-  >
-    <option value="pending">Pending</option>
-    <option value="processing">Processing</option>
-    <option value="delivered">Delivered</option>
-    <option value="cancelled">Cancelled</option>
-  </select>
-</div>
-
-                    </td>
-                   <td className="p-3 border-b border-gray-300 text-center space-x-2">
-  <div className="relative inline-block text-left">
-   <button
-  onClick={(e) => {
-    e.stopPropagation();
-    setDownloadMenuOpenOrderId(
-      downloadMenuOpenOrderId === order._id ? null : order._id
-    );
-  }}
-  className="px-4 py-1.5 bg-gray-600 text-white rounded-md text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300"
->
-  Download ▼
-</button>
-
-{downloadMenuOpenOrderId === order._id && (
-  <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-md z-30">
-    <button
-      onClick={() => {
-        downloadOrder(order);
-        setDownloadMenuOpenOrderId(null);
-      }}
-      className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
-    >
-      Download CSV
-    </button>
-    <button
-      onClick={() => {
-        downloadPDF(order);
-        setDownloadMenuOpenOrderId(null);
-      }}
-      className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
-    >
-      Download PDF
-    </button>
-  </div>
-)}
-
-  </div>
-</td>
-
-                  </tr>
-
-                  {/* Expanded row */}
-                  {expandedOrderId === order._id && (
-                    <tr className="bg-gray-50">
-                      <td colSpan="7" className="p-4 text-sm text-gray-700">
-                        <strong>Products Ordered:</strong>
-                        <ul className="list-disc list-inside mt-1 mb-2">
-                          {order.items.map((item, idx) => (
-                            <li key={idx}>
-                              {item.productName} — Qty: {item.quantity}, ₹
-                              {item.unitPrice.toFixed(2)} each
-                            </li>
-                          ))}
-                        </ul>
-                        {order.note && (
-                          <>
-                            <strong>Note:</strong>
-                            <p className="ml-2">{order.note}</p>
-                          </>
-                        )}
-                        {order.feedback && (
-                          <p className="text-red-600">
-                            Cancellation Feedback: {order.feedback}
-                          </p>
-                        )}
-                      </td>
-                    </tr>
-                  )}
-                       {order.status.toLowerCase() === "cancelled" && order.feedback && (
-  <tr>
-    <td colSpan="7" className="px-4 py-2 bg-red-50 text-red-600 text-sm border-b">
-      <strong>Feedback:</strong> {order.feedback}
-    </td>
-  </tr>
-)}
-
-                </React.Fragment>
+                <tr key={order._id}>
+                  <td className="p-3 border-b border-gray-300">{order._id}</td>
+                  <td className="p-3 border-b border-gray-300">{order.customerId?.name}</td>
+                  <td className="p-3 border-b border-gray-300">
+                    {
+                      order.customerId?.assignedTo?.name ||
+                      order.customerId?.assignedBy?.name ||
+                      "Unassigned"
+                    }
+                  </td>
+                  <td className="p-3 border-b border-gray-300">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-3 border-b border-gray-300 text-right">
+                    ₹{order.totalAmount.toFixed(2)}
+                  </td>
+                  <td className="p-3 border-b border-gray-300 text-center">
+                    {order.shippingCharge > 0 ? "Yes" : "No"}
+                  </td>
+                  <td className="p-3 border-b border-gray-300 text-center">
+                    <span className="capitalize text-xs px-2 py-1 rounded bg-gray-200">
+                      {order.status}
+                    </span>
+                  </td>
+                </tr>
               ))
             )}
           </tbody>
         </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-4">
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          className={`px-3 py-1 rounded ${
-            currentPage === 1
-              ? "bg-gray-200 cursor-not-allowed"
-              : "bg-blue-600 text-white hover:bg-blue-700"
-          }`}
-        >
-          Prev
-        </button>
-
-        <p>
-          Page {currentPage} of {totalPages || 1}
-        </p>
-
-        <button
-          disabled={currentPage === totalPages || totalPages === 0}
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-          className={`px-3 py-1 rounded ${
-            currentPage === totalPages || totalPages === 0
-              ? "bg-gray-200 cursor-not-allowed"
-              : "bg-blue-600 text-white hover:bg-blue-700"
-          }`}
-        >
-          Next
-        </button>
       </div>
     </div>
   );
