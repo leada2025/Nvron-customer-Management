@@ -19,6 +19,7 @@ import ProfileSettings from "./Pages/ProfileSetting";
 import NegotiatePricePage from "./Pages/NegotiatePricePage";
 import NegotiationHistory from "./Pages/PriceDetails";
 // import Dashboard from "./Pages/Dashboard";
+import SupportTicketPage from "./Pages/SupportTicketPage"; 
 
 // Admin
 import AdminLayout from './admin/AdminLayout';
@@ -89,6 +90,7 @@ function App() {
         </Route>
 
   <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
+              <Route path="/forgot-password" element={<SupportTicketPage />} />
         {/* User Routes */}
         <Route element={<UserLayout />}>
         <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
@@ -105,6 +107,7 @@ function App() {
           <Route path="/negotiate/:productId" element={<ProtectedRoute><NegotiatePricePage /></ProtectedRoute>} />
           <Route path="/negotiationhis" element={<ProtectedRoute><NegotiationHistory /></ProtectedRoute>} />
             <Route path="/offers" element={<OfferPage />} />
+
         </Route>
       </Routes>
     </Router>
