@@ -58,6 +58,8 @@ const fetchOrders = async () => {
       console.error("Error updating status:", err);
     }
   };
+
+
 const downloadZohoCompatibleOrder = async (order) => {
   const headers = [
     "SalesOrder Number", "Order Date", "Expected Shipment Date", "Status", "Notes",
@@ -87,14 +89,20 @@ const downloadZohoCompatibleOrder = async (order) => {
 
   const safe = (val) => typeof val === "number" ? val.toFixed(2) : "0";
 
-  const taxNameMap = (tax) => {
-    if (tax === 18) return "IGST18";
-    if (tax === 12) return "IGST12";
-    if (tax === 5) return "IGST5";
+  // ✅ Enhanced for IGST vs CGST+SGST
+  const taxNameMap = (tax, isIGST) => {
+    if (isIGST) {
+      if (tax === 18) return "IGST18";
+      if (tax === 12) return "IGST12";
+      if (tax === 5) return "IGST5";
+    } else {
+      if (tax === 18) return "CGST9+SGST9";
+      if (tax === 12) return "CGST6+SGST6";
+      if (tax === 5) return "CGST2.5+SGST2.5";
+    }
     return "";
   };
 
-  // 🧠 Fetch latest product prices from backend
   let latestProducts = [];
   try {
     const res = await axios.get("/api/products", {
@@ -119,6 +127,7 @@ const downloadZohoCompatibleOrder = async (order) => {
   const customerName = customer.name || "Unnamed";
   const gstin = customer.gstin || "";
   const placeOfSupply = customer.placeOfSupply || "TN";
+  const isIGST = placeOfSupply !== "TN"; // 🧠 Logic: if not same state, then IGST
   const position = customer.position?.toLowerCase();
   const currencyCode = "INR";
 
@@ -129,7 +138,7 @@ const downloadZohoCompatibleOrder = async (order) => {
 
   const rows = order.items.map((item, index) => {
     const latest = productMap[item.productId] || {};
-    const taxName = taxNameMap(item.tax);
+    const taxName = taxNameMap(item.tax, isIGST);
 
     return [
       order._id, orderDate, expectedShipmentDate, order.status || "draft",
@@ -143,7 +152,7 @@ const downloadZohoCompatibleOrder = async (order) => {
 
       index === 0 ? safe(order.shippingCharge) : "",
       index === 0 ? taxName : "",
-      index === 0 ? "IGST" : "",
+      index === 0 ? (isIGST ? "IGST" : "SGST+CGST") : "",
       index === 0 ? item.tax || "" : "",
       "", index === 0 ? "996812" : "",
 
