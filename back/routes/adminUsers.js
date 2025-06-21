@@ -389,29 +389,34 @@ router.get(
       const result = await Promise.all(
         targets.map(async (target) => {
           const salesUserId = target.salesUserId?._id;
-          if (!salesUserId) return { ...target.toObject(), remainingAmount: null };
+          if (!salesUserId) return null; // ⛔️ Skip deleted users
 
-          // Find customer role
           const customerRole = await Role.findOne({ name: /customer/i });
-          if (!customerRole) return { ...target.toObject(), remainingAmount: null };
+          if (!customerRole) return null;
 
-          // Find assigned customers
           const customerIds = await User.find({
             role: customerRole._id,
             $or: [{ assignedBy: salesUserId }, { assignedTo: salesUserId }],
           }).distinct("_id");
 
-          // If no customers assigned, return full target as remaining
           if (!customerIds.length) {
             return {
               ...target.toObject(),
+              totalSales: 0,
               remainingAmount: target.targetAmount,
             };
           }
 
-          // Calculate total sales amount for assigned customers
           const salesAgg = await Order.aggregate([
-            { $match: { customerId: { $in: customerIds.map(id => new mongoose.Types.ObjectId(id)) } } },
+            {
+              $match: {
+                customerId: { $in: customerIds.map(id => new mongoose.Types.ObjectId(id)) },
+                createdAt: {
+                  $gte: new Date(`${target.month}-01`),
+                  $lte: new Date(`${target.month}-31`),
+                },
+              },
+            },
             { $unwind: "$items" },
             {
               $group: {
@@ -435,18 +440,20 @@ router.get(
           ]);
 
           const totalSales = salesAgg[0]?.total || 0;
-          const remainingAmount = Math.max(target.targetAmount - totalSales, 0);
+          const remainingAmount = target.targetAmount - totalSales;
 
           return {
             ...target.toObject(),
+            totalSales,
             remainingAmount,
           };
         })
       );
 
-      res.json(result);
+      // Filter out nulls (e.g. deleted users or invalid roles)
+      res.json(result.filter(Boolean));
     } catch (err) {
-      console.error("❌ Error fetching sales target history with remainingAmount:", err);
+      console.error("❌ Error fetching sales target history:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   }

@@ -3,7 +3,7 @@ import axios from "../api/Axios";
 import SalesTargetModal from "../components/SalesTargetModal";
 
 export default function SalesTargetPage() {
-  const [open, setOpen] = useState(false); // ⛔ initially closed
+  const [open, setOpen] = useState(false);
   const [targetHistory, setTargetHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +44,7 @@ export default function SalesTargetPage() {
           onClose={() => setOpen(false)}
           onSuccess={() => {
             setOpen(false);
-            fetchTargets(); // refresh table after assigning
+            fetchTargets();
           }}
         />
 
@@ -57,30 +57,53 @@ export default function SalesTargetPage() {
         ) : (
           <div className="overflow-x-auto border rounded-xl bg-white">
             <table className="w-full table-auto text-sm text-left border-collapse">
-             <thead className="bg-[#0b7b7b] text-white">
-  <tr>
-    <th className="p-3">Sales Executive</th>
-    <th className="p-3">Email</th>
-    <th className="p-3">Month</th>
-    <th className="p-3">Target Amount ₹</th>
-    <th className="p-3">Remaining Amount ₹</th> {/* ← New */}
-    <th className="p-3">Assigned At</th>
-  </tr>
-</thead>
+              <thead className="bg-[#0b7b7b] text-white">
+                <tr>
+                  <th className="p-3">Sales Executive</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Month</th>
+                  <th className="p-3">Target Amount ₹</th>
+                  <th className="p-3">Remaining Amount ₹</th>
+                  <th className="p-3">Assigned At</th>
+                </tr>
+              </thead>
+              <tbody>
+                {targetHistory
+                  .filter((t) => t.salesUserId)
+                  .map((t) => {
+                    const target = t.targetAmount || 0;
+                    const remaining = t.remainingAmount ?? target;
+                    const achieved = remaining <= 0;
+                    const extra = achieved ? Math.abs(remaining).toFixed(2) : null;
 
-             <tbody>
-  {targetHistory.map((t) => (
-    <tr key={t._id} className="border-b hover:bg-[#f0fafa]">
-      <td className="p-3">{t.salesUserId?.name || "N/A"}</td>
-      <td className="p-3">{t.salesUserId?.email || "N/A"}</td>
-      <td className="p-3">{t.month}</td>
-      <td className="p-3">₹{parseFloat(t.targetAmount).toFixed(2)}</td>
-      <td className="p-3">₹{parseFloat(t.remainingAmount || 0).toFixed(2)}</td> {/* ← New */}
-      <td className="p-3">{new Date(t.createdAt).toLocaleString()}</td>
-    </tr>
-  ))}
-</tbody>
+                    return (
+                      <tr key={t._id} className="border-b hover:bg-[#f0fafa]">
+                        <td className="p-3">{t.salesUserId.name}</td>
+                        <td className="p-3">{t.salesUserId.email}</td>
+                        <td className="p-3">{t.month}</td>
+                        <td className="p-3">₹{parseFloat(target).toFixed(2)}</td>
+                        <td className="p-3">
+                          {achieved ? (
+  <span className="text-green-600 font-semibold flex items-center gap-1">
+    ✅ Achieved
+    {remaining < 0 && (
+      <span className="ml-1 text-green-700 font-medium">
+        +₹{Math.abs(remaining).toFixed(2)}
+      </span>
+    )}
+  </span>
+) : (
+  `₹${parseFloat(remaining).toFixed(2)}`
+)}
 
+                        </td>
+                        <td className="p-3">
+                          {new Date(t.createdAt).toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
             </table>
           </div>
         )}
