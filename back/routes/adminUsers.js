@@ -163,15 +163,16 @@ const target = await SalesTarget.findOne({
   month: currentMonth,
 });
 
+const assignedTarget = target?.targetOrders ?? null;
 const remainingTarget = target ? Math.max(target.targetOrders - ordersCount, 0) : null;
 
 res.json({
   assignedCustomers: customerIds.length,
   orders: ordersCount,
   totalSales,
+  assignedTarget,
   remainingTarget,
 });
-
 
 
     } catch (err) {
