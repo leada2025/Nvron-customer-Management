@@ -59,6 +59,7 @@ const fetchOrders = async () => {
     }
   };
 
+
 const downloadZohoCompatibleOrder = async (order) => {
   const headers = [
     "SalesOrder Number", "Order Date", "Expected Shipment Date", "Status", "Notes",
@@ -77,34 +78,33 @@ const downloadZohoCompatibleOrder = async (order) => {
     "MRP", "PTR", "PTS", "Net Rate", "Item Price",
     "Usage unit", "Item Desc", "Item Name", "HSN/SAC", "Quantity",
     "Kit Combo Item Name", "Discount", "Discount Amount",
-    "Item Tax", "Item Tax Type", "Item Tax %",
-    "Item Tax Exemption Reason", "Item Type", "Supply Type", "Project Name"
+    "Item Tax", "Item Tax Type", "Item Tax %", "Item Tax Exemption Reason",
+    "Item Type", "Supply Type", "Project Name"
   ];
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    return `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
   };
 
   const safe = (val) => typeof val === "number" ? val.toFixed(2) : "0";
 
-  // ✅ Updated tax mapping logic for Zoho Books/Inventory
-const taxNameMap = (tax, isIGST) => {
-  if (isIGST) {
-    if (tax === 5) return "IGST5";
-    if (tax === 12) return "IGST12";
-    if (tax === 18) return "IGST18";
-    if (tax === 28) return "IGST28";
-  } else {
-    if (tax === 5) return "GST5";   // CGST2.5 + SGST2.5
-    if (tax === 12) return "GST12"; // CGST6 + SGST6
-    if (tax === 18) return "GST18"; // CGST9 + SGST9
-    if (tax === 28) return "GST28"; // CGST14 + SGST14
-  }
-  return "GST0"; // fallback
-};
+  const taxNameMap = (tax, isIGST) => {
+    if (isIGST) {
+      if (tax === 5) return "IGST5";
+      if (tax === 12) return "IGST12";
+      if (tax === 18) return "IGST18";
+      if (tax === 28) return "IGST28";
+    } else {
+      if (tax === 5) return "GST5";
+      if (tax === 12) return "GST12";
+      if (tax === 18) return "GST18";
+      if (tax === 28) return "GST28";
+    }
+    return "GST0";
+  };
 
-
+  // Fetch latest product data
   let latestProducts = [];
   try {
     const res = await axios.get("/api/products", {
@@ -130,22 +130,27 @@ const taxNameMap = (tax, isIGST) => {
   const gstin = customer.gstin || "";
   const placeOfSupply = customer.placeOfSupply || "TN";
   const isIGST = placeOfSupply !== "TN";
-  const position = customer.position?.toLowerCase();
+  const position = customer.position?.toLowerCase() || "doctor";
   const currencyCode = "INR";
 
-const getItemPrice = (item) =>
-  position === "retailer" ? safe(item.ptr ?? item.netRate) :
-  position === "distributor" ? safe(item.pts ?? item.netRate) :
-  safe(item.netRate);
 
+  const getItemPrice = (item) =>
+    position === "retailer" ? safe(item.ptr ?? item.netRate) :
+    position === "distributor" ? safe(item.pts ?? item.netRate) :
+    safe(item.netRate);
 
   const rows = order.items.map((item, index) => {
     const latest = productMap[item.productId] || {};
     const tax = item.tax ?? 0;
     const itemTaxName = taxNameMap(tax, isIGST);
 
+    const isTaxGroup = itemTaxName.startsWith("GST");
+    const taxType = isTaxGroup ? "Tax Group" : "ItemAmount";
+    const taxPercent = isTaxGroup ? "" : tax;
+
+
     return [
-      order._id, orderDate, expectedShipmentDate,"draft",
+      order._id, orderDate, expectedShipmentDate, "draft",
       order.note || "Looking forward to your business.",
       "100% ADVANCE PAYMENT",
       gstin ? "business_gst" : "consumer", gstin, currencyCode,
@@ -154,9 +159,7 @@ const getItemPrice = (item) =>
       safe(order.totalAmount), "0", "Standard Terms", placeOfSupply,
       customerName, "FALSE", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
 
-      // TCS fields (always empty)
-
-      // Shipping fields (only on first row)
+      // Shipping fields
       index === 0 ? safe(order.shippingCharge) : "",
       index === 0 ? "" : "",
       index === 0 ? "" : "",
@@ -164,7 +167,7 @@ const getItemPrice = (item) =>
       index === 0 ? "" : "",
       index === 0 ? "996511" : "",
 
-      // Pricing
+      // MRP, PTR, PTS, Net Rate, Final Price
       safe(latest.mrp), safe(latest.ptr), safe(latest.pts), safe(latest.netRate),
       getItemPrice(latest),
 
@@ -173,8 +176,8 @@ const getItemPrice = (item) =>
 
       "", "0", "0",
 
-      // ✅ Correct tax name injected here
-      itemTaxName, "ItemAmount", tax,
+      // ✅ Fix applied here:
+      itemTaxName, taxType, taxPercent, 
       "", "goods", "Taxable", ""
     ];
   });
