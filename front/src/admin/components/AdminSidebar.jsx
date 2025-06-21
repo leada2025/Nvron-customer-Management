@@ -20,7 +20,7 @@ const sidebarLinks = [
     icon: <Users size={20} />,
     submenu: [
       {
-        label: "Customer View/Edit",
+        label: "Customers details",
         path: "customer",
         roles: ["admin", "sales"],
       },
