@@ -77,9 +77,13 @@ const UserPage = () => {
       setEditingUser(null);
     } catch (err) {
       console.error(err);
+      if (err.response && err.response.status === 400 && err.response.data.message === "User already exists") {
+      alert("This email is already registered. Please use a different email.");
+    } else {
       alert("Error saving user");
     }
-  };
+  }
+};
 
   const filteredUsers = users.filter((u) => {
     const term = searchTerm.toLowerCase();
