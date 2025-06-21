@@ -375,6 +375,25 @@ router.post("/sales-target", requireAuth({ role: "admin" }), async (req, res) =>
   }
 });
 
+// GET all assigned targets (admin view)
+router.get(
+  "/sales-targets",
+  requireAuth({ role: ["admin"] }),
+  async (req, res) => {
+    try {
+      const targets = await SalesTarget.find({})
+        .sort({ createdAt: -1 })
+        .populate("salesUserId", "name email");
+
+      res.json(targets);
+    } catch (err) {
+      console.error("❌ Error fetching sales target history:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+
 
 
 

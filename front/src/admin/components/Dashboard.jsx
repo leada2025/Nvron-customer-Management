@@ -39,12 +39,15 @@ export default function Dashboard() {
         });
 
         if (role === "sales" || role === "sales executive" || role === "sale") {
-          const { assignedCustomers, orders, totalSales } = res.data;
-          setStats({ assignedCustomers, orders, totalSales });
+         const { assignedCustomers, orders, totalSales, assignedTarget, remainingTarget } = res.data;
+
+setStats({ assignedCustomers, orders, totalSales, assignedTarget, remainingTarget });
+         
           setChartData([
             { name: "Customers", value: assignedCustomers },
             { name: "Orders", value: orders },
             { name: "Sales ₹", value: parseFloat(totalSales.toFixed(2)) },
+             { name: "Remaining", value: remainingTarget || 0 },
           ]);
         } else {
           const { users, products, pendingOrders, approvedPricing } = res.data;
