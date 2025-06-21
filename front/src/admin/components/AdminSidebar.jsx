@@ -129,11 +129,14 @@ export default function AdminSidebar() {
     <div className="flex h-screen bg-white text-gray-800">
       {/* Primary Sidebar */}
       <aside className="group w-20 hover:w-64 transition-all duration-300 bg-[#074f4f] text-white flex flex-col">
-        <div className="h-25 flex items-center justify-center group-hover:justify-start px-4">
-          <span className="font-bold text-xl hidden group-hover:inline text-white">
-            Fishman
-          </span>
-        </div>
+  <div className="w-full py-2 flex items-center justify-center group-hover:justify-start px-16">
+    <img
+      src="/fishman1.png"
+      alt="Fishman Logo"
+      className="h-24 w-full transition-transform duration-300 hover:scale-110"
+    />
+  </div>
+
         <nav className="flex-1 overflow-y-auto mt-4 space-y-1 px-2">
           {sidebarItems.map((item, index) => {
             const isActive = selectedMainItem === item.name;
