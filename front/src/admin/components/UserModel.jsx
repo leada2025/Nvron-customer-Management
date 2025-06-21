@@ -175,17 +175,32 @@ const UserModal = ({
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Role</label>
-            <Select
-              value={roleOptions.find((r) => r.value === role) || null}
-              onChange={handleRoleChange}
-              options={roleOptions}
-              placeholder="Select role..."
-              classNamePrefix="react-select"
-              isClearable
-            />
-          </div>
+       <div>
+  <label className="block text-sm font-medium text-gray-700">Roles</label>
+  <Select
+    value={roleOptions.find((r) => r.value === role) || null}
+    onChange={handleRoleChange}
+    options={roleOptions}
+    placeholder="Select role..."
+    classNamePrefix="react-select"
+    isClearable
+    styles={{
+      singleValue: (base) => ({
+        ...base,
+        textTransform: "capitalize",
+      }),
+      option: (base) => ({
+        ...base,
+        textTransform: "capitalize",
+      }),
+      placeholder: (base) => ({
+        ...base,
+        textTransform: "capitalize",
+      }),
+    }}
+  />
+</div>
+
 
           {roleName.toLowerCase() === "customer" && !["sales", "sale", "sales executive"].includes(localStorage.getItem("role")?.toLowerCase()) && (
             <div>
