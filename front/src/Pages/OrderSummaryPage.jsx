@@ -102,7 +102,7 @@ const OrderSummaryPage = () => {
     (sum, item) => sum + (item.unitPrice * item.quantity * item.tax) / 100,
     0
   );
-  const shippingCharge = subtotal > 10000 ? 0 : 250;
+  const shippingCharge = subtotal > 10000 ? 0 : 1;
   const totalAmount = subtotal + totalTax + shippingCharge;
 
 const handlePlaceOrder = async () => {
