@@ -48,11 +48,11 @@ const sidebarLinks = [
     icon: <ClipboardList size={20} />,
     submenu: [
       {
-        label: "View All Orders",
+        label: "Orders",
         path: "orders",
         roles: ["admin", "sales", "billing"],
       },
-      { label: "Add/Edit Products", path: "Products", roles: ["admin"] },
+      { label: "Products", path: "Products", roles: ["admin"] },
     ],
   },
   {
@@ -64,7 +64,7 @@ const sidebarLinks = [
         path: "request-pricing",
         roles: ["sales"],
       },
-      { label: "View All Rate Requests", path: "priceconsole", roles: ["admin"] },
+      { label: "Rate Requests", path: "priceconsole", roles: ["admin"] },
     ],
   },
   {
