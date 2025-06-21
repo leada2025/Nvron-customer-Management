@@ -386,9 +386,67 @@ router.get(
         .sort({ createdAt: -1 })
         .populate("salesUserId", "name email");
 
-      res.json(targets);
+      const result = await Promise.all(
+        targets.map(async (target) => {
+          const salesUserId = target.salesUserId?._id;
+          if (!salesUserId) return { ...target.toObject(), remainingAmount: null };
+
+          // Find customer role
+          const customerRole = await Role.findOne({ name: /customer/i });
+          if (!customerRole) return { ...target.toObject(), remainingAmount: null };
+
+          // Find assigned customers
+          const customerIds = await User.find({
+            role: customerRole._id,
+            $or: [{ assignedBy: salesUserId }, { assignedTo: salesUserId }],
+          }).distinct("_id");
+
+          // If no customers assigned, return full target as remaining
+          if (!customerIds.length) {
+            return {
+              ...target.toObject(),
+              remainingAmount: target.targetAmount,
+            };
+          }
+
+          // Calculate total sales amount for assigned customers
+          const salesAgg = await Order.aggregate([
+            { $match: { customerId: { $in: customerIds.map(id => new mongoose.Types.ObjectId(id)) } } },
+            { $unwind: "$items" },
+            {
+              $group: {
+                _id: null,
+                total: {
+                  $sum: {
+                    $add: [
+                      { $multiply: ["$items.quantity", "$items.netRate"] },
+                      {
+                        $multiply: [
+                          "$items.quantity",
+                          "$items.netRate",
+                          { $divide: ["$items.tax", 100] },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          ]);
+
+          const totalSales = salesAgg[0]?.total || 0;
+          const remainingAmount = Math.max(target.targetAmount - totalSales, 0);
+
+          return {
+            ...target.toObject(),
+            remainingAmount,
+          };
+        })
+      );
+
+      res.json(result);
     } catch (err) {
-      console.error("❌ Error fetching sales target history:", err);
+      console.error("❌ Error fetching sales target history with remainingAmount:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   }

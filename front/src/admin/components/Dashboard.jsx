@@ -95,15 +95,16 @@ setStats({ assignedCustomers, orders, totalSales, assignedTarget, remainingTarge
                 value={`₹${stats.totalSales.toFixed(2)}`}
                 icon={<BadgeDollarSign size={20} />}
               />
-  <DashboardCard
-  label="Target Amount ₹"
+ <DashboardCard
+  label="Remaining Amount ₹"
   value={
-    stats.assignedTarget !== null
-      ? `₹${parseFloat(stats.assignedTarget).toFixed(2)}`
+    stats.remainingTarget !== null
+      ? `₹${parseFloat(stats.remainingTarget).toFixed(2)}`
       : "Not Assigned"
   }
   icon={<Target size={20} />}
 />
+
 
 
             </>
