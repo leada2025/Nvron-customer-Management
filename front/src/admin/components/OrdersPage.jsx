@@ -59,6 +59,7 @@ const fetchOrders = async () => {
     }
   };
 
+
 const downloadZohoCompatibleOrder = async (order) => {
   const headers = [
     "SalesOrder Number", "Order Date", "Expected Shipment Date", "Status", "Notes",
@@ -88,22 +89,19 @@ const downloadZohoCompatibleOrder = async (order) => {
 
   const safe = (val) => typeof val === "number" ? val.toFixed(2) : "0";
 
-  // ✅ Updated tax mapping logic for Zoho Books/Inventory
-const taxNameMap = (tax, isIGST) => {
-  if (isIGST) {
-    if (tax === 5) return "IGST5";
-    if (tax === 12) return "IGST12";
-    if (tax === 18) return "IGST18";
-    if (tax === 28) return "IGST28";
-  } else {
-    if (tax === 5) return "GST5";   // CGST2.5 + SGST2.5
-    if (tax === 12) return "GST12"; // CGST6 + SGST6
-    if (tax === 18) return "GST18"; // CGST9 + SGST9
-    if (tax === 28) return "GST28"; // CGST14 + SGST14
-  }
-  return "GST0"; // fallback
-};
-
+  // ✅ Enhanced for IGST vs CGST+SGST
+  const taxNameMap = (tax, isIGST) => {
+    if (isIGST) {
+      if (tax === 18) return "IGST18";
+      if (tax === 12) return "IGST12";
+      if (tax === 5) return "IGST5";
+    } else {
+      if (tax === 18) return "CGST9+SGST9";
+      if (tax === 12) return "CGST6+SGST6";
+      if (tax === 5) return "CGST2.5+SGST2.5";
+    }
+    return "";
+  };
 
   let latestProducts = [];
   try {
@@ -129,23 +127,21 @@ const taxNameMap = (tax, isIGST) => {
   const customerName = customer.name || "Unnamed";
   const gstin = customer.gstin || "";
   const placeOfSupply = customer.placeOfSupply || "TN";
-  const isIGST = placeOfSupply !== "TN";
+  const isIGST = placeOfSupply !== "TN"; // 🧠 Logic: if not same state, then IGST
   const position = customer.position?.toLowerCase();
   const currencyCode = "INR";
 
-const getItemPrice = (item) =>
-  position === "retailer" ? safe(item.ptr ?? item.netRate) :
-  position === "distributor" ? safe(item.pts ?? item.netRate) :
-  safe(item.netRate);
-
+  const getItemPrice = (p) =>
+    position === "retailer" ? safe(p.ptr) :
+    position === "distributor" ? safe(p.pts) :
+    safe(p.netRate);
 
   const rows = order.items.map((item, index) => {
     const latest = productMap[item.productId] || {};
-    const tax = item.tax ?? 0;
-    const itemTaxName = taxNameMap(tax, isIGST);
+    const taxName = taxNameMap(item.tax, isIGST);
 
     return [
-      order._id, orderDate, expectedShipmentDate,"draft",
+      order._id, orderDate, expectedShipmentDate, order.status || "draft",
       order.note || "Looking forward to your business.",
       "100% ADVANCE PAYMENT",
       gstin ? "business_gst" : "consumer", gstin, currencyCode,
@@ -154,27 +150,19 @@ const getItemPrice = (item) =>
       safe(order.totalAmount), "0", "Standard Terms", placeOfSupply,
       customerName, "FALSE", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
 
-      // TCS fields (always empty)
-
-      // Shipping fields (only on first row)
       index === 0 ? safe(order.shippingCharge) : "",
-      index === 0 ? "" : "",
-      index === 0 ? "" : "",
-      index === 0 ? "" : "",
-      index === 0 ? "" : "",
-      index === 0 ? "996511" : "",
+      index === 0 ? taxName : "",
+      index === 0 ? (isIGST ? "IGST" : "SGST+CGST") : "",
+      index === 0 ? item.tax || "" : "",
+      "", index === 0 ? "996812" : "",
 
-      // Pricing
       safe(latest.mrp), safe(latest.ptr), safe(latest.pts), safe(latest.netRate),
       getItemPrice(latest),
 
       item.unit || "St", item.description || "", item.productName || "Unnamed Product",
       "30049066", item.quantity || 1,
-
       "", "0", "0",
-
-      // ✅ Correct tax name injected here
-      itemTaxName, "ItemAmount", tax,
+      taxName, "ItemAmount", item.tax || "",
       "", "goods", "Taxable", ""
     ];
   });
@@ -196,6 +184,7 @@ const getItemPrice = (item) =>
   link.click();
   document.body.removeChild(link);
 };
+
 
 
 const downloadPDF = async (order) => {
