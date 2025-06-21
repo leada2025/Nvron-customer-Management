@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "../api/Axios";
-import { Eye, EyeOff, Mail, Lock, Loader2, LogIn, CheckSquare } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  Loader2,
+  LogIn,
+} from "lucide-react";
 
 const LoginForm = () => {
-  const [email, setEmail] = useState(localStorage.getItem("rememberMe") ? localStorage.getItem("email") || "" : "");
+  const [email, setEmail] = useState(
+    localStorage.getItem("rememberMe") ? localStorage.getItem("email") || "" : ""
+  );
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(!!localStorage.getItem("rememberMe"));
@@ -57,21 +66,15 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#e6f7f7] via-[#d0f0f0] to-[#b2eaea] px-4 py-10">
-      {/* Logo */}
-      <div className="mb-6 max-w-xs w-full flex justify-center">
-        <img
-          src="/fishman.png"
-          alt="Fishman Logo"
-          className="max-h-40 sm:max-h-52 md:max-h-60 w-auto object-contain"
-        />
-      </div>
+    <div className="w-full h-screen overflow-hidden flex flex-col items-center justify-center bg-gradient-to-br from-[#e6f7f7] via-[#d0f0f0] to-[#b2eaea] px-4 py-4">
+      {/* Fishman Logo */}
+
 
       {/* Login Box */}
-      <div className="w-full max-w-sm md:max-w-md bg-white bg-opacity-95 p-6 md:p-10 rounded-3xl shadow-2xl">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="absolute top-60 w-full md:max-w-md bg-white bg-opacity-95 p-6 md:p-8 rounded-3xl shadow-2xl">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[#0b7b7b]">
-            Login to Your Account
+            Login
           </h2>
 
           {error && (
@@ -121,15 +124,7 @@ const LoginForm = () => {
 
           {/* Remember Me & Forgot Password */}
           <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 text-gray-600">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={() => setRemember(!remember)}
-                className="accent-[#0b7b7b]"
-              />
-              Remember me
-            </label>
+            
             <Link
               to="/forgot-password"
               className="text-[#0b7b7b] underline hover:text-[#095f5f]"
@@ -148,6 +143,13 @@ const LoginForm = () => {
             {loading ? "Signing in..." : "Login"}
           </button>
         </form>
+      </div>
+            <div className="absolute top-10">
+        <img
+          src="/fishman.png"
+          alt="Fishman Logo"
+          className="h-64 md:h-80 object-contain transition-transform duration-300 hover:scale-105"
+        />
       </div>
     </div>
   );
