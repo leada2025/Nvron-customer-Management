@@ -77,21 +77,23 @@ router.get("/dashboard-stats", async (req, res) => {
     const products = await Product.countDocuments();
     const pendingOrders = await Order.countDocuments({ status: "pending" });
 
-    const approvedPricing = await NegotiationRequest.distinct("productId", {
-      status: "approved",
+    // Find pricing requests where status is pending
+    const pendingApprovedPricing = await NegotiationRequest.countDocuments({
+      status: "pending"
     });
 
     res.json({
       users,
       products,
       pendingOrders,
-      approvedPricing: approvedPricing.length, // or .countDocuments if needed
+      pendingApprovedPricing
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);
     res.status(500).json({ message: "Failed to fetch dashboard stats" });
   }
 });
+
 
 
 router.get(
