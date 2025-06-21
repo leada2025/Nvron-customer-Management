@@ -50,13 +50,13 @@ setStats({ assignedCustomers, orders, totalSales, assignedTarget, remainingTarge
              { name: "Target ₹", value: assignedTarget || 0 },
           ]);
         } else {
-          const { users, products, pendingOrders, approvedPricing } = res.data;
-          setStats({ users, products, pendingOrders, approvedPricing });
+          const { users, products, pendingOrders, pendingApprovedPricing } = res.data;
+          setStats({ users, products, pendingOrders, pendingApprovedPricing });
           setChartData([
             { name: "Users", value: users },
             { name: "Products", value: products },
             { name: "Pending", value: pendingOrders },
-            { name: "Pricings", value: approvedPricing },
+             { name: "Pending Pricings", value: pendingApprovedPricing },
           
 
           ]);
@@ -113,7 +113,8 @@ setStats({ assignedCustomers, orders, totalSales, assignedTarget, remainingTarge
               <DashboardCard label="Total Users" value={stats.users} icon={<User size={20} />} />
               <DashboardCard label="Products" value={stats.products} icon={<PackageCheck size={20} />} />
               <DashboardCard label="Pending Orders" value={stats.pendingOrders} icon={<Hourglass size={20} />} />
-            <DashboardCard label="Approved Pricings" value={stats.approvedPricing} icon={<BadgeDollarSign size={20} />} />
+           <DashboardCard label="Pending Approved Pricings" value={stats.pendingApprovedPricing} icon={<BadgeDollarSign size={20} />} />
+
 
 
             </>
