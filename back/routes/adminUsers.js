@@ -11,6 +11,7 @@ const requireAuth = require("../middleware/requireAuth");
 const enrichUserRole = require("../middleware/enrichUserRole");
 const SalesTarget = require("../models/SalesTarget");
 const moment = require("moment");
+const NegotiationRequest =requir("../models/NegotiationRequest")
 
 
 const router = express.Router();

@@ -113,7 +113,9 @@ setStats({ assignedCustomers, orders, totalSales, assignedTarget, remainingTarge
               <DashboardCard label="Total Users" value={stats.users} icon={<User size={20} />} />
               <DashboardCard label="Products" value={stats.products} icon={<PackageCheck size={20} />} />
               <DashboardCard label="Pending Orders" value={stats.pendingOrders} icon={<Hourglass size={20} />} />
-              <DashboardCard label="Approved Pricings" value={stats.approvedPricing} icon={<BadgeDollarSign size={20} />} />
+            <DashboardCard label="Approved Pricings" value={stats.approvedPricing} icon={<BadgeDollarSign size={20} />} />
+
+
             </>
           )}
         </section>
