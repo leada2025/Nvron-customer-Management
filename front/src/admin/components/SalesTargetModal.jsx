@@ -6,7 +6,7 @@ export default function SalesTargetModal({ open, onClose, onSuccess }) {
   const [salesUsers, setSalesUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
-  const [targetOrders, setTargetOrders] = useState("");
+  const [targetAmount, setTargetAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,10 +33,10 @@ export default function SalesTargetModal({ open, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedUser || !targetOrders || !month) {
-      setError("All fields are required.");
-      return;
-    }
+ if (!selectedUser || !targetAmount || !month) {
+  setError("All fields are required.");
+  return;
+}
 
     setLoading(true);
     setError("");
@@ -44,13 +44,13 @@ export default function SalesTargetModal({ open, onClose, onSuccess }) {
     try {
       const token = localStorage.getItem("token");
 
-      await axios.post(
-        "/admin/users/sales-target",
-        {
-          salesUserId: selectedUser,
-          targetOrders: parseInt(targetOrders),
-          month,
-        },
+     await axios.post(
+  "/admin/users/sales-target",
+  {
+    salesUserId: selectedUser,
+    targetAmount: parseFloat(targetAmount), // ✅ Parse as float
+    month,
+  },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -108,17 +108,18 @@ export default function SalesTargetModal({ open, onClose, onSuccess }) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Target Orders</label>
-            <input
-              type="number"
-              min="1"
-              value={targetOrders}
-              onChange={(e) => setTargetOrders(e.target.value)}
-              className="w-full border rounded px-3 py-2"
-              placeholder="Enter number of orders"
-            />
-          </div>
+     <div>
+  <label className="block text-sm font-medium mb-1">Target Amount ₹</label>
+  <input
+    type="number"
+    min="0"
+    step="0.01"
+    value={targetAmount}
+    onChange={(e) => setTargetAmount(e.target.value)}
+    className="w-full border rounded px-3 py-2"
+    placeholder="Enter target amount"
+  />
+</div>
 
           <div className="pt-2">
             <button

@@ -47,7 +47,7 @@ setStats({ assignedCustomers, orders, totalSales, assignedTarget, remainingTarge
             { name: "Customers", value: assignedCustomers },
             { name: "Orders", value: orders },
             { name: "Sales ₹", value: parseFloat(totalSales.toFixed(2)) },
-             { name: "Remaining", value: remainingTarget || 0 },
+             { name: "Target ₹", value: assignedTarget || 0 },
           ]);
         } else {
           const { users, products, pendingOrders, approvedPricing } = res.data;
@@ -95,15 +95,16 @@ setStats({ assignedCustomers, orders, totalSales, assignedTarget, remainingTarge
                 value={`₹${stats.totalSales.toFixed(2)}`}
                 icon={<BadgeDollarSign size={20} />}
               />
-              <DashboardCard
-  label="Remaining Target"
+  <DashboardCard
+  label="Target Amount ₹"
   value={
-    stats.remainingTarget !== null
-      ? stats.remainingTarget
+    stats.assignedTarget !== null
+      ? `₹${parseFloat(stats.assignedTarget).toFixed(2)}`
       : "Not Assigned"
   }
   icon={<Target size={20} />}
 />
+
 
             </>
           ) : (

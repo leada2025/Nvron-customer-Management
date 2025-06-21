@@ -62,21 +62,22 @@ export default function SalesTargetPage() {
                   <th className="p-3">Sales Executive</th>
                   <th className="p-3">Email</th>
                   <th className="p-3">Month</th>
-                  <th className="p-3">Target Orders</th>
+                  <th className="p-3">Target Amount ₹</th>
                   <th className="p-3">Assigned At</th>
                 </tr>
               </thead>
               <tbody>
-                {targetHistory.map((t) => (
-                  <tr key={t._id} className="border-b hover:bg-[#f0fafa]">
-                    <td className="p-3">{t.salesUser?.name || "N/A"}</td>
-                    <td className="p-3">{t.salesUser?.email || "N/A"}</td>
-                    <td className="p-3">{t.month}</td>
-                    <td className="p-3">{t.targetOrders}</td>
-                    <td className="p-3">{new Date(t.createdAt).toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
+  {targetHistory.map((t) => (
+    <tr key={t._id} className="border-b hover:bg-[#f0fafa]">
+      <td className="p-3">{t.salesUserId?.name || "N/A"}</td>
+      <td className="p-3">{t.salesUserId?.email || "N/A"}</td>
+      <td className="p-3">{t.month}</td>
+     <td className="p-3">₹{parseFloat(t.targetAmount).toFixed(2)}</td>
+      <td className="p-3">{new Date(t.createdAt).toLocaleString()}</td>
+    </tr>
+  ))}
+</tbody>
+
             </table>
           </div>
         )}
