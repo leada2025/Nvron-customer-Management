@@ -63,7 +63,7 @@ export default function SalesTargetPage() {
                   <th className="p-3">Email</th>
                   <th className="p-3">Month</th>
                   <th className="p-3">Target Amount ₹</th>
-                  <th className="p-3">Remaining Amount ₹</th>
+                  <th className="p-3">Remaining / Achieved</th>
                   <th className="p-3">Assigned At</th>
                 </tr>
               </thead>
@@ -74,7 +74,7 @@ export default function SalesTargetPage() {
                     const target = t.targetAmount || 0;
                     const remaining = t.remainingAmount ?? target;
                     const achieved = remaining <= 0;
-                    const extra = achieved ? Math.abs(remaining).toFixed(2) : null;
+                    const overachieved = remaining < 0;
 
                     return (
                       <tr key={t._id} className="border-b hover:bg-[#f0fafa]">
@@ -84,18 +84,17 @@ export default function SalesTargetPage() {
                         <td className="p-3">₹{parseFloat(target).toFixed(2)}</td>
                         <td className="p-3">
                           {achieved ? (
-  <span className="text-green-600 font-semibold flex items-center gap-1">
-    ✅ Achieved
-    {remaining < 0 && (
-      <span className="ml-1 text-green-700 font-medium">
-        +₹{Math.abs(remaining).toFixed(2)}
-      </span>
-    )}
-  </span>
-) : (
-  `₹${parseFloat(remaining).toFixed(2)}`
-)}
-
+                            <span className="text-green-600 font-semibold flex items-center gap-1">
+                              ✅ Achieved
+                              {overachieved && (
+                                <span className="ml-1 text-green-700 font-medium">
+                                  +₹{Math.abs(remaining).toFixed(2)}
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            `₹${remaining.toFixed(2)}`
+                          )}
                         </td>
                         <td className="p-3">
                           {new Date(t.createdAt).toLocaleString()}
