@@ -146,7 +146,7 @@ const downloadZohoCompatibleOrder = async (order) => {
 
     const isTaxGroup = itemTaxName.startsWith("GST");
     const taxType = isTaxGroup ? "Tax Group" : "ItemAmount";
-    const taxPercent = isTaxGroup ? "" : tax;
+    const taxPercent = tax.toString();
 
 
     return [
@@ -169,7 +169,7 @@ const downloadZohoCompatibleOrder = async (order) => {
 
       // MRP, PTR, PTS, Net Rate, Final Price
       safe(latest.mrp), safe(latest.ptr), safe(latest.pts), safe(latest.netRate),
-      getItemPrice(latest),
+      safe(item.netRate),
 
       item.unit || "St", item.description || "", item.productName || "Unnamed Product",
       "30049066", item.quantity || 1,
