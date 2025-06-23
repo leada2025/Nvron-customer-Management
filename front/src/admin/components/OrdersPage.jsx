@@ -58,8 +58,6 @@ const fetchOrders = async () => {
       console.error("Error updating status:", err);
     }
   };
-
-
 const downloadZohoCompatibleOrder = async (order) => {
   const headers = [
     "SalesOrder Number", "Order Date", "Expected Shipment Date", "Status", "Notes",
@@ -87,7 +85,11 @@ const downloadZohoCompatibleOrder = async (order) => {
     return `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
   };
 
-  const safe = (val) => typeof val === "number" ? val.toFixed(2) : "0";
+  // ✅ Round UP to 2 decimals like Zoho (e.g., 43.8842 => 43.89)
+  const safe = (val) => {
+    if (typeof val !== "number") return "0.00";
+    return (Math.ceil(val * 100) / 100).toFixed(2);
+  };
 
   const taxNameMap = (tax, isIGST) => {
     if (isIGST) {
@@ -133,7 +135,6 @@ const downloadZohoCompatibleOrder = async (order) => {
   const position = customer.position?.toLowerCase() || "doctor";
   const currencyCode = "INR";
 
-
   const getItemPrice = (item) =>
     position === "retailer" ? safe(item.ptr ?? item.netRate) :
     position === "distributor" ? safe(item.pts ?? item.netRate) :
@@ -147,7 +148,6 @@ const downloadZohoCompatibleOrder = async (order) => {
     const isTaxGroup = itemTaxName.startsWith("GST");
     const taxType = isTaxGroup ? "Tax Group" : "ItemAmount";
     const taxPercent = tax.toString();
-
 
     return [
       order._id, orderDate, expectedShipmentDate, "draft",
@@ -176,8 +176,7 @@ const downloadZohoCompatibleOrder = async (order) => {
 
       "", "0", "0",
 
-      // ✅ Fix applied here:
-      itemTaxName, taxType, taxPercent, 
+      itemTaxName, taxType, taxPercent,
       "", "goods", "Taxable", ""
     ];
   });
@@ -199,7 +198,6 @@ const downloadZohoCompatibleOrder = async (order) => {
   link.click();
   document.body.removeChild(link);
 };
-
 
 const downloadPDF = async (order) => {
   const doc = new jsPDF();

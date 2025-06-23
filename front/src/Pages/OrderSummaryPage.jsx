@@ -11,6 +11,11 @@ const OrderSummaryPage = () => {
   const navigate = useNavigate();
   const [successPopup, setSuccessPopup] = useState(false);
 
+  // ✅ Round up to 2 decimals like Zoho
+  const safe = (val) => {
+    if (typeof val !== "number") return 0.00;
+    return Math.ceil(val * 100) / 100;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,58 +102,58 @@ const OrderSummaryPage = () => {
     fetchData();
   }, []);
 
-  const subtotal = orderItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-  const totalTax = orderItems.reduce(
-    (sum, item) => sum + (item.unitPrice * item.quantity * item.tax) / 100,
-    0
+  const subtotal = safe(
+    orderItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+  );
+  const totalTax = safe(
+    orderItems.reduce((sum, item) => sum + (item.unitPrice * item.quantity * item.tax) / 100, 0)
   );
   const shippingCharge = subtotal > 10000 ? 0 : 1;
-  const totalAmount = subtotal + totalTax + shippingCharge;
+  const totalAmount = safe(subtotal + totalTax + shippingCharge);
 
-const handlePlaceOrder = async () => {
-  setError("");
-  setLoading(true);
-  const token = localStorage.getItem("token");
+  const handlePlaceOrder = async () => {
+    setError("");
+    setLoading(true);
+    const token = localStorage.getItem("token");
 
-  if (!token) {
-    setError("You must be logged in to place an order.");
-    setLoading(false);
-    return;
-  }
+    if (!token) {
+      setError("You must be logged in to place an order.");
+      setLoading(false);
+      return;
+    }
 
-  const orderPayload = {
-    items: orderItems.map(
-      ({ productId, productName, quantity, unitPrice, tax, description }) => ({
-        productId,
-        productName,
-        quantity,
-        netRate: unitPrice,
-        tax,
-        description,
-      })
-    ),
-    note,
-    shippingCharge,
-    subtotal,
-    taxAmount: totalTax,
-    totalAmount,
+    const orderPayload = {
+      items: orderItems.map(
+        ({ productId, productName, quantity, unitPrice, tax, description }) => ({
+          productId,
+          productName,
+          quantity,
+          netRate: unitPrice,
+          tax,
+          description,
+        })
+      ),
+      note,
+      shippingCharge,
+      subtotal,
+      taxAmount: totalTax,
+      totalAmount,
+    };
+
+    try {
+      await axios.post("/api/orders", orderPayload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setSuccessPopup(true); // Show custom box
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to place order.");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  try {
-    await axios.post("/api/orders", orderPayload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    setSuccessPopup(true); // Show custom box
-  } catch (err) {
-    console.error(err);
-    setError(err.response?.data?.message || "Failed to place order.");
-  } finally {
-    setLoading(false);
-  }
-};
-
 
   if (orderItems.length === 0) {
     return (
@@ -181,7 +186,7 @@ const handlePlaceOrder = async () => {
               </p>
             </div>
             <div className="text-right">
-              <p>₹{(item.unitPrice * item.quantity).toFixed(2)}</p>
+              <p>₹{safe(item.unitPrice * item.quantity).toFixed(2)}</p>
               <p className="text-xs text-gray-500">{item.tax}% Tax</p>
             </div>
           </div>
@@ -196,11 +201,11 @@ const handlePlaceOrder = async () => {
       />
 
       <div className="text-right text-lg font-medium space-y-1">
-        <p>Subtotal: ₹{subtotal.toFixed(2)}</p>
-        <p>Tax: ₹{totalTax.toFixed(2)}</p>
+        <p>Subtotal: ₹{safe(subtotal).toFixed(2)}</p>
+        <p>Tax: ₹{safe(totalTax).toFixed(2)}</p>
         <p>Shipping: ₹{shippingCharge}</p>
         <hr className="my-2" />
-        <p className="text-xl">Total: ₹{totalAmount.toFixed(2)}</p>
+        <p className="text-xl">Total: ₹{safe(totalAmount).toFixed(2)}</p>
       </div>
 
       <div className="mt-6 text-right">
@@ -214,25 +219,25 @@ const handlePlaceOrder = async () => {
           {loading ? "Placing Order..." : "Place Order"}
         </button>
       </div>
-      {successPopup && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg p-6 shadow-lg w-full max-w-sm text-center border border-[#095e5e]">
-      <h2 className="text-lg font-semibold text-green-700">Success</h2>
-      <p className="text-sm text-gray-600 mt-2">Your order has been placed successfully!</p>
-      <button
-        onClick={() => {
-          localStorage.removeItem("orderItems");
-          setSuccessPopup(false);
-          navigate("/thank-you");
-        }}
-        className="mt-4 bg-[#0b7b7b] text-white px-4 py-2 rounded hover:bg-[#095e5e]"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
 
+      {successPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg w-full max-w-sm text-center border border-[#095e5e]">
+            <h2 className="text-lg font-semibold text-green-700">Success</h2>
+            <p className="text-sm text-gray-600 mt-2">Your order has been placed successfully!</p>
+            <button
+              onClick={() => {
+                localStorage.removeItem("orderItems");
+                setSuccessPopup(false);
+                navigate("/thank-you");
+              }}
+              className="mt-4 bg-[#0b7b7b] text-white px-4 py-2 rounded hover:bg-[#095e5e]"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
