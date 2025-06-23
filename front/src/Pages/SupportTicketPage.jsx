@@ -4,7 +4,7 @@ import React from "react";
 const SupportTicketPage = () => {
   return (
     <div className="min-h-screen bg-[#e6f7f7] flex items-center justify-center p-6">
-      <div className="w-full max-w-5xl bg-white border border-gray-200 shadow-lg rounded-2xl p-4">
+      <div className="w-full max-w-xl bg-white border border-gray-200 shadow-lg rounded-2xl p-4">
         <h1 className="text-3xl font-bold text-[#0b7b7b] mb-4 text-center">
           Forgot Password - Support Ticket
         </h1>
@@ -14,7 +14,8 @@ const SupportTicketPage = () => {
         <iframe
           id="zsfeedbackFrame"
           width="100%"
-          height="600"
+          height="550"
+          text-color="green"
           name="zsfeedbackFrame"
           scrolling="no"
           frameBorder="0"
