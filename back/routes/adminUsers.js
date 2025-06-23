@@ -492,7 +492,6 @@ router.delete("/:id", adminAuth, async (req, res) => {
 });
 
 
-
 router.post("/password", async (req, res) => {
   const { userId, currentPassword, newPassword } = req.body;
 
@@ -504,11 +503,13 @@ router.post("/password", async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) return res.status(401).json({ message: "Incorrect current password." });
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash); // ✅ FIXED
+
+    if (!isMatch)
+      return res.status(401).json({ message: "Incorrect current password." });
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
+    user.passwordHash = hashedPassword; // ✅ FIXED
     await user.save();
 
     res.json({ message: "Password changed successfully." });
@@ -517,5 +518,6 @@ router.post("/password", async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 });
+
 
 module.exports = router;
