@@ -271,11 +271,10 @@ router.post(
   }
 );
 
-
 // Update user (admin only)
 router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res) => {
   try {
-    const { name, email, password, role, permissions,position } = req.body;
+    const { name, email, password, role, permissions, position } = req.body;
 
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -283,15 +282,14 @@ router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res)
     user.name = name || user.name;
     user.email = email || user.email;
 
+    // Handle role (ID or name string)
     if (role) {
       let roleId = role;
 
       if (typeof role === "string") {
         if (mongoose.Types.ObjectId.isValid(role)) {
-          // role is a valid ID string, use directly
-          roleId = role;
+          roleId = role; // role is a valid ObjectId string
         } else {
-          // role is a name string, find or create
           let roleDoc = await Role.findOne({ name: role });
           if (!roleDoc) {
             roleDoc = await Role.create({ name: role, permissions: [] });
@@ -303,18 +301,29 @@ router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res)
       user.role = roleId;
     }
 
+    // Update permissions
     if (permissions) {
       user.permissions = permissions;
     }
 
+    // Hash password if provided
     if (password) {
       user.passwordHash = await bcrypt.hash(password, 10);
     }
 
+    // AssignedTo
     if (req.body.assignedTo !== undefined) {
-  user.assignedTo = req.body.assignedTo;
-}
+      user.assignedTo = req.body.assignedTo;
+    }
 
+    // Normalize and update position
+    if (position) {
+      const allowedPositions = ["Doctor", "Retailer", "Distributor"];
+      const matched = allowedPositions.find(
+        (p) => p.toLowerCase() === position.toLowerCase()
+      );
+      user.position = matched || position; // Use matched (normalized) or custom value
+    }
 
     await user.save();
     res.json({ message: "User updated" });
