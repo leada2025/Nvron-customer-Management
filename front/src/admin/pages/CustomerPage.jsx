@@ -189,7 +189,7 @@ const CustomerPage = () => {
                       setEditingCustomer(u);
                       setModalOpen(true);
                     }}
-                    className="text-[#0b7b7b] hover:text-[#095e5e]"
+                    className="text-[#0b7b7b] hover:text-[#095e5e] cursor-pointer"
                     title="Edit"
                   >
                     <FaPencilAlt />
