@@ -6,6 +6,7 @@ const POSITION_OPTIONS = [
   { label: "Doctor", value: "Doctor" },
   { label: "Retailer", value: "Retailer" },
   { label: "Distributor", value: "Distributor" },
+  { label: "Partners", value: "Partners" },
 ];
 
 const STATE_OPTIONS = [
@@ -50,17 +51,26 @@ const UserModal = ({
   allRoles = [],
   allPermissions = [],
   assignableUsers = [],
+    prefill = {},
+    partners = [],
+      addViaDistributor = false,
+  partnerUserId = null,
 }) => {
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState(user?.role?._id || "");
+  const [name, setName] = useState(user?.name ||  prefill.name || "");
+  const [email, setEmail] = useState(user?.email || prefill.email  ||  "");
+const [password, setPassword] = useState(user?.password || prefill.password || "");
+
+  const [role, setRole] = useState(user?.role?._id || prefill.role ||  "");
   const [roleName, setRoleName] = useState(user?.role?.name || "");
   const [permissions, setPermissions] = useState(user?.permissions || []);
   const [assignedTo, setAssignedTo] = useState(user?.assignedTo || "");
   const [position, setPosition] = useState(
-    user?.position ? { label: user.position, value: user.position } : null
-  );
+ user?.position
+    ? { label: user.position, value: user.position }
+    : prefill.position
+    ? { label: prefill.position, value: prefill.position }
+    : null
+);
   const [state, setState] = useState(
     user?.placeOfSupply
       ? STATE_OPTIONS.find((s) => s.value === user.placeOfSupply)
@@ -97,10 +107,23 @@ const UserModal = ({
       email,
       role,
       assignedTo: roleName.toLowerCase() === "customer" ? assignedTo || null : null,
+      
       permissions: roleName.toLowerCase() === "customer" ? [] : permissions,
       position: position?.value || null,
       placeOfSupply: roleName.toLowerCase() === "customer" ? state?.value || null : null,
     };
+
+if (
+  roleName.toLowerCase() === "customer" &&
+  addViaDistributor &&
+  position?.value !== "Partners" &&
+  partnerUserId
+) {
+  userData.partnerRef = partnerUserId;
+} else {
+  userData.partnerRef = null;
+}
+
 
     if (password) userData.password = password;
 
@@ -247,6 +270,31 @@ const UserModal = ({
               </div>
             </>
           )}
+
+        {roleName.toLowerCase() === "customer" &&
+  addViaDistributor &&
+  position?.value !== "Partners" && (
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Partner Reference</label>
+     <select
+  value={partnerUserId || ""}
+  disabled
+  className="w-full border border-gray-300 px-3 py-2 rounded-lg bg-gray-100 text-gray-700"
+>
+  {partners
+    .filter((p) => p.userId === partnerUserId)
+    .map((partner) => (
+      <option key={partner.userId} value={partner.userId}>
+        {partner.name} ({partner.email})
+      </option>
+    ))}
+</select>
+
+    </div>
+)}
+
+
+
 
           {roleName.toLowerCase() !== "customer" && (
             <div>

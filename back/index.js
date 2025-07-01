@@ -11,7 +11,9 @@ const requestRoutes = require("./routes/requests");
 const adminUsersRouter = require("./routes/adminUsers");
 const roleRoutes = require("./routes/roles");
 const negotiation =require("./routes/negotiation")
-
+const distributorRoutes = require("./routes/distributorRoutes");
+const payoutRoutes =require("./routes/payoutRoutes")
+const bankDetailsRoutes = require("./routes/bankDetails");
 
 
 dotenv.config();
@@ -31,9 +33,12 @@ app.use("/api/requests", requestRoutes);
 app.use("/admin/users", adminUsersRouter);
 app.use("/admin/roles", roleRoutes);
 app.use("/api/negotiations",negotiation);
+app.use("/api/distributors", distributorRoutes);
+app.use("/api/payouts",payoutRoutes);
+app.use("/api/bank-details", bankDetailsRoutes);
 
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => app.listen(PORT, () => console.log(`Server running on port ${PORT}`)))

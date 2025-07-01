@@ -67,6 +67,25 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
   }
 });
 
+// ✅ This route allows Partners to fetch only their referred customers
+router.get("/referred-customers", requireAuth(), async (req, res) => {
+  try {
+    const partnerId = req.user.userId;
+
+    // Find customers where partnerRef matches logged-in user
+    const referredCustomers = await User.find({
+      role: { $ne: null },
+      partnerRef: partnerId,
+    })
+      .populate("role", "name permissions")
+      .select("-passwordHash");
+
+    res.json(referredCustomers);
+  } catch (err) {
+    console.error("GET /admin/users/referred-customers error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
 
 
 
@@ -229,6 +248,7 @@ router.post(
         assignedTo,
         position, // 👈 updated from tags
         placeOfSupply, 
+         partnerRef ,
       } = req.body;
 
       if (!password)
@@ -260,6 +280,7 @@ router.post(
         assignedTo: assignedTo || null,
         position: position || null, // 👈 store position if provided
         placeOfSupply: placeOfSupply || null,
+        partnerRef: partnerRef || null,
 
       });
 
@@ -274,7 +295,7 @@ router.post(
 // Update user (admin only)
 router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res) => {
   try {
-    const { name, email, password, role, permissions, position } = req.body;
+    const { name, email, password, role, permissions, position, placeOfSupply, assignedTo } = req.body;
 
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -288,7 +309,7 @@ router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res)
 
       if (typeof role === "string") {
         if (mongoose.Types.ObjectId.isValid(role)) {
-          roleId = role; // role is a valid ObjectId string
+          roleId = role;
         } else {
           let roleDoc = await Role.findOne({ name: role });
           if (!roleDoc) {
@@ -312,17 +333,22 @@ router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res)
     }
 
     // AssignedTo
-    if (req.body.assignedTo !== undefined) {
-      user.assignedTo = req.body.assignedTo;
+    if (assignedTo !== undefined) {
+      user.assignedTo = assignedTo;
     }
 
     // Normalize and update position
     if (position) {
-      const allowedPositions = ["Doctor", "Retailer", "Distributor"];
+      const allowedPositions = ["Doctor", "Retailer", "Distributor", "Partners"];
       const matched = allowedPositions.find(
         (p) => p.toLowerCase() === position.toLowerCase()
       );
-      user.position = matched || position; // Use matched (normalized) or custom value
+      user.position = matched || position;
+    }
+
+    // ✅ Update placeOfSupply
+    if (placeOfSupply !== undefined) {
+      user.placeOfSupply = placeOfSupply;
     }
 
     await user.save();
@@ -331,6 +357,7 @@ router.put("/:id", requireAuth({ permission: "Manage Users" }), async (req, res)
     res.status(500).json({ message: err.message });
   }
 });
+
 
 
 

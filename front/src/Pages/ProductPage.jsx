@@ -5,7 +5,7 @@ import { Search, Minus, Plus } from "lucide-react";
 import { LayoutGrid, Table } from "lucide-react"; // 👈 Add at top
 
 
-const ITEMS_PER_PAGE = 16;
+const ITEMS_PER_PAGE = 12;
 
 export default function ProductPage() {
   const [products, setProducts] = useState([]);
@@ -76,6 +76,9 @@ const handleQty = (id, d) => {
   });
 };
 
+
+
+
   const handleAdd = (p) => {
     const qty = quantities[p._id] || 1;
     setOrderItems((o) =>
@@ -93,6 +96,33 @@ const handleQty = (id, d) => {
   );
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const shown = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  let partnerSubtotal = 0;
+const partnerProductTotals = {}; // key: productId, value: subtotal for that product
+
+if (userPosition === "Partners") {
+  orderItems.forEach((item) => {
+    const price = parseFloat(item.specialPrice || item.pts || 0);
+    const qty = parseInt(item.quantity || 1);
+    const total = price * qty;
+    partnerSubtotal += total;
+    partnerProductTotals[item._id] = total;
+  });
+}
+
+const getCommissionPercent = (total) => {
+  if (total < 2000) return 0;
+  if (total < 5000) return 3;
+  if (total < 10000) return 4;
+  if (total < 20000) return 6;
+  if (total < 50000) return 7;
+  if (total < 100000) return 8;
+  if (total < 200000) return 9;
+  return 10;
+};
+
+
+const commissionPercent = getCommissionPercent(partnerSubtotal);
+
 
   if (loading)
     return <div className="p-6 text-center text-[#0b7b7b]">Loading products...</div>;
@@ -102,6 +132,12 @@ const handleQty = (id, d) => {
   setViewMode(newMode);
   localStorage.setItem("viewMode", newMode);
 };
+
+
+
+
+// Subtotal only for Partner
+
 
 
   return (
@@ -142,15 +178,17 @@ const handleQty = (id, d) => {
 
 
 {viewMode === "card" ? (
+  <>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {shown.map((p) => {
             const qty = quantities[p._id] || 1;
             const added = orderItems.some((i) => i._id === p._id);
             let priceLabel = null;
             if (userRole === "Customer") {
-              if (userPosition === "Doctor") priceLabel = p.specialPrice || p.netRate || "-";
+              if (userPosition === "Doctor") priceLabel = p.specialPrice || p.pts || "-";
               if (userPosition === "Retailer") priceLabel = p.specialPrice || p.ptr || "-";
               if (userPosition === "Distributor") priceLabel = p.specialPrice || p.pts || "-";
+              if (userPosition === "Partners") priceLabel = p.specialPrice || p.pts || "-";
             }
 
             return (
@@ -166,11 +204,18 @@ const handleQty = (id, d) => {
   <p className="text-sm font-bold text-[#0b7b7b] mt-1">MRP: ₹{p.mrp}</p>
   {userRole === "Customer" && (
     <p className="text-sm font-semibold mt-1">
-      {userPosition === "Doctor" && <span className="text-green-600">Net ₹{priceLabel}</span>}
+      {userPosition === "Doctor" && <span className="text-green-600">PTS  ₹{priceLabel}</span>}
       {userPosition === "Retailer" && <span className="text-blue-600">PTR ₹{priceLabel}</span>}
       {userPosition === "Distributor" && <span className="text-purple-600">PTS ₹{priceLabel}</span>}
+      {userPosition === "Partners" && <span className="text-purple-600">PTS ₹{priceLabel}</span>}
     </p>
   )}
+
+  {userPosition === "Partners" && added && (
+  <p className="text-xs text-green-700 mt-1">
+    Commission: ₹{((partnerProductTotals[p._id] || 0) * commissionPercent / 100).toFixed(2)}
+  </p>
+)}
   <p className="text-xs text-[#0b7b7b]/60 mt-1">Tax: {p.tax || 12}%</p>
 
   <div className="flex items-center gap-2 mt-3">
@@ -232,7 +277,21 @@ const handleQty = (id, d) => {
               </div>
             );
           })}
+         
         </div>
+
+          {userPosition === "Partners" && (
+      <div className="p-3 text-right text-sm text-[#0b7b7b] font-medium">
+        Order Subtotal: ₹{partnerSubtotal.toFixed(2)} <br />
+        Commission: {commissionPercent}% <br />
+        Estimated Commission Amount: ₹{(partnerSubtotal * commissionPercent / 100).toFixed(2)}
+      </div>
+    )}
+         </>
+
+       
+
+        
         ) :(  <div className="overflow-auto rounded shadow border border-[#0b7b7b]/30">
     <table className="w-full text-sm text-left">
       <thead className="bg-[#0b7b7b] text-white">
@@ -243,7 +302,9 @@ const handleQty = (id, d) => {
           <th className="p-2">MRP</th>
           <th className="p-2">Rate</th>
           <th className="p-2">Qty</th>
+          {userPosition === "Partners" && <th className="p-2">Commission/{commissionPercent}%</th>}
           <th className="p-2">Action</th>
+          
         </tr>
       </thead>
       <tbody>
@@ -252,9 +313,10 @@ const handleQty = (id, d) => {
           const added = orderItems.some((i) => i._id === p._id);
           let priceLabel = "-";
           if (userRole === "Customer") {
-            if (userPosition === "Doctor") priceLabel = p.specialPrice || p.netRate || "-";
+            if (userPosition === "Doctor") priceLabel = p.specialPrice || p.pts || "-";
             if (userPosition === "Retailer") priceLabel = p.specialPrice || p.ptr || "-";
             if (userPosition === "Distributor") priceLabel = p.specialPrice || p.pts || "-";
+             if (userPosition === "Partners") priceLabel = p.specialPrice || p.pts || "-";
           }
 
           return (
@@ -267,7 +329,10 @@ const handleQty = (id, d) => {
                 {userPosition === "Doctor" && <span className="text-green-600">₹{priceLabel}</span>}
                 {userPosition === "Retailer" && <span className="text-blue-600">₹{priceLabel}</span>}
                 {userPosition === "Distributor" && <span className="text-purple-600">₹{priceLabel}</span>}
+                 {userPosition === "Partners" && <span className="text-purple-600">{priceLabel}</span>}
               </td>
+             
+
               <td className="p-2">
                 <div className="flex items-center gap-1">
                   <button
@@ -309,6 +374,15 @@ const handleQty = (id, d) => {
                   </button>
                 </div>
               </td>
+
+               {userPosition === "Partners" && (
+  <td className="p-2">
+    {added
+      ? `₹${((partnerProductTotals[p._id] || 0) * commissionPercent / 100).toFixed(2)}`
+      : "-"}
+  </td>
+)}
+
               <td className="p-2">
                 <button
                   onClick={() => handleAdd(p)}
@@ -324,6 +398,14 @@ const handleQty = (id, d) => {
         })}
       </tbody>
     </table>
+    {userPosition === "Partners" && (
+  <div className="p-3 text-right text-sm text-[#0b7b7b] font-medium">
+    Order Subtotal: ₹{partnerSubtotal.toFixed(2)} <br />
+    Commission: {commissionPercent}% <br />
+    Estimated Commission Amount: ₹{(partnerSubtotal * commissionPercent / 100).toFixed(2)}
+  </div>
+)}
+
   </div>
 )}
 

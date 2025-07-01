@@ -30,40 +30,48 @@ const LoginForm = () => {
   }, [remember, email]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      const res = await axios.post("/api/auth/login", { email, password });
-      const { token, user, redirectTo } = res.data;
+  try {
+    const res = await axios.post("/api/auth/login", { email, password });
+    const { token, user, redirectTo } = res.data;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("name", user.name);
-      localStorage.setItem("role", user.role);
-      localStorage.setItem("userId", user._id);
-
-      if (remember) {
-        localStorage.setItem("rememberMe", "true");
-        localStorage.setItem("email", email);
-      } else {
-        localStorage.removeItem("rememberMe");
-        localStorage.removeItem("email");
-      }
-
-      if (user.role === "Customer" && user.position) {
-        localStorage.setItem("position", user.position);
-      } else {
-        localStorage.removeItem("position");
-      }
-
-      navigate(redirectTo || "/admin/products");
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Try again.");
-    } finally {
+    // ❌ BLOCK login if position is "Partners"
+    if (user.position === "Partners") {
+      setError("Distributors-partners are not allowed to login from here.");
       setLoading(false);
+      return;
     }
-  };
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("name", user.name);
+    localStorage.setItem("role", user.role);
+    localStorage.setItem("userId", user._id);
+
+    if (remember) {
+      localStorage.setItem("rememberMe", "true");
+      localStorage.setItem("email", email);
+    } else {
+      localStorage.removeItem("rememberMe");
+      localStorage.removeItem("email");
+    }
+
+    if (user.position) {
+      localStorage.setItem("position", user.position);
+    } else {
+      localStorage.removeItem("position");
+    }
+
+    navigate(redirectTo || "/admin/products");
+  } catch (err) {
+    setError(err.response?.data?.message || "Login failed. Try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="w-full min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-[#e6f7f7] via-[#d0f0f0] to-[#b2eaea] px-4 py-8">

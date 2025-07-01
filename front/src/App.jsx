@@ -40,6 +40,15 @@ import SalesNegotiationPanel from "./admin/pages/PriceRequest";
 import NegotiationApprovalPage from "./admin/pages/PriceApproval";
 import RequestPricingPage from "./admin/components/RequestPricingPage";
 import SalesTargetPage from "./admin/pages/salesTarget";
+import DistributorSignupPage from "./Pages/DistributorSignupPage";
+import SignupForm from "./components/SignupForm";
+import SignForm from "./Pages/SignForm";
+import DistributorApprovalPage from "./admin/pages/DistributorApprovalPage";
+import PartnerLoginForm from "./Pages/PartnersLogin";
+import PayoutsPage from "./Pages/PayoutsPage";
+import AdminPayoutsPage from "./admin/pages/CommissionPay";
+import CustomerPages from "./Pages/CustomerPage";
+import BankDetailsList from "./admin/pages/BankDetailsList";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -89,6 +98,9 @@ function App() {
           <Route path="priceapproval" element={<NegotiationApprovalPage />} />
           <Route path="request-pricing" element={<RequestPricingPage />} />
           <Route path="salestarget" element={<SalesTargetPage />} />
+           <Route path="distributorrequest" element={<DistributorApprovalPage />} />
+           <Route path="commissionpay" element={<AdminPayoutsPage />} />
+<Route path="bank-details" element={<BankDetailsList />} />
 
         </Route>
 
@@ -110,8 +122,16 @@ function App() {
           <Route path="/negotiate/:productId" element={<ProtectedRoute><NegotiatePricePage /></ProtectedRoute>} />
           <Route path="/negotiationhis" element={<ProtectedRoute><NegotiationHistory /></ProtectedRoute>} />
             <Route path="/offers" element={<OfferPage />} />
+            <Route path="/payout" element={<PayoutsPage />} />
+             <Route path="/customers" element={<CustomerPages/>} />
+
 
         </Route>
+        <Route path="/distributor-signup" element={<DistributorSignupPage />} />
+         <Route path="/signup" element={<SignForm />} />
+         <Route path="/partner-login" element={<PartnerLoginForm />} />
+
+
       </Routes>
     </Router>
   );

@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
   // 👇 Updated field: position with enum
   position: {
     type: String,
-    enum: ["Doctor", "Retailer","Distributor"],
+    enum: ["Doctor", "Retailer","Distributor","Partners"],
     default: null,
   },
   placeOfSupply: {
@@ -38,6 +38,13 @@ const userSchema = new mongoose.Schema({
     default: null,
   },
 
+    partnerRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+}, {
+  timestamps: true, // ✅ Enables createdAt and updatedAt
 });
 
 module.exports = mongoose.model("User", userSchema);

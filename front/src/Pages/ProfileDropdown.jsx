@@ -33,11 +33,23 @@ export default function ProfileDropdown() {
     setOpen(false);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+const handleLogout = () => {
+  const position = localStorage.getItem("position");
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("name");
+  localStorage.removeItem("role");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("position");
+
+  if (position === "Partners") {
+    navigate("/distributor-signup");
+  } else {
     navigate("/");
-  };
+  }
+};
+
 
   return (
     <div className="relative inline-block text-left z-50" ref={dropdownRef}>

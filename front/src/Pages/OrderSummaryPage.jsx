@@ -10,6 +10,10 @@ const OrderSummaryPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [successPopup, setSuccessPopup] = useState(false);
+  const [commissionPercent, setCommissionPercent] = useState(0);
+const [commissionAmount, setCommissionAmount] = useState(0);
+
+  
 
   // ✅ Round up to 2 decimals like Zoho
   const safe = (val) => {
@@ -18,6 +22,32 @@ const OrderSummaryPage = () => {
   };
 
   useEffect(() => {
+
+    const calculateCommission = (items) => {
+  const partnerSubtotal = items.reduce((acc, item) => {
+    const price = Number(item.unitPrice) || 0;
+    const qty = Number(item.quantity) || 1;
+    return acc + price * qty;
+  }, 0);
+
+  const getCommissionPercent = (total) => {
+    if (total < 2000) return 0;
+    if (total < 5000) return 3;
+    if (total < 10000) return 4;
+    if (total < 20000) return 6;
+    if (total < 50000) return 7;
+    if (total < 100000) return 8;
+    if (total < 200000) return 9;
+    return 10;
+  };
+
+  const percent = getCommissionPercent(partnerSubtotal);
+  const amount = (partnerSubtotal * percent) / 100;
+
+  setCommissionPercent(percent);
+  setCommissionAmount(amount);
+};
+
     const fetchData = async () => {
       const token = localStorage.getItem("token");
       const rawPosition = localStorage.getItem("position");
@@ -44,10 +74,12 @@ const OrderSummaryPage = () => {
           if (approvedPrice) {
             finalPrice = approvedPrice;
           } else if (position === "doctor") {
-            finalPrice = Number(item.netRate);
+            finalPrice = Number(item.pts);
           } else if (position === "retailer") {
             finalPrice = Number(item.ptr);
           } else if (position === "distributor") {
+            finalPrice = Number(item.pts);
+          } else if (position === "partners") {
             finalPrice = Number(item.pts);
           } else {
             finalPrice = Number(item.netRate); // fallback
@@ -65,6 +97,10 @@ const OrderSummaryPage = () => {
         });
 
         setOrderItems(updatedItems);
+        if (position === "partners") {
+  calculateCommission(updatedItems); // or fallback in catch block
+}
+
       } catch (err) {
         console.error("Price load error:", err);
         const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
@@ -75,10 +111,12 @@ const OrderSummaryPage = () => {
           let finalPrice = 0;
 
           if (position === "doctor") {
-            finalPrice = Number(item.netRate);
+            finalPrice = Number(item.pts);
           } else if (position === "retailer") {
             finalPrice = Number(item.ptr);
           } else if (position === "distributor") {
+            finalPrice = Number(item.pts);
+            } else if (position === "partners") {
             finalPrice = Number(item.pts);
           } else {
             finalPrice = Number(item.netRate);
@@ -110,6 +148,15 @@ const OrderSummaryPage = () => {
   );
   const shippingCharge = subtotal > 10000 ? 0 : 1;
   const totalAmount = safe(subtotal + totalTax + shippingCharge);
+  <p className="text-xl">Total: ₹{safe(totalAmount).toFixed(2)}</p>
+  {localStorage.getItem("position")?.toLowerCase() === "partners" && (
+  <div className="mt-2 text-sm text-[#0b7b7b] text-right">
+    <p>Commission Rate: {commissionPercent}%</p>
+    <p>Estimated Commission: ₹{commissionAmount.toFixed(2)}</p>
+  </div>
+)}
+
+
 
   const handlePlaceOrder = async () => {
     setError("");
@@ -238,6 +285,14 @@ const OrderSummaryPage = () => {
           </div>
         </div>
       )}
+      <p className="text-xl">Total: ₹{safe(totalAmount).toFixed(2)}</p>
+{localStorage.getItem("position")?.toLowerCase() === "partners" && (
+  <div className="mt-2 text-sm text-[#0b7b7b] ">
+    <p>Commission Rate: {commissionPercent}%</p>
+    <p>Estimated Commission: ₹{commissionAmount.toFixed(2)}</p>
+  </div>
+)}
+
     </div>
   );
 };

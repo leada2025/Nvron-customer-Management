@@ -7,10 +7,14 @@ import {
   Settings,
   FileText,
   Package,
+  Users,
+  DollarSign,
   X,
 } from "lucide-react";
 
 const Sidebar = ({ collapsed, setCollapsed, onNavigate }) => {
+  const position = (localStorage.getItem("position") || "").trim().toLowerCase();
+
   const navItems = [
     { label: "Home", path: "/products", icon: <Home size={20} /> },
     { label: "Catalogue", path: "/catalog", icon: <BookOpen size={20} /> },
@@ -19,6 +23,16 @@ const Sidebar = ({ collapsed, setCollapsed, onNavigate }) => {
     { label: "Support", path: "/request-services", icon: <Package size={20} /> },
     { label: "Settings", path: "/profile/settings", icon: <Settings size={20} /> },
   ];
+
+  // Add extra items only for "partners"
+  if (position === "partners") {
+    navItems.splice(
+      navItems.findIndex(item => item.label === "Support"), // insert before "Support"
+      0,
+      { label: "Payout", path: "/payout", icon: <DollarSign size={20} /> },
+      { label: "Customers", path: "/customers", icon: <Users size={20} /> }
+    );
+  }
 
   const handleMouseEnter = () => {
     if (window.innerWidth >= 1024 && collapsed) setCollapsed(false);
@@ -37,22 +51,18 @@ const Sidebar = ({ collapsed, setCollapsed, onNavigate }) => {
       onMouseLeave={handleMouseLeave}
     >
       {/* Header */}
-      <div className="h-15 flex items-center justify-between px-20  ">
+      <div className="h-15 flex items-center justify-between px-20">
         {!collapsed && (
           <div className="flex items-center space-x-2">
             <img
               src="/fishman.png"
               alt="Fishman Logo"
               className="h-24 w-full object-contain transition-transform duration-300 scale-200"
-
             />
           </div>
         )}
         {onNavigate && (
-          <button
-            onClick={onNavigate}
-            className="block lg:hidden text-[#0b7b7b]"
-          >
+          <button onClick={onNavigate} className="block lg:hidden text-[#0b7b7b]">
             <X size={20} />
           </button>
         )}
