@@ -30,17 +30,31 @@ const [referredCustomers, setReferredCustomers] = useState({});
       console.error("Error fetching pending distributors:", err);
     }
   };
+const fetchApprovedDistributors = async () => {
+  try {
+    const { data } = await axios.get("/api/distributors/approved", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
 
-  const fetchApprovedDistributors = async () => {
-    try {
-      const { data } = await axios.get("/api/distributors/approved", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      setApprovedDistributors(data);
-    } catch (err) {
-      console.error("Error fetching approved distributors:", err);
+    // ✅ Remove duplicates by userId (if exists), otherwise _id
+    const seenUserIds = new Set();
+    const uniqueDistributors = [];
+
+    for (const dist of data) {
+      const idToCheck = dist.userId || dist._id;
+
+      if (!seenUserIds.has(idToCheck)) {
+        seenUserIds.add(idToCheck);
+        uniqueDistributors.push(dist);
+      }
     }
-  };
+
+    setApprovedDistributors(uniqueDistributors);
+  } catch (err) {
+    console.error("Error fetching approved distributors:", err);
+  }
+};
+
 
   const fetchCustomerRole = async () => {
     try {
@@ -71,18 +85,19 @@ const [referredCustomers, setReferredCustomers] = useState({});
     setAddModalOpen(true);
   };
 
- const handleCreateFromDistributor = async (userData) => {
+const handleCreateFromDistributor = async (userData) => {
   try {
     const createResponse = await axios.post("/admin/users", userData, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
 
+    const newUserId = createResponse.data?.user?._id || createResponse.data?._id;
+
     if (createResponse.status === 201 || createResponse.status === 200) {
-      // If selected distributor is from "Pending", approve as well
       if (distributors.find((d) => d._id === selectedDistributor._id)) {
         const approveResponse = await axios.patch(
           `/api/distributors/approve/${selectedDistributor._id}`,
-          null,
+          { userId: newUserId },
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -96,16 +111,13 @@ const [referredCustomers, setReferredCustomers] = useState({});
           alert("User created, but distributor approval failed.");
         }
       } else {
-        // From approved distributors — just adding customer
         alert("User created.");
       }
 
-      // Refresh data
       fetchDistributors();
       fetchApprovedDistributors();
       setAddModalOpen(false);
       setSelectedDistributor(null);
-      
     } else {
       alert("Failed to create user.");
     }
@@ -114,6 +126,7 @@ const [referredCustomers, setReferredCustomers] = useState({});
     alert("Failed to create user or approve distributor.");
   }
 };
+
 
 
 

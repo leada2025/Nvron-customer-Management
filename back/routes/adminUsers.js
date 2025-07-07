@@ -12,6 +12,7 @@ const enrichUserRole = require("../middleware/enrichUserRole");
 const SalesTarget = require("../models/SalesTarget");
 const moment = require("moment");
 const NegotiationRequest = require("../models/NegotiationRequest")
+const Distributor = require("../models/Distributor");
 
 
 const router = express.Router();
@@ -20,7 +21,7 @@ const router = express.Router();
 // Update this route
 router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) => {
   try {
-    const { excludeRole, onlyRole } = req.query;
+    const { excludeRole, onlyRole,onlyPosition } = req.query;
 
     const isAdmin = req.user.role?.toLowerCase() === "admin";
     const hasViewAllAccess = req.user.permissions?.includes("View All Users");
@@ -34,6 +35,10 @@ router.get("/", requireAuth({ permission: "Manage Users" }), async (req, res) =>
           { assignedTo: req.user.userId },
         ],
       };
+    }
+
+      if (onlyPosition) {
+      filter.position = new RegExp(`^${onlyPosition}$`, "i");
     }
 
     const users = await User.find(filter)
@@ -511,9 +516,24 @@ router.get(
 
 router.delete("/:id", adminAuth, async (req, res) => {
   try {
+    // Find user first
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Delete user
     await User.findByIdAndDelete(req.params.id);
-    res.json({ message: "User deleted" });
+
+    // Also delete matching distributor(s)
+    await Distributor.deleteMany({
+      $or: [
+        { userId: user._id },        // Primary match
+        { email: user.email }        // Fallback if userId wasn't set
+      ]
+    });
+
+    res.json({ message: "User and associated distributor deleted successfully." });
   } catch (err) {
+    console.error("❌ Error deleting user/distributor:", err);
     res.status(500).json({ message: err.message });
   }
 });

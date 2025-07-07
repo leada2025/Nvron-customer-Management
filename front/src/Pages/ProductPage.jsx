@@ -20,6 +20,9 @@ const [viewMode, setViewMode] = useState(() => {
   if (isMobile) return "card";
   return localStorage.getItem("viewMode") || "card";
 });
+const [commissionConfig, setCommissionConfig] = useState({ slabs: [], fixedPTSRate: 9 });
+
+const [specialPrices, setSpecialPrices] = useState([]);
 
 
 
@@ -27,31 +30,52 @@ const [viewMode, setViewMode] = useState(() => {
   const userRole = localStorage.getItem("role");
   const userPosition = localStorage.getItem("position");
 
- useEffect(() => {
- window.scroll(0, 0);
+useEffect(() => {
+  window.scroll(0, 0);
+
   const fetchData = async () => {
-     
     try {
       const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+
       const [prods, specials] = await Promise.all([
         axios.get("/api/products", { headers: { Authorization: `Bearer ${token}` } }),
         axios.get("/api/negotiations/special-prices", { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
+      // Try partner-specific config first
+      let config = null;
+      try {
+        const partnerRes = await axios.get(`/api/partner-commission/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        config = partnerRes.data;
+      } catch (err) {
+        console.warn("No partner-specific config found. Falling back to global...");
+        const globalRes = await axios.get("/api/commission", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        config = globalRes.data;
+      }
+setSpecialPrices(specials.data);
+      setCommissionConfig(config);
+
+      // Enrich products with special prices
       const sp = specials.data;
+      // ✅ check if partner has any special price at all
+const partnerHasAnySpecial = sp.length > 0;
+
       const enriched = prods.data.map((p) => {
-        const match = sp.filter((s) => s.productId === p._id)
-                        .sort((a, b) => (a._id < b._id ? 1 : -1))[0];
+        const match = sp
+          .filter((s) => s.productId === p._id)
+          .sort((a, b) => (a._id < b._id ? 1 : -1))[0];
         return match ? { ...p, specialPrice: match.approvedPrice } : p;
       });
 
-      // 🟩 Restore orderItems from localStorage if present
       const savedItems = JSON.parse(localStorage.getItem("orderItems")) || [];
-
       setProducts(enriched);
       setOrderItems(savedItems);
 
-      // 🟩 Optionally restore quantities too
       const initialQuantities = {};
       savedItems.forEach(item => {
         initialQuantities[item._id] = item.quantity || 1;
@@ -66,6 +90,7 @@ const [viewMode, setViewMode] = useState(() => {
 
   fetchData();
 }, []);
+
 
 
 const handleQty = (id, d) => {
@@ -96,8 +121,10 @@ const handleQty = (id, d) => {
   );
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const shown = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  let partnerSubtotal = 0;
-const partnerProductTotals = {}; // key: productId, value: subtotal for that product
+let partnerSubtotal = 0;
+const hasSpecialRate = specialPrices.length > 0;
+// ✅ Global flag
+const partnerProductTotals = {};
 
 if (userPosition === "Partners") {
   orderItems.forEach((item) => {
@@ -109,19 +136,27 @@ if (userPosition === "Partners") {
   });
 }
 
-const getCommissionPercent = (total) => {
-  if (total < 2000) return 0;
-  if (total < 5000) return 3;
-  if (total < 10000) return 4;
-  if (total < 20000) return 6;
-  if (total < 50000) return 7;
-  if (total < 100000) return 8;
-  if (total < 200000) return 9;
-  return 10;
+
+
+
+
+const getCommissionPercent = (total, hasSpecialRate) => {
+  if (!hasSpecialRate) {
+    return commissionConfig.fixedPTSRate ?? 9;
+  }
+
+  const slabs = commissionConfig.slabs || [];
+  for (const slab of slabs) {
+    if (total >= slab.from && total <= slab.to) {
+      return slab.percent;
+    }
+  }
+  return 0;
 };
 
 
-const commissionPercent = getCommissionPercent(partnerSubtotal);
+
+const commissionPercent = getCommissionPercent(partnerSubtotal, hasSpecialRate);
 
 
   if (loading)

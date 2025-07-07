@@ -6,7 +6,8 @@ import {
   DollarSign,
   ClipboardList,
   Folder,
-  Handshake
+  Handshake,
+  Gift,
 } from "lucide-react";
 
 const sidebarLinks = [
@@ -75,9 +76,21 @@ const sidebarLinks = [
    
       { label: "Distributor-Partners", path: "distributorrequest", roles: ["admin"] },
        { label: "Commission-Payouts", path: "commissionpay", roles: ["admin"] },
+       { label: "Commission-Settings", path: "commission-settings", roles: ["admin"] },
     ],
   },
-// Add this block inside sidebarLinks
+  {
+  name: "Offers",
+  icon: <Gift size={20} />,
+  submenu: [
+   
+      { label: "Customer-Offers", path: "offerspage", roles: ["admin"] },
+      
+    ],
+ 
+},
+
+
 {
   name: "Bank Details",
   icon: <DollarSign size={20} />,

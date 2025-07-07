@@ -3,6 +3,14 @@ const Order = require("../models/Order");
 const { authenticate, authorizeRoles } = require("../middleware/auth");
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../models/User");
+const Commission = require("../models/CommissionConfig");
+const Payout = require("../models/Payout");
+const PartnerCommission = require("../models/PartnerCommission");
+const NegotiationRequest = require("../models/NegotiationRequest");
+
+
+
+
 
 const router = express.Router();
 
@@ -24,17 +32,12 @@ router.post("/", authenticate, authorizeRoles("Customer"), async (req, res) => {
 
     const customer = await User.findById(req.user.userId);
 
-    // Check if the customer is a Partner (self-purchase)
     const isSelfPartner = customer?.position?.toLowerCase() === "partners";
-
-    // Check if this customer was referred by a Partner
     const referredPartner = customer?.partnerRef
       ? await User.findById(customer.partnerRef)
       : null;
-
     const validRefPartner = referredPartner && referredPartner.position === "Partners";
 
-    // ✅ Determine who to pay (either self or referred partner)
     const payoutPartner = isSelfPartner
       ? customer
       : validRefPartner
@@ -42,18 +45,41 @@ router.post("/", authenticate, authorizeRoles("Customer"), async (req, res) => {
       : null;
 
     if (payoutPartner) {
-      const getCommissionPercent = (total) => {
-        if (total < 2000) return 0;
-        if (total < 5000) return 3;
-        if (total < 10000) return 4;
-        if (total < 20000) return 6;
-        if (total < 50000) return 7;
-        if (total < 100000) return 8;
-        if (total < 200000) return 9;
-        return 10;
+      // ✅ Fetch commission config from DB
+     // Try to fetch partner-specific commission config
+let slabs = [];
+let fixedRate = 9;
+
+const partnerCommission = await PartnerCommission.findOne({ partnerId: payoutPartner._id });
+
+if (partnerCommission) {
+  slabs = partnerCommission.slabs || [];
+  fixedRate = partnerCommission.fixedPTSRate || 9;
+} else {
+  const globalConfig = await Commission.findOne();
+  slabs = globalConfig?.slabs || [];
+  fixedRate = globalConfig?.fixedPTSRate || 9;
+}
+
+
+      // ✅ Check if any product has special pricing applied
+      const hasApprovedSpecialRate = await NegotiationRequest.exists({
+  customerId: req.user.userId,
+  status: "approved",
+});
+
+      // ✅ Dynamic commission logic
+      const getCommissionPercent = (total, hasSpecialRate, slabs = [], fixedRate = 9) => {
+        if (!hasSpecialRate) return fixedRate;
+        for (const slab of slabs) {
+          if (total >= slab.from && total <= slab.to) {
+            return slab.percent;
+          }
+        }
+        return 0;
       };
 
-      const commissionPercent = getCommissionPercent(subtotal);
+      const commissionPercent = getCommissionPercent(subtotal, hasApprovedSpecialRate, slabs, fixedRate);
       const commissionAmount = (subtotal * commissionPercent) / 100;
 
       const productBreakdown = items.map((item) => {
@@ -68,13 +94,13 @@ router.post("/", authenticate, authorizeRoles("Customer"), async (req, res) => {
         };
       });
 
-      const Payout = require("../models/Payout");
       await Payout.create({
         partnerId: payoutPartner._id,
-        referredCustomerId: isSelfPartner ? null : customer._id, // always record who made the purchase
+        referredCustomerId: isSelfPartner ? null : customer._id,
         orderId: order._id,
         commissionAmount: Math.ceil(commissionAmount * 100) / 100,
         commissionPercent,
+        commissionSource:  hasApprovedSpecialRate ? "Slab" : "Fixed",
         products: productBreakdown,
       });
     }
@@ -85,6 +111,7 @@ router.post("/", authenticate, authorizeRoles("Customer"), async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 
 

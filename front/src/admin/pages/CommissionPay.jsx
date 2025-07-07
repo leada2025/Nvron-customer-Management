@@ -49,7 +49,7 @@ const AdminPayoutsPage = () => {
           <thead className="bg-[#d1f3f3] text-[#0b7b7b]">
             <tr>
               <th className="px-4 py-3">Partner</th>
-                <th className="px-4 py-2">Phone</th>
+              <th className="px-4 py-2">Phone</th>
               <th className="px-4 py-3">Order ID</th>
               <th className="px-4 py-3">Commission %</th>
               <th className="px-4 py-3">Amount</th>
@@ -59,48 +59,57 @@ const AdminPayoutsPage = () => {
             </tr>
           </thead>
           <tbody className="text-gray-800">
-            {payouts.map((payout) => (
-              <tr key={payout._id} className="border-b hover:bg-[#f0fdfa]">
-                <td className="px-4 py-3">
-                  {payout.partnerId?.name || <span className="text-red-500 italic">Not Assigned</span>}
-                  <br />
-                  <span className="text-xs text-gray-500">{payout.partnerId?.email}</span>
-                </td>
-                 <td className="px-4 py-3 text-sm text-gray-800">{payout.partnerPhone || "—"}</td>
-                <td className="px-4 py-3">{payout.orderId?._id?.slice(-6)}</td>
-                <td className="px-4 py-3">{payout.commissionPercent}%</td>
-                <td className="px-4 py-3 font-medium">
-                  ₹{payout.commissionAmount.toFixed(2)}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`px-3 py-1 text-xs rounded-full font-medium ${
-                      payout.status === "paid"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {payout.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  {payout.paidDate
-                    ? new Date(payout.paidDate).toLocaleDateString()
-                    : "—"}
-                </td>
-                <td className="px-4 py-3">
-                  <select
-                    className="border rounded px-2 py-1 text-sm"
-                    value={payout.status}
-                    disabled={updatingId === payout._id}
-                    onChange={(e) => updateStatus(payout._id, e.target.value)}
-                  >
-                    <option value="unpaid">Unpaid</option>
-                    <option value="paid">Paid</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
+            {payouts.map((payout) => {
+              const isDelivered = payout.orderId?.status === "delivered";
+              return (
+                <tr key={payout._id} className="border-b hover:bg-[#f0fdfa]">
+                  <td className="px-4 py-3">
+                    {payout.partnerId?.name || (
+                      <span className="text-red-500 italic">Not Assigned</span>
+                    )}
+                    <br />
+                    <span className="text-xs text-gray-500">{payout.partnerId?.email}</span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-800">{payout.partnerPhone || "—"}</td>
+                  <td className="px-4 py-3">{payout.orderId?._id?.slice(-6)}</td>
+                  <td className="px-4 py-3">{payout.commissionPercent}%</td>
+                  <td className="px-4 py-3 font-medium">₹{payout.commissionAmount.toFixed(2)}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-3 py-1 text-xs rounded-full font-medium ${
+                        payout.status === "paid"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {payout.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {payout.paidDate
+                      ? new Date(payout.paidDate).toLocaleDateString()
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      className="border rounded px-2 py-1 text-sm"
+                      value={payout.status}
+                      disabled={
+                        updatingId === payout._id ||
+                        !isDelivered
+                      }
+                      onChange={(e) => updateStatus(payout._id, e.target.value)}
+                    >
+                      <option value="unpaid">Unpaid</option>
+                      <option value="paid">Paid</option>
+                    </select>
+                    {!isDelivered && (
+                      <div className="text-[10px] text-red-500 mt-1">Only after delivery</div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 

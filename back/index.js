@@ -14,6 +14,9 @@ const negotiation =require("./routes/negotiation")
 const distributorRoutes = require("./routes/distributorRoutes");
 const payoutRoutes =require("./routes/payoutRoutes")
 const bankDetailsRoutes = require("./routes/bankDetails");
+const commissionRoutes = require("./routes/commissionRoutes");
+const partnerCommission = require("./routes/partnerCommission")
+const offerRoutes = require("./routes/offerRoutes");
 
 
 dotenv.config();
@@ -24,6 +27,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
@@ -36,7 +40,9 @@ app.use("/api/negotiations",negotiation);
 app.use("/api/distributors", distributorRoutes);
 app.use("/api/payouts",payoutRoutes);
 app.use("/api/bank-details", bankDetailsRoutes);
-
+app.use("/api/commission", commissionRoutes);
+app.use("/api/partner-commission",partnerCommission);
+app.use("/api/offers", offerRoutes);
 
 const PORT = process.env.PORT;
 mongoose

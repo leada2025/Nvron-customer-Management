@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/Axios";
 import { jwtDecode } from "jwt-decode";
+import { useRef } from "react"
 
 const OrderSummaryPage = () => {
   const [orderItems, setOrderItems] = useState([]);
@@ -12,7 +13,7 @@ const OrderSummaryPage = () => {
   const [successPopup, setSuccessPopup] = useState(false);
   const [commissionPercent, setCommissionPercent] = useState(0);
 const [commissionAmount, setCommissionAmount] = useState(0);
-
+const priceMapRef = useRef({});
   
 
   // ✅ Round up to 2 decimals like Zoho
@@ -23,120 +24,136 @@ const [commissionAmount, setCommissionAmount] = useState(0);
 
   useEffect(() => {
 
-    const calculateCommission = (items) => {
-  const partnerSubtotal = items.reduce((acc, item) => {
-    const price = Number(item.unitPrice) || 0;
-    const qty = Number(item.quantity) || 1;
-    return acc + price * qty;
-  }, 0);
-
-  const getCommissionPercent = (total) => {
-    if (total < 2000) return 0;
-    if (total < 5000) return 3;
-    if (total < 10000) return 4;
-    if (total < 20000) return 6;
-    if (total < 50000) return 7;
-    if (total < 100000) return 8;
-    if (total < 200000) return 9;
-    return 10;
-  };
-
-  const percent = getCommissionPercent(partnerSubtotal);
-  const amount = (partnerSubtotal * percent) / 100;
-
-  setCommissionPercent(percent);
-  setCommissionAmount(amount);
+     const getCommissionPercent = (total, hasSpecialRate, slabs = [], fixedRate = 9) => {
+  if (!hasSpecialRate) return fixedRate;
+  for (const slab of slabs) {
+    if (total >= slab.from && total <= slab.to) {
+      return slab.percent;
+    }
+  }
+  return 0;
 };
 
-    const fetchData = async () => {
-      const token = localStorage.getItem("token");
-      const rawPosition = localStorage.getItem("position");
-      const position = (rawPosition || "").trim().toLowerCase();
+   const calculateCommission = (items, slabs = [], fixedRate = 9,forceSlab = false) => {
+  let subtotal = 0;
+  let hasSpecialRate = false;
 
-      try {
-        const { data: specialPrices } = await axios.get("/api/negotiations/special-prices", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+ 
+items.forEach((item) => {
+  const price = Number(item.unitPrice) || 0;
+  const qty = Number(item.quantity) || 1;
+  subtotal += price * qty;
+});
 
-        const priceMap = {};
-        specialPrices.forEach((entry) => {
-          priceMap[entry.productId] = entry.approvedPrice;
-        });
+const percent = getCommissionPercent(subtotal, forceSlab, slabs, fixedRate);
+const amount = (subtotal * percent) / 100;
 
-        const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
+setCommissionPercent(percent);
+setCommissionAmount(amount);
+};
 
-        const updatedItems = items.map((item) => {
-          const quantity = Number(item.quantity) || 1;
-          const tax = Number(item.tax) || 0;
-          const approvedPrice = priceMap[item._id];
 
-          let finalPrice = 0;
-          if (approvedPrice) {
-            finalPrice = approvedPrice;
-          } else if (position === "doctor") {
-            finalPrice = Number(item.pts);
-          } else if (position === "retailer") {
-            finalPrice = Number(item.ptr);
-          } else if (position === "distributor") {
-            finalPrice = Number(item.pts);
-          } else if (position === "partners") {
-            finalPrice = Number(item.pts);
-          } else {
-            finalPrice = Number(item.netRate); // fallback
-          }
+   const fetchData = async () => {
+ const token = localStorage.getItem("token");
+const rawPosition = localStorage.getItem("position");
+const userId = localStorage.getItem("userId"); // ensure this is stored at login
+const position = (rawPosition || "").trim().toLowerCase();
 
-          return {
-            ...item,
-            quantity,
-            tax,
-            unitPrice: finalPrice,
-            productId: item._id,
-            productName: item.name,
-            description: item.description,
-          };
-        });
+try {
+  const { data: specialPrices } = await axios.get("/api/negotiations/special-prices", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
-        setOrderItems(updatedItems);
-        if (position === "partners") {
-  calculateCommission(updatedItems); // or fallback in catch block
-}
+  // Try partner-specific commission config
+  let commissionConfig = null;
+  try {
+    const { data: partnerData } = await axios.get(`/api/partner-commission/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    commissionConfig = partnerData;
+  } catch (err) {
+    // fallback to global
+    const { data: globalConfig } = await axios.get("/api/commission", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    commissionConfig = globalConfig;
+  }
 
-      } catch (err) {
-        console.error("Price load error:", err);
-        const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
+  // ... (rest of your priceMap and updatedItems logic stays the same)
 
-        const fallback = items.map((item) => {
-          const quantity = Number(item.quantity) || 1;
-          const tax = Number(item.tax) || 0;
-          let finalPrice = 0;
+    // ✅ Build price map and store in useRef
+// ✅ Build price map
+priceMapRef.current = {};
+let customerHasAnySpecialRate = false;
 
-          if (position === "doctor") {
-            finalPrice = Number(item.pts);
-          } else if (position === "retailer") {
-            finalPrice = Number(item.ptr);
-          } else if (position === "distributor") {
-            finalPrice = Number(item.pts);
-            } else if (position === "partners") {
-            finalPrice = Number(item.pts);
-          } else {
-            finalPrice = Number(item.netRate);
-          }
+specialPrices.forEach((entry) => {
+  priceMapRef.current[entry.productId] = entry.approvedPrice;
+  customerHasAnySpecialRate = true; // ✅ even 1 = use slab
+});
 
-          return {
-            ...item,
-            quantity,
-            tax,
-            unitPrice: finalPrice,
-            productId: item._id,
-            productName: item.name,
-            description: item.description,
-          };
-        });
 
-        setOrderItems(fallback);
-      }
-    };
+    const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
 
+    const updatedItems = items.map((item) => {
+      const quantity = Number(item.quantity) || 1;
+      const tax = Number(item.tax) || 0;
+      const approvedPrice = priceMapRef.current[item._id];
+
+      let finalPrice = approvedPrice
+        ? approvedPrice
+        : position === "doctor" || position === "distributor" || position === "partners"
+        ? Number(item.pts)
+        : position === "retailer"
+        ? Number(item.ptr)
+        : Number(item.netRate);
+
+      return {
+        ...item,
+        quantity,
+        tax,
+        unitPrice: finalPrice,
+        productId: item._id,
+        productName: item.name,
+        description: item.description,
+        specialPrice: !!approvedPrice, // ✅ mark special price flag
+      };
+    });
+
+    setOrderItems(updatedItems);
+
+    // ✅ Recalculate commission only for partners
+    if (position === "partners") {
+      calculateCommission(updatedItems, commissionConfig.slabs, commissionConfig.fixedPTSRate,customerHasAnySpecialRate);
+    }
+  } catch (err) {
+    console.error("Price load error:", err);
+
+    const items = JSON.parse(localStorage.getItem("orderItems") || "[]");
+    const fallback = items.map((item) => {
+      const quantity = Number(item.quantity) || 1;
+      const tax = Number(item.tax) || 0;
+
+      let finalPrice = position === "doctor" || position === "distributor" || position === "partners"
+        ? Number(item.pts)
+        : position === "retailer"
+        ? Number(item.ptr)
+        : Number(item.netRate);
+
+      return {
+        ...item,
+        quantity,
+        tax,
+        unitPrice: finalPrice,
+        productId: item._id,
+        productName: item.name,
+        description: item.description,
+        specialPrice: false, // fallback without special price
+      };
+    });
+
+    setOrderItems(fallback);
+  }
+};
     fetchData();
   }, []);
 
@@ -158,49 +175,51 @@ const [commissionAmount, setCommissionAmount] = useState(0);
 
 
 
-  const handlePlaceOrder = async () => {
-    setError("");
-    setLoading(true);
-    const token = localStorage.getItem("token");
+ const handlePlaceOrder = async () => {
+  setError("");
+  setLoading(true);
+  const token = localStorage.getItem("token");
 
-    if (!token) {
-      setError("You must be logged in to place an order.");
-      setLoading(false);
-      return;
-    }
+  if (!token) {
+    setError("You must be logged in to place an order.");
+    setLoading(false);
+    return;
+  }
 
-    const orderPayload = {
-      items: orderItems.map(
-        ({ productId, productName, quantity, unitPrice, tax, description }) => ({
-          productId,
-          productName,
-          quantity,
-          netRate: unitPrice,
-          tax,
-          description,
-        })
-      ),
-      note,
-      shippingCharge,
-      subtotal,
-      taxAmount: totalTax,
-      totalAmount,
-    };
-
-    try {
-      await axios.post("/api/orders", orderPayload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSuccessPopup(true); // Show custom box
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Failed to place order.");
-    } finally {
-      setLoading(false);
-    }
+  const orderPayload = {
+    items: orderItems.map(
+      ({ productId, productName, quantity, unitPrice, tax, description }) => ({
+        productId,
+        productName,
+        quantity,
+        netRate: unitPrice,
+        tax,
+        description,
+        specialPrice: !!priceMapRef.current[productId], // ✅ Corrected line
+      })
+    ),
+    note,
+    shippingCharge,
+    subtotal,
+    taxAmount: totalTax,
+    totalAmount,
   };
+
+  try {
+    await axios.post("/api/orders", orderPayload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setSuccessPopup(true); // Show custom box
+  } catch (err) {
+    console.error(err);
+    setError(err.response?.data?.message || "Failed to place order.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (orderItems.length === 0) {
     return (

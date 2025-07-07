@@ -49,6 +49,8 @@ import PayoutsPage from "./Pages/PayoutsPage";
 import AdminPayoutsPage from "./admin/pages/CommissionPay";
 import CustomerPages from "./Pages/CustomerPage";
 import BankDetailsList from "./admin/pages/BankDetailsList";
+import CommissionSettings from "./admin/components/CommissionSettings";
+import OffersPage from "./admin/pages/OffersPage";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -101,6 +103,8 @@ function App() {
            <Route path="distributorrequest" element={<DistributorApprovalPage />} />
            <Route path="commissionpay" element={<AdminPayoutsPage />} />
 <Route path="bank-details" element={<BankDetailsList />} />
+<Route path="commission-settings" element={<CommissionSettings />} />
+<Route path="offerspage" element={<OffersPage />} />
 
         </Route>
 

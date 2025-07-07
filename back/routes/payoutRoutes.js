@@ -29,20 +29,18 @@ router.get("/", requireAuth(), async (req, res) => {
 // GET /api/payouts/admin
 router.get("/admin", requireAuth({ permission: "Manage Pricing" }), async (req, res) => {
   try {
-  const payouts = await Payout.find()
-  .populate([
-    {
-      path: "partnerId",
-      select: "name email", // populate partner details
-    },
-    {
-      path: "orderId",
-      select: "_id", // 👈 ensure _id is included (default) or select more if needed
-    },
-  ])
-  .sort({ createdAt: -1 });
-
-   
+    const payouts = await Payout.find()
+      .populate([
+        {
+          path: "partnerId",
+          select: "name email", // populate partner details
+        },
+        {
+          path: "orderId",
+          select: "_id status", // ✅ also fetch order status
+        },
+      ])
+      .sort({ createdAt: -1 });
 
     // 🔗 Join with Distributor to get phone number
     const enrichedPayouts = await Promise.all(
@@ -61,6 +59,7 @@ router.get("/admin", requireAuth({ permission: "Manage Pricing" }), async (req, 
     res.status(500).json({ message: err.message });
   }
 });
+
 
 
 // PUT /api/payouts/:id/status

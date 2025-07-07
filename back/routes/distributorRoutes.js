@@ -51,19 +51,23 @@ router.get("/pending", async (req, res) => {
 
 router.get("/approved", async (req, res) => {
   try {
-    const approvedDistributors = await Distributor.find({ status: "approved" }).select("name email phone password"); // 👈 ADD 'password'
+    const approvedDistributors = await Distributor.find({ status: "approved" }).select("name email phone password");
 
     const enriched = await Promise.all(
       approvedDistributors.map(async (dist) => {
         const user = await User.findOne({ email: dist.email }).select("_id");
+        if (!user) return null; // ✅ Skip if user doesn't exist
         return {
           ...dist.toObject(),
-          userId: user?._id || null,
+          userId: user._id,
         };
       })
     );
 
-    res.status(200).json(enriched);
+    // Remove any null entries where user was not found
+    const filtered = enriched.filter(d => d !== null);
+
+    res.status(200).json(filtered);
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
