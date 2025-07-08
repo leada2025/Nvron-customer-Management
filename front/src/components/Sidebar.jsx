@@ -51,9 +51,9 @@ const Sidebar = ({ collapsed, setCollapsed, onNavigate }) => {
       onMouseLeave={handleMouseLeave}
     >
       {/* Header */}
-      <div className="h-15 flex items-center justify-between px-20">
+      <div className="h-15 flex items-center justify-between px-6">
         {!collapsed && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 ml-[50px]">
             <img
               src="/fishman.png"
               alt="Fishman Logo"
@@ -62,7 +62,7 @@ const Sidebar = ({ collapsed, setCollapsed, onNavigate }) => {
           </div>
         )}
         {onNavigate && (
-          <button onClick={onNavigate} className="block lg:hidden text-[#0b7b7b]">
+          <button onClick={onNavigate} className="block lg:hidden text-[#0b7b7b] ml-[50px]">
             <X size={20} />
           </button>
         )}

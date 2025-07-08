@@ -14,7 +14,9 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get All Offers or Offers for specific user
+
+
+
 router.get("/", async (req, res) => {
   try {
     const { userId } = req.query;
@@ -23,15 +25,13 @@ router.get("/", async (req, res) => {
       return res.status(400).json({ error: "Valid userId required" });
     }
 
-    const userObjectId = userId ? new mongoose.Types.ObjectId(userId) : null;
-
     let offers;
-    if (userObjectId) {
+    if (userId) {
       offers = await Offer.find({
         $or: [
           { eligibleFor: "All" },
-          { eligibleUsers: userObjectId }
-        ]
+          { eligibleUsers: userId },
+        ],
       }).sort({ createdAt: -1 });
     } else {
       offers = await Offer.find().sort({ createdAt: -1 });
@@ -42,6 +42,8 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
 
 // Update Offer
 router.put("/:id", async (req, res) => {
@@ -54,7 +56,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete Offer
+// Delete Offer (Expire)
 router.delete("/:id", async (req, res) => {
   try {
     await Offer.findByIdAndDelete(req.params.id);
