@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import Select from "react-select";
+import { Eye, EyeOff } from "lucide-react";
+
 
 const POSITION_OPTIONS = [
   { label: "Doctor", value: "Doctor" },
@@ -59,6 +61,7 @@ const UserModal = ({
   const [name, setName] = useState(user?.name ||  prefill.name || "");
   const [email, setEmail] = useState(user?.email || prefill.email  ||  "");
 const [password, setPassword] = useState(user?.password || prefill.password || "");
+const [showPassword, setShowPassword] = useState(false);
 
   const [role, setRole] = useState(user?.role?._id || prefill.role ||  "");
   const [roleName, setRoleName] = useState(user?.role?.name || "");
@@ -189,12 +192,21 @@ if (
           {!user && (
             <div>
               <label className="block text-sm font-medium text-gray-700">Password</label>
-              <input
-                type="password"
-                className="w-full border border-gray-300 px-3 py-2 rounded-lg mt-1 focus:ring-[#0b7b7b] focus:border-[#0b7b7b]"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+  <input
+    type={showPassword ? "text" : "password"}
+    className="w-full border border-gray-300 px-3 py-2 rounded-lg mt-1 focus:ring-[#0b7b7b] focus:border-[#0b7b7b] pr-10"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+  />
+  <span
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute top-2/3 right-3 transform -translate-y-1/2 text-gray-500 hover:text-[#0b7b7b] cursor-pointer"
+  >
+    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+  </span>
+</div>
+
             </div>
           )}
 

@@ -95,7 +95,7 @@ const DistributorSignupPage = () => {
 
             <div className="pt-4">
               <Link
-                to="/partner-login"
+                to="/signup"
                 className="inline-block bg-[#0b7b7b] text-white px-6 py-3 rounded-full shadow hover:bg-[#095e5e] transition font-medium"
               >
                 Become a Partner Now
@@ -226,7 +226,7 @@ const DistributorSignupPage = () => {
         </div>
         <div className="flex flex-wrap justify-center gap-4 mb-6">
           <img
-            src="/image2.webp"
+            src="/doctor.jpg"
             alt="Ambassador"
             className="w-72 h-64 rounded-lg object-cover shadow-md"
           />
