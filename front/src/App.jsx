@@ -51,6 +51,7 @@ import CustomerPages from "./Pages/CustomerPage";
 import BankDetailsList from "./admin/pages/BankDetailsList";
 import CommissionSettings from "./admin/components/CommissionSettings";
 import OffersPage from "./admin/pages/OffersPage";
+import AboutPage from "./Pages/AboutPage";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -128,6 +129,8 @@ function App() {
             <Route path="/offers" element={<OfferPage />} />
             <Route path="/payout" element={<PayoutsPage />} />
              <Route path="/customers" element={<CustomerPages/>} />
+               <Route path="/aboutpage" element={<AboutPage/>} />
+
 
 
         </Route>

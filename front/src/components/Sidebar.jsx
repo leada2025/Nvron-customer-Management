@@ -9,6 +9,7 @@ import {
   Package,
   Users,
   DollarSign,
+   Info,
   X,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ const Sidebar = ({ collapsed, setCollapsed, onNavigate }) => {
 
   const navItems = [
     { label: "Home", path: "/products", icon: <Home size={20} /> },
+     { label: "About Us", path: "/aboutpage", icon: <Info size={20} /> },
     { label: "Catalogue", path: "/catalog", icon: <BookOpen size={20} /> },
     { label: "Order History", path: "/order-history", icon: <ShoppingCart size={20} /> },
     { label: "Offers", path: "/offers", icon: <FileText size={20} /> },
