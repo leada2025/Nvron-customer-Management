@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import UserModal from "../components/UserModel";
+import AssignExistingCustomersModal from "../components/AssignExistingCustomersModal"
 
 const DistributorApprovalPage = () => {
   const [distributors, setDistributors] = useState([]);
@@ -12,6 +13,7 @@ const DistributorApprovalPage = () => {
   const [expandedDistributorId, setExpandedDistributorId] = useState(null);
 const [referredCustomers, setReferredCustomers] = useState({});
 
+const [showAssignModal, setShowAssignModal] = useState(false);
 
   useEffect(() => {
     fetchDistributors();
@@ -175,14 +177,14 @@ const handleCreateFromDistributor = async (userData) => {
 
       {/* Approved Section */}
       <div>
-        <h2 className="text-2xl font-bold text-green-700 mb-6">Approved Distributors</h2>
+        <h2 className="text-2xl font-bold text-[#0b7b7b] mb-6">Approved Distributors</h2>
 
         {approvedDistributors.length === 0 ? (
           <p className="text-gray-500">No approved distributors yet.</p>
         ) : (
           <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
             <table className="min-w-full text-sm text-left">
-              <thead className="bg-green-100 text-green-800">
+              <thead className="bg-[#0b7b7b] text-white">
                 <tr>
                   <th className="p-3">Name</th>
                   <th className="p-3">Email</th>
@@ -219,16 +221,28 @@ const handleCreateFromDistributor = async (userData) => {
       <td className="p-3">{d.email}</td>
       <td className="p-3">{d.phone}</td>
       <td className="p-3 text-center">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedDistributor({ ...d, userId: d.userId });
-            setAddModalOpen(true);
-          }}
-          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
-        >
-          + Add Customer
-        </button>
+   <button
+  onClick={(e) => {
+    e.stopPropagation();
+    setSelectedDistributor({ ...d, userId: d.userId });
+    setAddModalOpen(true);
+  }}
+  className="bg-[#0b7b7b] hover:bg-[#095e5e] text-white px-3 py-1 rounded text-sm mr-2"
+>
+  + Add Customer
+</button>
+
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    setSelectedDistributor({ ...d, userId: d.userId });
+    setShowAssignModal(true);
+  }}
+  className="bg-[#0b7b7b] hover:bg-[#095e5e] text-white px-3 py-1 rounded text-sm"
+>
+  Assign Existing
+</button>
+
       </td>
     </tr>
 
@@ -301,6 +315,23 @@ const handleCreateFromDistributor = async (userData) => {
     partnerUserId={selectedDistributor.userId}
   />
 )}
+
+{showAssignModal && selectedDistributor && (
+  <AssignExistingCustomersModal
+    distributor={selectedDistributor}
+    onClose={() => {
+      setShowAssignModal(false);
+      setSelectedDistributor(null);
+    }}
+    onAssigned={() => {
+      fetchApprovedDistributors(); // refresh list
+      if (expandedDistributorId === selectedDistributor._id) {
+        setExpandedDistributorId(null); // force close and re-fetch
+      }
+    }}
+  />
+)}
+
 
     </div>
   );

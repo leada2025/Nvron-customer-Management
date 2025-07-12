@@ -566,5 +566,27 @@ router.post("/password", async (req, res) => {
   }
 });
 
+// PATCH /admin/users/assign-partner
+router.patch("/assign-partner", requireAuth({ permission: "Manage Users" }), async (req, res) => {
+  try {
+    const { customerIds, partnerUserId } = req.body;
+
+    if (!Array.isArray(customerIds) || !partnerUserId) {
+      return res.status(400).json({ message: "customerIds and partnerUserId required" });
+    }
+
+    const updated = await User.updateMany(
+      { _id: { $in: customerIds } },
+      { $set: { partnerRef: partnerUserId } }
+    );
+
+    res.json({ message: "Customers assigned", modified: updated.modifiedCount });
+  } catch (err) {
+    console.error("Assign Partner Error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 
 module.exports = router;
