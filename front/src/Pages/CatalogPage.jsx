@@ -24,11 +24,11 @@ const catalog = [
   },
   {
     _id: "2",
-    name: "Pregaron NT",
+    name: "BAGARON NT",
     dosage: "Gabapentin 400 mg + Nortriptyline 10 mg",
     category: "Neuro care",
     badge: "",
-    image: "/assets/catalog/pregaron-nt.png",
+    image: "/assets/catalog/Bagaron NT.jpg",
     description: "Combination therapy for neuropathic pain."
   },
   {
@@ -221,7 +221,7 @@ const catalog = [
   dosage: "Multivitamin, Mecobalamin, Betacarotene, Antioxidants, Minerals",
   category: "Care Well",
   badge: "",
-  image: "/assets/catalog/multiviron.png",
+  image: "/assets/catalog/Multyviron_Tab_3D_Box.webp",
   description: "Daily multivitamin for immunity and energy."
 },
 {
@@ -239,7 +239,7 @@ const catalog = [
   dosage: "100% Whey Protein Concentrate",
   category: "Care Well",
   badge: "",
-  image: "/assets/catalog/multiviron-pro-hp.png",
+  image: "/assets/catalog/multyviron.webp",
   description: "High-performance protein for strength and recovery."
 },
 {
@@ -347,7 +347,7 @@ const catalog = [
   dosage: "Metformin Hydrochloride IP 500 mg",
   category: "Diabetic care",
   badge: "",
-  image: "/assets/catalog/metviron.png",
+  image: "/assets/catalog/Metviron.webp",
   description: "First-line treatment for type 2 diabetes."
 },
 {
@@ -365,7 +365,7 @@ const catalog = [
   dosage: "Metformin 500 mg + Glimepiride 2 mg",
   category: "Diabetic care",
   badge: "",
-  image: "/assets/catalog/metivrongp2.jpeg",
+  image: "/assets/catalog/Metviron_GP_2.webp",
   description: "Improved glycemic control with dual therapy."
 },
 {
@@ -460,11 +460,21 @@ const catalog = [
 },
 {
   _id: "118",
-  name: "Vogliron M 02/03",
-  dosage: "Metformin 500 mg + Voglibose 0.2/0.3 mg",
+  name: "Vogliron M 0.2",
+  dosage: "Metformin 500 mg + Voglibose 0.2 mg",
   category: "Diabetic care",
   badge: "",
-  image: "/assets/catalog/metformin-voglibose.png",
+  image: "/assets/catalog/Vogliron M 0.2.jpg",
+  description: "Combination to manage both fasting and postprandial glucose."
+}
+,
+{
+  _id: "1118",
+  name: "Vogliron M 0.3",
+  dosage: "Metformin 500 mg + Voglibose 0.3 mg",
+  category: "Diabetic care",
+  badge: "",
+  image: "/assets/catalog/Vogliron M 0.3.jpg",
   description: "Combination to manage both fasting and postprandial glucose."
 }
 ,
