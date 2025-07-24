@@ -163,7 +163,7 @@ specialPrices.forEach((entry) => {
   const totalTax = safe(
     orderItems.reduce((sum, item) => sum + (item.unitPrice * item.quantity * item.tax) / 100, 0)
   );
-  const shippingCharge = subtotal > 10000 ? 0 : 1;
+  const shippingCharge = subtotal > 10000 ? 0 : 0;
   const totalAmount = safe(subtotal + totalTax + shippingCharge);
   <p className="text-xl">Total: ₹{safe(totalAmount).toFixed(2)}</p>
   {localStorage.getItem("position")?.toLowerCase() === "partners" && (
@@ -272,6 +272,9 @@ specialPrices.forEach((entry) => {
         <p>Shipping: ₹{shippingCharge}</p>
         <hr className="my-2" />
         <p className="text-xl">Total: ₹{safe(totalAmount).toFixed(2)}</p>
+         <p className="text-sm text-gray-600 italic mt-2">
+    * Shipping charges are based on product weight and will be updated in order history.
+  </p>
       </div>
 
       <div className="mt-6 text-right">

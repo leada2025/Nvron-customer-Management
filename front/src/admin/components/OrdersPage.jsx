@@ -14,6 +14,8 @@ export default function Orders() {
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [downloadMenuOpenOrderId, setDownloadMenuOpenOrderId] = useState(null);
+  const [shippingInputs, setShippingInputs] = useState({});
+
 
 
   const ORDERS_PER_PAGE = 10;
@@ -198,6 +200,48 @@ const downloadZohoCompatibleOrder = async (order) => {
   link.click();
   document.body.removeChild(link);
 };
+
+const handleShippingChange = (orderId, value) => {
+  setShippingInputs((prev) => ({
+    ...prev,
+    [orderId]: value,
+  }));
+};
+
+const updateShippingCharge = async (orderId) => {
+  const shippingCharge = parseFloat(shippingInputs[orderId]);
+
+  if (isNaN(shippingCharge)) {
+    alert("Please enter a valid shipping amount.");
+    return;
+  }
+
+  try {
+    const response = await axios.put(
+      `/api/orders/${orderId}/shipping`,
+      { shippingCharge }, // Body
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // or 'token' if that’s what you use
+        },
+      }
+    );
+
+    // Update local state with updated order
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order._id === orderId ? response.data.order : order
+      )
+    );
+
+    alert("Shipping charge updated!");
+  } catch (error) {
+    console.error("Failed to update shipping:", error);
+    alert("Failed to update shipping charge.");
+  }
+};
+
+
 
 const downloadPDF = async (order) => {
   const doc = new jsPDF();
@@ -497,9 +541,24 @@ const paginatedOrders = filteredOrders.slice(
                     <td className="p-3 border-b border-gray-300 text-right">
                       {order.totalAmount.toFixed(2)}
                     </td>
-                    <td className="p-3 border-b border-gray-300 text-center">
-                      {order.shippingCharge > 0 ? "Yes" : "No"}
-                    </td>
+                   <td className="p-3 border-b border-gray-300 text-center">
+  <div className="flex flex-col items-center gap-1">
+    <input
+      type="number"
+      value={shippingInputs[order._id] ?? order.shippingCharge ?? ""}
+      onChange={(e) => handleShippingChange(order._id, e.target.value)}
+      className="border px-2 py-1 w-20 rounded text-sm"
+      placeholder="₹"
+    />
+    <button
+      onClick={() => updateShippingCharge(order._id)}
+      className="text-xs mt-1 px-2 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600"
+    >
+      Save
+    </button>
+  </div>
+</td>
+
                     <td className="p-3 border-b border-gray-300 text-center">
                  <div className="flex flex-col items-center gap-1">
   <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize

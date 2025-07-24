@@ -7,6 +7,7 @@ const Commission = require("../models/CommissionConfig");
 const Payout = require("../models/Payout");
 const PartnerCommission = require("../models/PartnerCommission");
 const NegotiationRequest = require("../models/NegotiationRequest");
+const nodemailer = require("nodemailer");
 
 
 
@@ -103,6 +104,73 @@ if (partnerCommission) {
         commissionSource:  hasApprovedSpecialRate ? "Slab" : "Fixed",
         products: productBreakdown,
       });
+// Send Email to Admin after order placement
+try {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.ADMIN_EMAIL,
+      pass: process.env.ADMIN_EMAIL_PASS,
+    },
+  });
+
+  // 🧾 Generate item breakdown
+  const itemListHtml = order.items.map(item => `
+    <tr>
+      <td style="border:1px solid #ccc;padding:8px;">${item.productName}</td>
+      <td style="border:1px solid #ccc;padding:8px;">${item.quantity}</td>
+      <td style="border:1px solid #ccc;padding:8px;">₹${item.netRate.toFixed(2)}</td>
+      <td style="border:1px solid #ccc;padding:8px;">${item.tax}%</td>
+      <td style="border:1px solid #ccc;padding:8px;">₹${(item.netRate * item.quantity).toFixed(2)}</td>
+    </tr>
+  `).join("");
+
+  const emailBody = `
+    <h2>🛒 New Order Placed</h2>
+    <p><strong>Name:</strong> ${customer.name}</p>
+    <p><strong>Email:</strong> ${customer.email}</p>
+    <p><strong>Position:</strong> ${customer.position || "N/A"}</p>
+    <p><strong>Place of Supply:</strong> ${customer.placeOfSupply || "N/A"}</p>
+    <p><strong>Note:</strong> ${order.note || "None"}</p>
+    <hr />
+    <h3>🧾 Order Details</h3>
+    <table style="border-collapse:collapse;width:100%;margin-top:10px;">
+      <thead>
+        <tr>
+          <th style="border:1px solid #ccc;padding:8px;">Product</th>
+          <th style="border:1px solid #ccc;padding:8px;">Qty</th>
+          <th style="border:1px solid #ccc;padding:8px;">Rate</th>
+          <th style="border:1px solid #ccc;padding:8px;">Tax</th>
+          <th style="border:1px solid #ccc;padding:8px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemListHtml}
+      </tbody>
+    </table>
+
+    <p><strong>Subtotal:</strong> ₹${order.subtotal.toFixed(2)}</p>
+    <p><strong>Tax:</strong> ₹${order.taxAmount.toFixed(2)}</p>
+    <p><strong>Shipping:</strong> ₹${order.shippingCharge.toFixed(2)}</p>
+    <p><strong><u>Total Amount:</u></strong> ₹${order.totalAmount.toFixed(2)}</p>
+    <hr />
+    <p style="color:gray;font-size:12px;">Order ID: ${order._id}</p>
+    <p style="color:gray;font-size:12px;">Placed on: ${new Date(order.createdAt).toLocaleString()}</p>
+  `;
+
+  await transporter.sendMail({
+    from: `"Order System" <${process.env.ADMIN_EMAIL}>`,
+      to: [process.env.ADMIN_RECEIVER_EMAIL, process.env.SECONDARY_RECEIVER_EMAIL], 
+    subject: `🆕 New Order from ${customer.name}`,
+    html: emailBody,
+  });
+
+} catch (emailErr) {
+  console.error("❌ Failed to send order email:", emailErr.message);
+}
+
+
+
     }
 
     res.status(201).json({ message: "Order placed successfully", order });
@@ -240,5 +308,36 @@ router.patch("/:id/cancel", authenticate, authorizeRoles("Customer"), async (req
     res.status(500).json({ message: err.message });
   }
 });
+
+// ✅ Update shippingCharge & totalAmount
+router.put("/:id/shipping", requireAuth({ permission: "Manage Orders" }), async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const { shippingCharge } = req.body;
+
+    if (isNaN(shippingCharge)) {
+      return res.status(400).json({ message: "Invalid shipping charge" });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.shippingCharge = parseFloat(shippingCharge);
+    order.totalAmount = parseFloat(
+      (order.subtotal || 0) + (order.taxAmount || 0) + order.shippingCharge
+    ).toFixed(2);
+
+    await order.save();
+
+    res.json({
+      message: "Shipping charge updated",
+      order,
+    });
+  } catch (err) {
+    console.error("Error updating shipping charge:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 module.exports = router;

@@ -2,6 +2,16 @@ const express = require("express");
 const router = express.Router();
 const Distributor = require("../models/Distributor");
 const User = require("../models/User");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
+// Setup email transporter (Gmail example)
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.ADMIN_EMAIL,           // sender address
+    pass: process.env.ADMIN_EMAIL_PASS       // app password
+  },
+});
 
 // POST /api/distributors/signup
 router.post("/signup", async (req, res) => {
@@ -19,6 +29,22 @@ router.post("/signup", async (req, res) => {
   try {
     const newDistributor = new Distributor({ name, email, phone, password });
     await newDistributor.save();
+
+     const emailBody = `
+      <h2>🆕 New Distributor Partner Signup Request</h2>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Phone:</strong> ${phone}</p>
+      <p>Status: <b>Pending</b></p>
+    `;
+
+    // ✉️ Send email to admin and secondary email
+     await transporter.sendMail({
+      from: `"Distributor System" <${process.env.ADMIN_EMAIL}>`,
+      to: [process.env.ADMIN_RECEIVER_EMAIL, process.env.SECONDARY_RECEIVER_EMAIL],
+      subject: "New Distributor Signup Request",
+      html: emailBody,
+    });
     res.status(201).json({ message: "Distributor registered successfully." });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
