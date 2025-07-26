@@ -52,6 +52,7 @@ import BankDetailsList from "./admin/pages/BankDetailsList";
 import CommissionSettings from "./admin/components/CommissionSettings";
 import OffersPage from "./admin/pages/OffersPage";
 import AboutPage from "./Pages/AboutPage";
+import PendingReviewPage from "./admin/pages/DistributorHoldRejectlist";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -106,6 +107,7 @@ function App() {
 <Route path="bank-details" element={<BankDetailsList />} />
 <Route path="commission-settings" element={<CommissionSettings />} />
 <Route path="offerspage" element={<OffersPage />} />
+<Route path="pendingpartners" element={<PendingReviewPage />} />
 
         </Route>
 

@@ -75,6 +75,19 @@ router.get("/pending", async (req, res) => {
   }
 });
 
+// GET /api/distributors/pending-review
+router.get("/pending-review", async (req, res) => {
+  try {
+    const distributors = await Distributor.find({
+      status: { $in: ["rejected", "hold"] },
+    });
+
+    res.status(200).json({ distributors });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch distributors", error: err.message });
+  }
+});
+
 
 
 router.get("/approved", async (req, res) => {

@@ -75,6 +75,7 @@ const sidebarLinks = [
     submenu: [
    
       { label: "Distributor-Partners", path: "distributorrequest", roles: ["admin"] },
+       { label: "Distributor-Hold/reject-List", path: "pendingpartners", roles: ["admin"] },
        { label: "Commission-Payouts", path: "commissionpay", roles: ["admin"] },
        { label: "Commission-Settings", path: "commission-settings", roles: ["admin"] },
     ],
