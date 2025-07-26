@@ -29,6 +29,14 @@ export default function PriceRequest() {
 
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
+const [pendingPage, setPendingPage] = useState(0);
+const itemsPerPage = 50;
+
+const [historyPage, setHistoryPage] = useState(0);
+const [historySearchTerm, setHistorySearchTerm] = useState("");
+
+
+const [searchTerm, setSearchTerm] = useState("");
 
   const [newRequestOpen, setNewRequestOpen] = useState(false);
 const [customers, setCustomers] = useState([]);
@@ -135,9 +143,26 @@ useEffect(() => {
     historyMap.set(item._id, item);
   });
 
-  const history = Array.from(historyMap.values())
-    .filter((r) => !["pending", "proposed"].includes(r.status))
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+const fullHistory = Array.from(historyMap.values())
+  .filter((r) => !["pending", "proposed"].includes(r.status))
+  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+const filteredHistory = fullHistory.filter((item) => {
+  const customer = item.customerId?.name?.toLowerCase() || "";
+  const product = item.productId?.name?.toLowerCase() || "";
+  return (
+    customer.includes(historySearchTerm.toLowerCase()) ||
+    product.includes(historySearchTerm.toLowerCase())
+  );
+});
+
+const historyItemsPerPage = 10;
+const paginatedHistory = filteredHistory.slice(
+  historyPage * historyItemsPerPage,
+  (historyPage + 1) * historyItemsPerPage
+);
+const historyTotalPages = Math.ceil(filteredHistory.length / historyItemsPerPage);
+
 
   if (loading)
     return (
@@ -145,6 +170,23 @@ useEffect(() => {
         <CircularProgress />
       </Box>
     );
+
+    const filteredPending = pending.filter((req) => {
+  const customer = req.customerId?.name?.toLowerCase() || "";
+  const product = req.productId?.name?.toLowerCase() || "";
+  return (
+    customer.includes(searchTerm.toLowerCase()) ||
+    product.includes(searchTerm.toLowerCase())
+  );
+});
+
+const paginatedPending = filteredPending.slice(
+  pendingPage * itemsPerPage,
+  (pendingPage + 1) * itemsPerPage
+);
+
+const totalPages = Math.ceil(filteredPending.length / itemsPerPage);
+
 
   return (
     <Box className="bg-[#f7f9fa] min-h-screen p-6">
@@ -160,6 +202,76 @@ useEffect(() => {
   </button>
 </div>
 
+
+<Box className="flex justify-between items-center mb-4">
+  <TextField
+    size="small"
+    label="Search Customer/Product"
+    variant="outlined"
+    value={searchTerm}
+    onChange={(e) => {
+      setSearchTerm(e.target.value);
+      setPendingPage(0); // reset to first page on search
+    }}
+    sx={{
+      backgroundColor: "white",
+      borderRadius: 2,
+      width: 300,
+      "& label.Mui-focused": {
+        color: "#095e5e",
+      },
+      "& .MuiOutlinedInput-root": {
+        "& fieldset": {
+          borderColor: "#095e5e",
+        },
+        "&:hover fieldset": {
+          borderColor: "#095e5e",
+        },
+        "&.Mui-focused fieldset": {
+          borderColor: "#095e5e",
+        },
+      },
+    }}
+  />
+
+  <div className="flex items-center space-x-2">
+    <Button
+      size="small"
+      disabled={pendingPage === 0}
+      onClick={() => setPendingPage((p) => Math.max(p - 1, 0))}
+      sx={{
+        color: "#095e5e",
+        border: "1px solid #095e5e",
+        borderRadius: "6px",
+        textTransform: "none",
+        "&:hover": {
+          backgroundColor: "#e0f5f5",
+        },
+      }}
+    >
+      Prev
+    </Button>
+    <span style={{ color: "#095e5e" }}>
+      Page {pendingPage + 1} of {totalPages}
+    </span>
+    <Button
+      size="small"
+      disabled={pendingPage + 1 >= totalPages}
+      onClick={() => setPendingPage((p) => p + 1)}
+      sx={{
+        color: "#095e5e",
+        border: "1px solid #095e5e",
+        borderRadius: "6px",
+        textTransform: "none",
+        "&:hover": {
+          backgroundColor: "#e0f5f5",
+        },
+      }}
+    >
+      Next
+    </Button>
+  </div>
+</Box>
 
 
 
@@ -180,7 +292,7 @@ useEffect(() => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {pending.map((req) => (
+               {paginatedPending.map((req) => (
                   <TableRow key={req._id}>
                     <TableCell>{req.customerId?.name}</TableCell>
                     <TableCell>{req.productId?.name}</TableCell>
@@ -229,7 +341,7 @@ useEffect(() => {
                     </TableCell>
                   </TableRow>
                 ))}
-                {pending.length === 0 && (
+                {paginatedPending.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} align="center">
                       No pending requests
@@ -241,7 +353,78 @@ useEffect(() => {
           </Paper>
         </Box>
 
-        {/* History Section */}
+       {/* History Section */}
+<Box className="flex justify-between items-center mb-4 mt-10">
+  <TextField
+    size="small"
+    label="Search Customer/Product"
+    variant="outlined"
+    value={historySearchTerm}
+    onChange={(e) => {
+      setHistorySearchTerm(e.target.value);
+      setHistoryPage(0); // reset to first page on search
+    }}
+    sx={{
+      backgroundColor: "white",
+      borderRadius: 2,
+      width: 300,
+      "& label.Mui-focused": {
+        color: "#095e5e",
+      },
+      "& .MuiOutlinedInput-root": {
+        "& fieldset": {
+          borderColor: "#095e5e",
+        },
+        "&:hover fieldset": {
+          borderColor: "#095e5e",
+        },
+        "&.Mui-focused fieldset": {
+          borderColor: "#095e5e",
+        },
+      },
+    }}
+  />
+
+  <div className="flex items-center space-x-2">
+    <Button
+      size="small"
+      disabled={historyPage === 0}
+      onClick={() => setHistoryPage((p) => Math.max(p - 1, 0))}
+      sx={{
+        color: "#095e5e",
+        border: "1px solid #095e5e",
+        borderRadius: "6px",
+        textTransform: "none",
+        "&:hover": {
+          backgroundColor: "#e0f5f5",
+        },
+      }}
+    >
+      Prev
+    </Button>
+    <span style={{ color: "#095e5e" }}>
+      Page {historyPage + 1} of {historyTotalPages}
+    </span>
+    <Button
+      size="small"
+      disabled={historyPage + 1 >= historyTotalPages}
+      onClick={() => setHistoryPage((p) => p + 1)}
+      sx={{
+        color: "#095e5e",
+        border: "1px solid #095e5e",
+        borderRadius: "6px",
+        textTransform: "none",
+        "&:hover": {
+          backgroundColor: "#e0f5f5",
+        },
+      }}
+    >
+      Next
+    </Button>
+  </div>
+</Box>
+
+
         <Box>
           <Typography variant="h5" className="text-[#0b7b7b] font-semibold">
             Negotiation History
@@ -262,7 +445,8 @@ useEffect(() => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {history.map((item) => (
+                {paginatedHistory.map((item) => (
+
                   <TableRow key={item._id}>
                     <TableCell>{item.customerId?.name || "-"}</TableCell>
                     <TableCell>{item.productId?.name || "-"}</TableCell>
@@ -294,7 +478,8 @@ useEffect(() => {
                     </TableCell>
                   </TableRow>
                 ))}
-                {history.length === 0 && (
+                {paginatedHistory.length === 0 && (
+
                   <TableRow>
                     <TableCell colSpan={9} align="center">
                       No history available

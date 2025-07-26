@@ -7,7 +7,7 @@ const distributorSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     phone: { type: String, required: true },
     password: { type: String, required: true }, // Hash in production
-    status: { type: String, enum: ["pending", "approved"], default: "pending" },
+    status: { type: String, enum: ["pending", "approved","rejected", "hold"], default: "pending" },
   },
   { timestamps: true }
 );

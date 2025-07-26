@@ -129,9 +129,35 @@ const handleCreateFromDistributor = async (userData) => {
   }
 };
 
+const handleHoldDistributor = async (id) => {
+  if (window.confirm("Put this distributor on hold?")) {
+    try {
+      await axios.patch(`/api/distributors/hold/${id}`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      alert("Distributor put on hold.");
+      fetchDistributors();
+    } catch (err) {
+      console.error("Hold failed:", err);
+      alert("Failed to put distributor on hold.");
+    }
+  }
+};
 
-
-
+const handleRejectDistributor = async (id) => {
+  if (window.confirm("Reject this distributor?")) {
+    try {
+      await axios.patch(`/api/distributors/reject/${id}`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      alert("Distributor rejected.");
+      fetchDistributors();
+    } catch (err) {
+      console.error("Rejection failed:", err);
+      alert("Failed to reject distributor.");
+    }
+  }
+};
 
 
   return (
@@ -160,12 +186,29 @@ const handleCreateFromDistributor = async (userData) => {
                     <td className="p-3">{d.email}</td>
                     <td className="p-3">{d.phone}</td>
                     <td className="p-3 text-center">
-                      <button
-                        onClick={() => handleApproveClick(d)}
-                        className="bg-[#0b7b7b] hover:bg-[#095e5e] text-white px-4 py-1 rounded-md text-sm"
-                      >
-                        Approve
-                      </button>
+                     <div className="space-x-2">
+  <button
+    onClick={() => handleApproveClick(d)}
+    className="bg-[#0b7b7b] hover:bg-[#095e5e] text-white px-4 py-1 rounded-md text-sm"
+  >
+    Approve
+  </button>
+
+  <button
+    onClick={() => handleHoldDistributor(d._id)}
+    className="bg-[#0b7b7b] hover:bg-[#095e5e] text-white px-4 py-1 rounded-md text-sm"
+  >
+    Hold
+  </button>
+
+  <button
+    onClick={() => handleRejectDistributor(d._id)}
+    className="bg-[#0b7b7b] hover:bg-[#095e5e] text-white px-4 py-1 rounded-md text-sm"
+  >
+    Reject
+  </button>
+</div>
+
                     </td>
                   </tr>
                 ))}
