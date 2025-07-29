@@ -17,7 +17,7 @@ const bankDetailsRoutes = require("./routes/bankDetails");
 const commissionRoutes = require("./routes/commissionRoutes");
 const partnerCommission = require("./routes/partnerCommission")
 const offerRoutes = require("./routes/offerRoutes");
-
+const adminRoutes = require("./routes/admin")
 
 dotenv.config();
 
@@ -43,6 +43,7 @@ app.use("/api/bank-details", bankDetailsRoutes);
 app.use("/api/commission", commissionRoutes);
 app.use("/api/partner-commission",partnerCommission);
 app.use("/api/offers", offerRoutes);
+app.use("/api/admin",adminRoutes);
 
 const PORT = process.env.PORT;
 mongoose

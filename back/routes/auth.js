@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Role = require("../models/Role");
+const LoginLog = require("../models/LoginLog");
 
 const router = express.Router();
 
@@ -55,6 +56,8 @@ router.post("/login", async (req, res) => {
     const rolePermissions = user.role?.permissions || [];
     const userPermissions = user.permissions || [];
     const combinedPermissions = [...new Set([...rolePermissions, ...userPermissions])];
+
+      await LoginLog.create({ customerId: user._id });
 
     const token = jwt.sign(
       {

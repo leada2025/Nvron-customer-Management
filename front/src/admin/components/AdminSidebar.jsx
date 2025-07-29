@@ -116,6 +116,17 @@ const sidebarLinks = [
       },
     ],
   },
+    {
+    name: "Login Activities",
+    icon: <Users size={20} />,
+    submenu: [
+      {
+        label: "Customer's Logins",
+        path: "loginactivity",
+        roles: ["admin", "sales", "billing"],
+      },
+    ],
+  },
 ];
 
 export default function AdminSidebar() {
