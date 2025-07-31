@@ -80,6 +80,17 @@ const sidebarLinks = [
        { label: "Commission-Settings", path: "commission-settings", roles: ["admin"] },
     ],
   },
+    {
+  name: "Catalogue",
+  icon: <Gift size={20} />,
+  submenu: [
+   
+      { label: "Catalogue-Settings", path: "admincatalogue", roles: ["admin"] },
+       { label: "Catalogue-Categories", path: "admincatagory", roles: ["admin"] },
+      
+    ],
+ 
+},
   {
   name: "Offers",
   icon: <Gift size={20} />,

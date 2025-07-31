@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
@@ -18,6 +19,7 @@ const commissionRoutes = require("./routes/commissionRoutes");
 const partnerCommission = require("./routes/partnerCommission")
 const offerRoutes = require("./routes/offerRoutes");
 const adminRoutes = require("./routes/admin")
+const catalogueRoutes = require("./routes/catalogueRoutes");
 
 dotenv.config();
 
@@ -28,6 +30,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.use("/catalog", express.static("/mnt/catalog"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
@@ -44,6 +47,7 @@ app.use("/api/commission", commissionRoutes);
 app.use("/api/partner-commission",partnerCommission);
 app.use("/api/offers", offerRoutes);
 app.use("/api/admin",adminRoutes);
+app.use("/api/catalogue", catalogueRoutes);
 
 const PORT = process.env.PORT;
 mongoose

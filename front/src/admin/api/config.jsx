@@ -1,0 +1,1 @@
+export const BASE_URL = "https://nvron-customer-management-back.onrender.com";

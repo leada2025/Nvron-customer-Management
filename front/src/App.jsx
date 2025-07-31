@@ -54,6 +54,8 @@ import OffersPage from "./admin/pages/OffersPage";
 import AboutPage from "./Pages/AboutPage";
 import PendingReviewPage from "./admin/pages/DistributorHoldRejectlist";
 import LoginActivityPage from "./admin/pages/LoginActivityPage";
+import AdminCatalogueTab from "./admin/pages/AdminCatalogue";
+import AdminCategoriesTab from "./admin/pages/AdminCategoriesTab";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -110,6 +112,9 @@ function App() {
 <Route path="offerspage" element={<OffersPage />} />
 <Route path="pendingpartners" element={<PendingReviewPage />} />
 <Route path="loginactivity" element={<LoginActivityPage/>} />
+<Route path="admincatalogue" element={<AdminCatalogueTab/>} />
+<Route path="admincatagory" element={<AdminCategoriesTab/>} />
+
         </Route>
 
   <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
