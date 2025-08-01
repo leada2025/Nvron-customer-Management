@@ -501,7 +501,7 @@ const paginatedOrders = filteredOrders.slice(
 
       {/* Orders Table */}
       <div className="overflow-x-auto">
-      <table className="w-full border border-gray-300 text-sm  bg-white rounded-md overflow-hidden">
+      <table className="w-full border border-gray-300 text-sm  bg-white rounded-md ">
   <thead className="bg-[#e6f7f7] text-gray-600">
             <tr>
               <th className="p-3 border-b border-gray-300 text-left">Order ID</th>
@@ -587,7 +587,9 @@ const paginatedOrders = filteredOrders.slice(
 
                     </td>
                    <td className="p-3 border-b border-gray-300 text-center space-x-2">
-  <div className="relative inline-block text-left">
+<div className="relative inline-block text-left z-20">
+
+
    <button
   onClick={(e) => {
     e.stopPropagation();
@@ -601,13 +603,15 @@ const paginatedOrders = filteredOrders.slice(
 </button>
 
 {downloadMenuOpenOrderId === order._id && (
-  <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-md z-30">
+ <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-md z-50">
+
+
 <button
   onClick={() => {
     downloadZohoCompatibleOrder(order);
     setDownloadMenuOpenOrderId(null);
   }}
-  className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+  className="block w-full px-4 py-2 text-left z-999 hover:bg-gray-100 text-sm"
 >
   Download Zoho CSV
 </button>
