@@ -1,3 +1,5 @@
+"use client";
+import Alert from "@mui/material/Alert";
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import {
