@@ -42,11 +42,12 @@ const [searchTerm, setSearchTerm] = useState("");
 const [customers, setCustomers] = useState([]);
 const [products, setProducts] = useState([]);
 const [newRequestData, setNewRequestData] = useState({
-  customerId: "",
   productId: "",
+  customerIds: [],
   approvedPrice: "",
   comment: ""
 });
+
 
 
 const fetchAll = async () => {
@@ -517,46 +518,95 @@ const totalPages = Math.ceil(filteredPending.length / itemsPerPage);
   </DialogTitle>
 
   <DialogContent sx={{ pt: 2 }}>
-    <FormControl fullWidth size="small" margin="normal" sx={{ backgroundColor: "white", borderRadius: 2 }}>
-      <InputLabel>Customer</InputLabel>
-      <Select
-        value={newRequestData.customerId}
-        onChange={(e) => setNewRequestData({ ...newRequestData, customerId: e.target.value })}
-        label="Customer"
-      >
-        {customers.map((c) => (
-          <MenuItem key={c._id} value={c._id}>
-            {c.name} ({c.email})
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+   <FormControl fullWidth size="small" margin="normal">
+  <InputLabel>Product</InputLabel>
+  <Select
+    value={newRequestData.productId}
+    onChange={(e) =>
+      setNewRequestData({ ...newRequestData, productId: e.target.value })
+    }
+    label="Product"
+  >
+    {products.map((p) => (
+      <MenuItem key={p._id} value={p._id}>
+        {p.name}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
 
-    <FormControl fullWidth size="small" margin="normal" sx={{ backgroundColor: "white", borderRadius: 2 }}>
-      <InputLabel>Product</InputLabel>
-      <Select
-        value={newRequestData.productId}
-        onChange={(e) => setNewRequestData({ ...newRequestData, productId: e.target.value })}
-        label="Product"
-      >
-        {products.map((p) => (
-          <MenuItem key={p._id} value={p._id}>
-            {p.name}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+<TextField
+  fullWidth
+  size="small"
+  placeholder="Search customers..."
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  sx={{ mt: 2 }}
+/>
+<Typography variant="body2" sx={{ mt: 1, mb: 1, color: "#0b7b7b", fontWeight: 500 }}>
+  Selected Customers: {newRequestData.customerIds.length}
+</Typography>
 
-    <TextField
-      label="Approved Price (₹)"
-      fullWidth
-      size="small"
-      type="number"
-      value={newRequestData.approvedPrice}
-      onChange={(e) => setNewRequestData({ ...newRequestData, approvedPrice: e.target.value })}
-      margin="normal"
-      sx={{ backgroundColor: "white", borderRadius: 2 }}
-    />
+
+<Box
+  sx={{
+    maxHeight: 200,
+    overflowY: "auto",
+    border: "1px solid #ccc",
+    borderRadius: 2,
+    mt: 1,
+    px: 1
+  }}
+>
+  {customers
+    .filter((c) =>
+      c.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .map((customer) => (
+      <Box key={customer._id} display="flex" alignItems="center">
+        <input
+          type="checkbox"
+          checked={newRequestData.customerIds.includes(customer._id)}
+          onChange={(e) => {
+            const isChecked = e.target.checked;
+            setNewRequestData((prev) => ({
+              ...prev,
+              customerIds: isChecked
+                ? [...prev.customerIds, customer._id]
+                : prev.customerIds.filter((id) => id !== customer._id),
+            }));
+          }}
+        />
+        <Typography sx={{ ml: 1 }}>
+          {customer.name} ({customer.email})
+        </Typography>
+      </Box>
+    ))}
+</Box>
+
+<TextField
+  label="Special Rate (₹)"
+  fullWidth
+  size="small"
+  type="number"
+  value={newRequestData.approvedPrice}
+  onChange={(e) =>
+    setNewRequestData({ ...newRequestData, approvedPrice: e.target.value })
+  }
+  margin="normal"
+/>
+
+<TextField
+  label="Comment (optional)"
+  fullWidth
+  size="small"
+  multiline
+  minRows={2}
+  value={newRequestData.comment}
+  onChange={(e) =>
+    setNewRequestData({ ...newRequestData, comment: e.target.value })
+  }
+/>
 
    
   </DialogContent>
@@ -577,31 +627,40 @@ const totalPages = Math.ceil(filteredPending.length / itemsPerPage);
     </Button>
     <Button
       variant="contained"
-      onClick={async () => {
-        try {
-          await axios.post("/api/negotiations/direct-approve", {
-            customerId: newRequestData.customerId,
-            productId: newRequestData.productId,
-            approvedPrice: newRequestData.approvedPrice,
-            comment: newRequestData.comment,
-          }, { headers });
+     onClick={async () => {
+  try {
+    await axios.post(
+      "/api/negotiations/direct-approve-multi",
+      {
+        customerIds: newRequestData.customerIds,
+        productId: newRequestData.productId,
+        approvedPrice: newRequestData.approvedPrice,
+        comment: newRequestData.comment,
+      },
+      { headers }
+    );
 
-          alert("Request approved directly!");
-          setNewRequestOpen(false);
-          setNewRequestData({
-            customerId: "", productId: "", approvedPrice: "", comment: ""
-          });
-          fetchAll();
-        } catch (err) {
-          console.error("Failed to approve directly:", err);
-          alert("Failed to process request.");
-        }
-      }}
-      disabled={
-        !newRequestData.customerId ||
-        !newRequestData.productId ||
-        !newRequestData.approvedPrice
-      }
+    alert("Special rate applied to selected customers!");
+    setNewRequestOpen(false);
+    setNewRequestData({
+      customerIds: [],
+      productId: "",
+      approvedPrice: "",
+      comment: "",
+    });
+    fetchAll();
+  } catch (err) {
+    console.error("Bulk approve failed:", err);
+    alert("Failed to apply special rate.");
+  }
+}}
+
+    disabled={
+  !newRequestData.productId ||
+  !newRequestData.customerIds.length ||
+  !newRequestData.approvedPrice
+}
+
       sx={{
         backgroundColor: "#0b7b7b",
         textTransform: "none",

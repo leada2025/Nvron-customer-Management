@@ -467,8 +467,8 @@ const paginatedOrders = filteredOrders.slice(
   currentPage * ORDERS_PER_PAGE
 );
   return (
- <div className="p-6 bg-[#e6f7f7] rounded-lg shadow-sm border border-gray-200 max-w-7xl mx-auto">
-  <h2 className="text-3xl font-medium text-gray-800 mb-6">Sales Orders</h2>
+ <div className="p-6 bg-[#e6f7f7] z-1  rounded-lg shadow-sm border border-gray-200 max-w-7xl mx-auto">
+  <h2 className="text-3xl z-1 font-medium text-[#0b7b7b] mb-6">Sales Orders</h2>
 
 
       {/* Filters */}
@@ -485,7 +485,7 @@ const paginatedOrders = filteredOrders.slice(
         />
 
         <select
-          value={statusFilter}
+          value={statusFilter}  
           onChange={(e) => {
             setStatusFilter(e.target.value);
             setCurrentPage(1);
@@ -501,7 +501,7 @@ const paginatedOrders = filteredOrders.slice(
 
       {/* Orders Table */}
       <div className="overflow-x-auto">
-      <table className="w-full border border-gray-300 text-sm  bg-white rounded-md ">
+      <table className="w-full border  border-gray-300 text-sm  bg-white rounded-md ">
   <thead className="bg-[#e6f7f7] text-gray-600">
             <tr>
               <th className="p-3 border-b border-gray-300 text-left">Order ID</th>
@@ -587,7 +587,7 @@ const paginatedOrders = filteredOrders.slice(
 
                     </td>
                    <td className="p-3 border-b border-gray-300 text-center space-x-2">
-<div className="relative inline-block text-left z-20">
+<div className="relative inline-block text-left z-30">
 
 
    <button
@@ -597,13 +597,13 @@ const paginatedOrders = filteredOrders.slice(
       downloadMenuOpenOrderId === order._id ? null : order._id
     );
   }}
-  className="px-4 py-1.5 bg-gray-600 text-white rounded-md text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300"
+  className="px-4 py-1.5 z-10 bg-gray-600 text-white rounded-md text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300"
 >
   Download ▼
 </button>
 
 {downloadMenuOpenOrderId === order._id && (
- <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-md z-50">
+ <div className="absolute z-9999 right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-md z-50">
 
 
 <button
