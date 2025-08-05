@@ -106,13 +106,16 @@ if (partnerCommission) {
       });
 // Send Email to Admin after order placement
 try {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.ADMIN_EMAIL,
-      pass: process.env.ADMIN_EMAIL_PASS,
-    },
-  });
+ const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.ADMIN_EMAIL,
+    pass: process.env.ADMIN_EMAIL_PASS,
+  },
+});
+
 
   // 🧾 Generate item breakdown
   const itemListHtml = order.items.map(item => `
@@ -158,12 +161,18 @@ try {
     <p style="color:gray;font-size:12px;">Placed on: ${new Date(order.createdAt).toLocaleString()}</p>
   `;
 
-  await transporter.sendMail({
-    from: `"Order System" <${process.env.ADMIN_EMAIL}>`,
-      to: [process.env.ADMIN_RECEIVER_EMAIL, process.env.SECONDARY_RECEIVER_EMAIL], 
-    subject: `🆕 New Order from ${customer.name}`,
-    html: emailBody,
-  });
+await transporter.sendMail({
+  from: `"Order System" <${process.env.ADMIN_EMAIL}>`,
+  to: [process.env.ADMIN_RECEIVER_EMAIL, process.env.SECONDARY_RECEIVER_EMAIL],
+  subject: `🆕 New Order from ${customer.name}`,
+  html: emailBody,
+}, (err, info) => {
+  if (err) {
+    console.error("❌ Email send failed:", err);
+  } else {
+    console.log("✅ Email sent:", info.response);
+  }
+});
 
 } catch (emailErr) {
   console.error("❌ Failed to send order email:", emailErr.message);
