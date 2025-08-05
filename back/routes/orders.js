@@ -9,7 +9,7 @@ const PartnerCommission = require("../models/PartnerCommission");
 const NegotiationRequest = require("../models/NegotiationRequest");
 const nodemailer = require("nodemailer");
 
-
+require("dotenv").config();
 
 
 
@@ -186,33 +186,6 @@ try {
   } catch (err) {
     console.error("Error placing order:", err);
     res.status(500).json({ message: err.message });
-  }
-});
-
-router.get("/test-mail", async (req, res) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.ADMIN_EMAIL,
-        pass: process.env.ADMIN_EMAIL_PASS,
-      },
-    });
-
-    const info = await transporter.sendMail({
-      from: `"Test" <${process.env.ADMIN_EMAIL}>`,
-      to: process.env.ADMIN_RECEIVER_EMAIL,
-      subject: "📨 Render Test Email",
-      text: "This is a test email from Render deployment.",
-    });
-
-    console.log("✅ Test email sent:", info.response);
-    res.send("✅ Test email sent.");
-  } catch (err) {
-    console.error("❌ Test email failed:", err.message);
-    res.status(500).send("❌ Test email failed: " + err.message);
   }
 });
 
