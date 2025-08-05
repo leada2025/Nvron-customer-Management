@@ -8,15 +8,12 @@ require("dotenv").config();
 const logoURL = "https://orders.fishmanb2b.in/fishman3.png"
 // Setup email transporter (Gmail example)
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  service: "gmail",
   auth: {
-    user: process.env.ADMIN_EMAIL,
-    pass: process.env.ADMIN_EMAIL_PASS,
+    user: process.env.ADMIN_EMAIL,           // sender address
+    pass: process.env.ADMIN_EMAIL_PASS       // app password
   },
 });
-
 
 // POST /api/distributors/signup
 router.post("/signup", async (req, res) => {

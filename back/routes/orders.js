@@ -104,16 +104,24 @@ if (partnerCommission) {
         commissionSource:  hasApprovedSpecialRate ? "Slab" : "Fixed",
         products: productBreakdown,
       });
+
+      console.log("ENV CHECK:", {
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  ADMIN_EMAIL_PASS: process.env.ADMIN_EMAIL_PASS,
+  ADMIN_RECEIVER_EMAIL: process.env.ADMIN_RECEIVER_EMAIL,
+});
+
 // Send Email to Admin after order placement
 try {
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587, // change from 465
+  secure: false, // important!
   auth: {
     user: process.env.ADMIN_EMAIL,
     pass: process.env.ADMIN_EMAIL_PASS,
   },
 });
-
 
 
 
@@ -161,18 +169,27 @@ const transporter = nodemailer.createTransport({
     <p style="color:gray;font-size:12px;">Order ID: ${order._id}</p>
     <p style="color:gray;font-size:12px;">Placed on: ${new Date(order.createdAt).toLocaleString()}</p>
   `;
+console.log("📨 Order email triggered");
 
 try {
+  console.log("🛠️ Using email:", process.env.ADMIN_EMAIL);
+  console.log("📬 Sending to:", process.env.ADMIN_RECEIVER_EMAIL);
+
   const info = await transporter.sendMail({
     from: `"Order System" <${process.env.ADMIN_EMAIL}>`,
-    to: [process.env.ADMIN_RECEIVER_EMAIL, process.env.SECONDARY_RECEIVER_EMAIL],
-    subject: `🆕 New Order from ${customer.name}`,
-    html: emailBody,
+    to: process.env.ADMIN_RECEIVER_EMAIL,
+    cc: process.env.SECONDARY_RECEIVER_EMAIL,
+    subject: "🛒 New Order Placed",
+    text: "Order placed test",
   });
+
   console.log("✅ Email sent:", info.response);
+  res.status(201).json({ message: "Order email sent" });
 } catch (err) {
   console.error("❌ Email send failed:", err.message);
+  res.status(500).json({ error: "Email failed", details: err.message });
 }
+
 
 
 } catch (emailErr) {
