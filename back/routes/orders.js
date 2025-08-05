@@ -189,6 +189,33 @@ try {
   }
 });
 
+router.get("/test-email", async (req, res) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.ADMIN_EMAIL,
+        pass: process.env.ADMIN_EMAIL_PASS,
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: `"Test" <${process.env.ADMIN_EMAIL}>`,
+      to: process.env.ADMIN_RECEIVER_EMAIL,
+      subject: "Test Email from Render",
+      text: "This is a test email to check if SMTP works.",
+    });
+
+    console.log("✅ Email test sent:", info.response);
+    res.send("Email sent successfully");
+  } catch (err) {
+    console.error("❌ Email send failed:", err.message);
+    res.status(500).send("Failed to send email: " + err.message);
+  }
+});
+
 
 
 // Get customer orders
