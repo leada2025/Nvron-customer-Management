@@ -495,6 +495,7 @@ const paginatedOrders = filteredOrders.slice(
           <option value="All">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="Processed">Processed</option>
+        
            <option value="Cancelled">Cancelled</option>
         </select>
       </div>
@@ -581,6 +582,7 @@ const paginatedOrders = filteredOrders.slice(
     <option value="pending">Pending</option>
     <option value="processing">Processing</option>
     <option value="delivered">Delivered</option>
+       <option value="dispatched">Dispatched</option>
     <option value="cancelled">Cancelled</option>
   </select>
 </div>
