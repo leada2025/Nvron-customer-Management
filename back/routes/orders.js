@@ -161,18 +161,18 @@ try {
     <p style="color:gray;font-size:12px;">Placed on: ${new Date(order.createdAt).toLocaleString()}</p>
   `;
 
-await transporter.sendMail({
-  from: `"Order System" <${process.env.ADMIN_EMAIL}>`,
-  to: [process.env.ADMIN_RECEIVER_EMAIL, process.env.SECONDARY_RECEIVER_EMAIL],
-  subject: `🆕 New Order from ${customer.name}`,
-  html: emailBody,
-}, (err, info) => {
-  if (err) {
-    console.error("❌ Email send failed:", err);
-  } else {
-    console.log("✅ Email sent:", info.response);
-  }
-});
+try {
+  const info = await transporter.sendMail({
+    from: `"Order System" <${process.env.ADMIN_EMAIL}>`,
+    to: [process.env.ADMIN_RECEIVER_EMAIL, process.env.SECONDARY_RECEIVER_EMAIL],
+    subject: `🆕 New Order from ${customer.name}`,
+    html: emailBody,
+  });
+  console.log("✅ Email sent:", info.response);
+} catch (err) {
+  console.error("❌ Email send failed:", err.message);
+}
+
 
 } catch (emailErr) {
   console.error("❌ Failed to send order email:", emailErr.message);
@@ -189,6 +189,32 @@ await transporter.sendMail({
   }
 });
 
+router.get("/test-mail", async (req, res) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.ADMIN_EMAIL,
+        pass: process.env.ADMIN_EMAIL_PASS,
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: `"Test" <${process.env.ADMIN_EMAIL}>`,
+      to: process.env.ADMIN_RECEIVER_EMAIL,
+      subject: "📨 Render Test Email",
+      text: "This is a test email from Render deployment.",
+    });
+
+    console.log("✅ Test email sent:", info.response);
+    res.send("✅ Test email sent.");
+  } catch (err) {
+    console.error("❌ Test email failed:", err.message);
+    res.status(500).send("❌ Test email failed: " + err.message);
+  }
+});
 
 
 
