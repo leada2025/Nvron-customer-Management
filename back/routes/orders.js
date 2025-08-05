@@ -106,13 +106,16 @@ if (partnerCommission) {
       });
 // Send Email to Admin after order placement
 try {
- const transporter = nodemailer.createTransport({
-  service: "gmail",
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587, // change from 465
+  secure: false, // important!
   auth: {
     user: process.env.ADMIN_EMAIL,
     pass: process.env.ADMIN_EMAIL_PASS,
   },
 });
+
 
 
 
