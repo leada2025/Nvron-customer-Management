@@ -46,30 +46,24 @@ router.post("/", authenticate, authorizeRoles("Customer"), async (req, res) => {
       : null;
 
     if (payoutPartner) {
-      // ✅ Fetch commission config from DB
-     // Try to fetch partner-specific commission config
-let slabs = [];
-let fixedRate = 9;
+      let slabs = [];
+      let fixedRate = 9;
 
-const partnerCommission = await PartnerCommission.findOne({ partnerId: payoutPartner._id });
+      const partnerCommission = await PartnerCommission.findOne({ partnerId: payoutPartner._id });
+      if (partnerCommission) {
+        slabs = partnerCommission.slabs || [];
+        fixedRate = partnerCommission.fixedPTSRate || 9;
+      } else {
+        const globalConfig = await Commission.findOne();
+        slabs = globalConfig?.slabs || [];
+        fixedRate = globalConfig?.fixedPTSRate || 9;
+      }
 
-if (partnerCommission) {
-  slabs = partnerCommission.slabs || [];
-  fixedRate = partnerCommission.fixedPTSRate || 9;
-} else {
-  const globalConfig = await Commission.findOne();
-  slabs = globalConfig?.slabs || [];
-  fixedRate = globalConfig?.fixedPTSRate || 9;
-}
-
-
-      // ✅ Check if any product has special pricing applied
       const hasApprovedSpecialRate = await NegotiationRequest.exists({
-  customerId: req.user.userId,
-  status: "approved",
-});
+        customerId: req.user.userId,
+        status: "approved",
+      });
 
-      // ✅ Dynamic commission logic
       const getCommissionPercent = (total, hasSpecialRate, slabs = [], fixedRate = 9) => {
         if (!hasSpecialRate) return fixedRate;
         for (const slab of slabs) {
@@ -101,111 +95,86 @@ if (partnerCommission) {
         orderId: order._id,
         commissionAmount: Math.ceil(commissionAmount * 100) / 100,
         commissionPercent,
-        commissionSource:  hasApprovedSpecialRate ? "Slab" : "Fixed",
+        commissionSource: hasApprovedSpecialRate ? "Slab" : "Fixed",
         products: productBreakdown,
       });
-
-      console.log("ENV CHECK:", {
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
-  ADMIN_EMAIL_PASS: process.env.ADMIN_EMAIL_PASS,
-  ADMIN_RECEIVER_EMAIL: process.env.ADMIN_RECEIVER_EMAIL,
-});
-
-// Send Email to Admin after order placement
-try {
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587, // change from 465
-  secure: false, // important!
-  auth: {
-    user: process.env.ADMIN_EMAIL,
-    pass: process.env.ADMIN_EMAIL_PASS,
-  },
-});
-
-
-
-
-  // 🧾 Generate item breakdown
-  const itemListHtml = order.items.map(item => `
-    <tr>
-      <td style="border:1px solid #ccc;padding:8px;">${item.productName}</td>
-      <td style="border:1px solid #ccc;padding:8px;">${item.quantity}</td>
-      <td style="border:1px solid #ccc;padding:8px;">₹${item.netRate.toFixed(2)}</td>
-      <td style="border:1px solid #ccc;padding:8px;">${item.tax}%</td>
-      <td style="border:1px solid #ccc;padding:8px;">₹${(item.netRate * item.quantity).toFixed(2)}</td>
-    </tr>
-  `).join("");
-
-  const emailBody = `
-    <h2>🛒 New Order Placed</h2>
-    <p><strong>Name:</strong> ${customer.name}</p>
-    <p><strong>Email:</strong> ${customer.email}</p>
-    <p><strong>Position:</strong> ${customer.position || "N/A"}</p>
-    <p><strong>Place of Supply:</strong> ${customer.placeOfSupply || "N/A"}</p>
-    <p><strong>Note:</strong> ${order.note || "None"}</p>
-    <hr />
-    <h3>🧾 Order Details</h3>
-    <table style="border-collapse:collapse;width:100%;margin-top:10px;">
-      <thead>
-        <tr>
-          <th style="border:1px solid #ccc;padding:8px;">Product</th>
-          <th style="border:1px solid #ccc;padding:8px;">Qty</th>
-          <th style="border:1px solid #ccc;padding:8px;">Rate</th>
-          <th style="border:1px solid #ccc;padding:8px;">Tax</th>
-          <th style="border:1px solid #ccc;padding:8px;">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${itemListHtml}
-      </tbody>
-    </table>
-
-    <p><strong>Subtotal:</strong> ₹${order.subtotal.toFixed(2)}</p>
-    <p><strong>Tax:</strong> ₹${order.taxAmount.toFixed(2)}</p>
-    <p><strong>Shipping:</strong> ₹${order.shippingCharge.toFixed(2)}</p>
-    <p><strong><u>Total Amount:</u></strong> ₹${order.totalAmount.toFixed(2)}</p>
-    <hr />
-    <p style="color:gray;font-size:12px;">Order ID: ${order._id}</p>
-    <p style="color:gray;font-size:12px;">Placed on: ${new Date(order.createdAt).toLocaleString()}</p>
-  `;
-console.log("📨 Order email triggered");
-
-try {
-  console.log("🛠️ Using email:", process.env.ADMIN_EMAIL);
-  console.log("📬 Sending to:", process.env.ADMIN_RECEIVER_EMAIL);
-
-  const info = await transporter.sendMail({
-    from: `"Order System" <${process.env.ADMIN_EMAIL}>`,
-    to: process.env.ADMIN_RECEIVER_EMAIL,
-    cc: process.env.SECONDARY_RECEIVER_EMAIL,
-    subject: "🛒 New Order Placed",
-    text: "Order placed test",
-  });
-
-  console.log("✅ Email sent:", info.response);
-  res.status(201).json({ message: "Order email sent" });
-} catch (err) {
-  console.error("❌ Email send failed:", err.message);
-  res.status(500).json({ error: "Email failed", details: err.message });
-}
-
-
-
-} catch (emailErr) {
-  console.error("❌ Failed to send order email:", emailErr.message);
-}
-
-
-
     }
 
+    // ✅ Email sending
+    try {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.ADMIN_EMAIL,
+          pass: process.env.ADMIN_EMAIL_PASS,
+        },
+      });
+
+      const itemListHtml = order.items.map(item => `
+        <tr>
+          <td style="border:1px solid #ccc;padding:8px;">${item.productName}</td>
+          <td style="border:1px solid #ccc;padding:8px;">${item.quantity}</td>
+          <td style="border:1px solid #ccc;padding:8px;">₹${item.netRate.toFixed(2)}</td>
+          <td style="border:1px solid #ccc;padding:8px;">${item.tax}%</td>
+          <td style="border:1px solid #ccc;padding:8px;">₹${(item.netRate * item.quantity).toFixed(2)}</td>
+        </tr>
+      `).join("");
+
+      const emailBody = `
+        <h2>🛒 New Order Placed</h2>
+        <p><strong>Name:</strong> ${customer.name}</p>
+        <p><strong>Email:</strong> ${customer.email}</p>
+        <p><strong>Position:</strong> ${customer.position || "N/A"}</p>
+        <p><strong>Place of Supply:</strong> ${customer.placeOfSupply || "N/A"}</p>
+        <p><strong>Note:</strong> ${order.note || "None"}</p>
+        <hr />
+        <h3>🧾 Order Details</h3>
+        <table style="border-collapse:collapse;width:100%;margin-top:10px;">
+          <thead>
+            <tr>
+              <th style="border:1px solid #ccc;padding:8px;">Product</th>
+              <th style="border:1px solid #ccc;padding:8px;">Qty</th>
+              <th style="border:1px solid #ccc;padding:8px;">Rate</th>
+              <th style="border:1px solid #ccc;padding:8px;">Tax</th>
+              <th style="border:1px solid #ccc;padding:8px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemListHtml}
+          </tbody>
+        </table>
+        <p><strong>Subtotal:</strong> ₹${order.subtotal.toFixed(2)}</p>
+        <p><strong>Tax:</strong> ₹${order.taxAmount.toFixed(2)}</p>
+        <p><strong>Shipping:</strong> ₹${order.shippingCharge.toFixed(2)}</p>
+        <p><strong><u>Total Amount:</u></strong> ₹${order.totalAmount.toFixed(2)}</p>
+        <hr />
+        <p style="color:gray;font-size:12px;">Order ID: ${order._id}</p>
+        <p style="color:gray;font-size:12px;">Placed on: ${new Date(order.createdAt).toLocaleString()}</p>
+      `;
+
+      await transporter.sendMail({
+        from: `"Order System" <${process.env.ADMIN_EMAIL}>`,
+        to: process.env.ADMIN_RECEIVER_EMAIL,
+        cc: process.env.SECONDARY_RECEIVER_EMAIL,
+        subject: "🛒 New Order Placed",
+        html: emailBody,
+      });
+
+      console.log("✅ Email sent to admin");
+    } catch (emailErr) {
+      console.error("❌ Failed to send order email:", emailErr.message);
+    }
+
+    // ✅ Final response only once here
     res.status(201).json({ message: "Order placed successfully", order });
   } catch (err) {
     console.error("Error placing order:", err);
     res.status(500).json({ message: err.message });
   }
 });
+
 
 router.get("/test-email", async (req, res) => {
   try {
