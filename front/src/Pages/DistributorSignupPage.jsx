@@ -10,6 +10,8 @@ import {
   Rocket,
   FileText,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
+
 
 const DistributorSignupPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,6 +33,17 @@ const DistributorSignupPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#e6f7f7]">
+            <Helmet>
+        <title>Distributor Signup | Fishman B2B</title>
+        <meta
+          name="description"
+          content="Register as a distributor and grow with Fishman B2B."
+        />
+        <meta
+          name="keywords"
+          content="Fishman, distributor signup, B2B registration, wholesale"
+        />
+      </Helmet>
       {/* Navbar */}
       <div className="flex items-center justify-between p-3 md:h-[70px] h-15 -ml-10 bg-gradient-to-br from-[#e6f7f7] via-[#d0f0f0] shadow-md">
         <div className="mb-4 ml-[50px]">
