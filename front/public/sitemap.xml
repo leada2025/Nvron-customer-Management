@@ -1,22 +1,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://orders.fishmanb2b.in/</loc>
+        <loc>https://orders.fishmanb2b.in/distributor-signup</loc>
         <priority>1.0</priority>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://orders.fishmanb2b.in/distributor-signup</loc>
-        <priority>0.7</priority>
-        <changefreq>monthly</changefreq>
-    </url>
-    <url>
         <loc>https://orders.fishmanb2b.in/partner-login</loc>
-        <priority>0.7</priority>
-        <changefreq>monthly</changefreq>
+        <priority>1.0</priority>
+        <changefreq>daily</changefreq>
     </url>
     <url>
         <loc>https://orders.fishmanb2b.in/signup</loc>
         <priority>0.7</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+    <url>
+        <loc>https://orders.fishmanb2b.in/</loc>
+        <priority>0.5</priority> <!-- lowered priority -->
         <changefreq>monthly</changefreq>
     </url>
 </urlset>
