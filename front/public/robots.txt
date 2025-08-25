@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://orders.fishmanb2b.in/sitemap.xml

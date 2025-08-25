@@ -41,7 +41,7 @@ const DistributorSignupPage = () => {
         />
         <meta
           name="keywords"
-          content="Fishman, distributor signup, B2B registration, wholesale"
+          content="Fishman, distributor signup, B2B registration, wholesale,medical distribution partner,pharma distribution partner,medicine wholesale distributor,pharmaceutical distributor in India,B2B pharma distribution,medicine distributor partnership,pharma franchise distributor,medical supplier partnership,distribution partner for doctors,medical distribution partner for pharmacists,pharma distributorship opportunities,rural medical store supplier,medical stockist partner,wholesale medicine supplier India,best pharma distribution partner,pharmacy franchise distributor,how to become a pharma distributor in India,best pharmaceutical distribution partner in India,medical distribution opportunities for doctors,pharma distributorship business for rural areas,wholesale pharma supplier for medical stores,distribution partner signup for pharma business,medicine supply partnership for doctors & pharmacists,Fishman pharma distribution,Fishman distributor signup,Fishman  medical supplier India,Distribuition Buisness,Medical Buisness,High paying buisness,Easy Buisness Idea,No Investment Buisness,Less investment high Income buisness,Online buisness,Online medical buisness,Online pharma buisness,Pharma related buisness"
         />
       </Helmet>
       {/* Navbar */}
