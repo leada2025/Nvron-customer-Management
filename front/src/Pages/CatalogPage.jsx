@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "../api/Axios"; // make sure this is configured
-import { BASE_URL } from "../admin/api/config";
+import axios from "../api/Axios";
 
 const CatalogPage = () => {
   const [catalog, setCatalog] = useState([]);
@@ -14,7 +13,6 @@ const CatalogPage = () => {
         const res = await axios.get("/api/catalogue");
         setCatalog(res.data);
 
-        // derive categories from the result
         const uniqueCategories = Array.from(
           new Set(res.data.map((item) => item.category?.name))
         ).filter(Boolean);
@@ -87,7 +85,7 @@ const CatalogPage = () => {
                 <img
                   src={
                     item.image
-                      ? `${BASE_URL}${item.image}`
+                      ? item.image
                       : "/assets/catalog/placeholder.png"
                   }
                   alt={item.name}

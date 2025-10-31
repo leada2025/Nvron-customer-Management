@@ -85,9 +85,8 @@ const handleEdit = (item) => {
     image: null, // This ensures new file can be uploaded optionally
   });
 
-  // 👇 Fix: Prefix image path with BASE_URL for preview
-  if (item.image) {
-    setImagePreview(`${BASE_URL}${item.image}`);
+ if (item.image) {
+  setImagePreview(item.image);
   } else {
     setImagePreview(null);
   }
@@ -172,13 +171,13 @@ const handleCancelEdit = () => {
           onChange={handleChange}
           className="p-2 border border-gray-300 rounded md:col-span-2"
         />
-     <input
+<input
   type="file"
   name="image"
   onChange={handleChange}
   accept="image/*"
   className="md:col-span-2"
-  required
+  required={!editingId} // Required only for new items
 />
 
 {imagePreview && (
@@ -222,7 +221,7 @@ const handleCancelEdit = () => {
               className="border rounded-lg shadow p-4 space-y-2 bg-white"
             >
               <img
-                src={`${BASE_URL}${item.image}`}
+                src={item.image} 
                 alt={item.name}
                 className="w-full h-40 object-cover rounded"
               />

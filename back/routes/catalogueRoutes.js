@@ -3,21 +3,30 @@ const router = express.Router();
 const Catalogue = require("../models/Catalogue");
 const Category = require("../models/Category");
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
+const dotenv = require("dotenv");
 
-// Ensure upload directory exists
-const uploadDir = "/mnt/catalog"; 
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+dotenv.config();
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Multer Cloudinary storage setup
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "catalogue", // Cloudinary folder
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  },
 });
 const upload = multer({ storage });
 
-// GET all catalogue items
+// ✅ GET all catalogue items
 router.get("/", async (req, res) => {
   try {
     const items = await Catalogue.find().populate("category");
@@ -27,7 +36,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET all categories
+// ✅ GET all categories
 router.get("/categories", async (req, res) => {
   try {
     const categories = await Category.find();
@@ -37,7 +46,7 @@ router.get("/categories", async (req, res) => {
   }
 });
 
-// POST a new catalogue item
+// ✅ POST a new catalogue item
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { name, dosage, category, badge, description } = req.body;
@@ -47,8 +56,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       category,
       badge,
       description,
-     image: req.file ? `/catalog/${req.file.filename}` : "",
-
+      image: req.file ? req.file.path : "",
     });
     await newItem.save();
     res.status(201).json(newItem);
@@ -57,7 +65,7 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
-// POST a new category
+// ✅ POST a new category
 router.post("/categories", async (req, res) => {
   try {
     const { name } = req.body;
@@ -69,7 +77,7 @@ router.post("/categories", async (req, res) => {
   }
 });
 
-// PUT to update a category
+// ✅ PUT to update a category
 router.put("/categories/:id", async (req, res) => {
   try {
     const updated = await Category.findByIdAndUpdate(
@@ -83,22 +91,14 @@ router.put("/categories/:id", async (req, res) => {
   }
 });
 
-// PUT update catalogue item
+// ✅ PUT update catalogue item
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     const { name, dosage, category, badge, description } = req.body;
-
-    const updateData = {
-      name,
-      dosage,
-      category,
-      badge,
-      description,
-    };
+    const updateData = { name, dosage, category, badge, description };
 
     if (req.file) {
-     updateData.image = `/catalog/${req.file.filename}`;
-
+      updateData.image = req.file.path; // Cloudinary returns full secure URL
     }
 
     const updated = await Catalogue.findByIdAndUpdate(req.params.id, updateData, { new: true });
@@ -108,8 +108,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
   }
 });
 
-
-// DELETE a category
+// ✅ DELETE a category
 router.delete("/categories/:id", async (req, res) => {
   try {
     await Category.findByIdAndDelete(req.params.id);
@@ -119,23 +118,19 @@ router.delete("/categories/:id", async (req, res) => {
   }
 });
 
+// ✅ DELETE a catalogue item (and delete from Cloudinary)
 router.delete("/:id", async (req, res) => {
   try {
     const item = await Catalogue.findById(req.params.id);
     if (!item) return res.status(404).json({ error: "Item not found" });
 
-    // Delete image file if it exists and is on Render Disk
-    if (item.image && item.image.startsWith("/catalog/")) {
-      const filename = item.image.replace("/catalog/", "");
-      const filePath = path.join("/mnt/catalog", filename);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+    // Remove image from Cloudinary if exists
+    if (item.image && item.image.includes("cloudinary.com")) {
+      const publicId = item.image.split("/").pop().split(".")[0]; // Extract ID from URL
+      await cloudinary.uploader.destroy(`catalogue/${publicId}`);
     }
 
-    // Remove from DB
     await Catalogue.findByIdAndDelete(req.params.id);
-
     res.json({ success: true });
   } catch (err) {
     console.error("Delete error:", err);
