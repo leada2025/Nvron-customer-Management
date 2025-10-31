@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/Axios";
 import UserModal from "../components/UserModel";
-import { FaPencilAlt } from "react-icons/fa";
+import { FaPencilAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const CustomerPage = () => {
   const [customers, setCustomers] = useState([]);
@@ -13,6 +13,11 @@ const CustomerPage = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetchCustomers();
@@ -26,6 +31,8 @@ const CustomerPage = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setCustomers(response.data);
+      // Calculate total pages based on all customers (for client-side pagination)
+      setTotalPages(Math.ceil(response.data.length / itemsPerPage));
     } catch (err) {
       console.error("Error fetching customers:", err);
     }
@@ -97,6 +104,7 @@ const CustomerPage = () => {
     }
   };
 
+  // Filter and sort customers
   const filteredCustomers = customers.filter((u) =>
     u.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -106,6 +114,57 @@ const CustomerPage = () => {
     const execB = b.assignedTo?.name || b.assignedBy?.name || "";
     return execA.localeCompare(execB);
   });
+
+  // Pagination calculations
+  const totalFilteredCustomers = sortedCustomers.length;
+  const totalFilteredPages = Math.ceil(totalFilteredCustomers / itemsPerPage);
+  
+  // Get current page items
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentCustomers = sortedCustomers.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Pagination handlers
+  const goToNextPage = () => {
+    if (currentPage < totalFilteredPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToPage = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalFilteredPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+    
+    return pageNumbers;
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto bg-[#e6f7f7] min-h-screen">
@@ -117,7 +176,6 @@ const CustomerPage = () => {
             setModalOpen(true);
           }}
           className="bg-[#0b7b7b] text-white px-4 py-2 rounded-md"
-
         >
           + Add Customer
         </button>
@@ -127,11 +185,30 @@ const CustomerPage = () => {
         <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search customers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-[#0b7b7b]/30 px-3 py-2 rounded w-64 focus:outline-none focus:ring-2 focus:ring-[#0b7b7b]"
           />
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">Show:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="border border-[#0b7b7b]/30 px-2 py-1 rounded text-sm focus:outline-none focus:ring-1 focus:ring-[#0b7b7b]"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+            <span className="text-sm text-gray-600">
+              {totalFilteredCustomers} customer(s) found
+            </span>
+          </div>
         </div>
         <table className="min-w-full text-sm text-left">
           <thead className="bg-[#f0fdfa] text-[#0b7b7b]">
@@ -144,7 +221,7 @@ const CustomerPage = () => {
             </tr>
           </thead>
           <tbody>
-            {sortedCustomers.map((u) => (
+            {currentCustomers.map((u) => (
               <tr
                 key={u._id}
                 className="border-t border-[#0b7b7b]/10 hover:bg-[#f8ffff] cursor-pointer"
@@ -197,15 +274,63 @@ const CustomerPage = () => {
                 </td>
               </tr>
             ))}
-            {sortedCustomers.length === 0 && (
+            {currentCustomers.length === 0 && (
               <tr>
                 <td colSpan="5" className="p-4 text-center text-gray-500">
-                  No customers found.
+                  {searchTerm ? "No customers match your search." : "No customers found."}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+
+        {/* Pagination Controls */}
+        {totalFilteredPages > 1 && (
+          <div className="flex justify-between items-center px-4 py-3 border-t border-gray-200 bg-[#f9fdfd]">
+            <div className="text-sm text-gray-600">
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, totalFilteredCustomers)} of {totalFilteredCustomers} entries
+            </div>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                className={`p-2 rounded ${
+                  currentPage === 1
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-[#0b7b7b] hover:bg-[#0b7b7b] hover:text-white"
+                }`}
+              >
+                <FaChevronLeft size={14} />
+              </button>
+
+              {getPageNumbers().map((page) => (
+                <button
+                  key={page}
+                  onClick={() => goToPage(page)}
+                  className={`px-3 py-1 text-sm rounded ${
+                    currentPage === page
+                      ? "bg-[#0b7b7b] text-white"
+                      : "text-[#0b7b7b] hover:bg-[#0b7b7b] hover:text-white"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalFilteredPages}
+                className={`p-2 rounded ${
+                  currentPage === totalFilteredPages
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-[#0b7b7b] hover:bg-[#0b7b7b] hover:text-white"
+                }`}
+              >
+                <FaChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Modal */}
